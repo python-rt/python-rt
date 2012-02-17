@@ -1,0 +1,435 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html><head><title>Python: module rt</title>
+</head><body bgcolor="#f0f0f8">
+
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="heading">
+<tr bgcolor="#7799ee">
+<td valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong>rt</strong></big></big></font></td
+><td align=right valign=bottom
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/home/machalekj/env/rt/rt.py">/home/machalekj/env/rt/rt.py</a></font></td></tr></table>
+    <p></p>
+<p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#aa55cc">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Modules</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="StringIO.html">StringIO</a><br>
+<a href="os.html">os</a><br>
+</td><td width="25%" valign=top><a href="pycurl.html">pycurl</a><br>
+<a href="re.html">re</a><br>
+</td><td width="25%" valign=top><a href="urllib.html">urllib</a><br>
+</td><td width="25%" valign=top></td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ee77aa">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Classes</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#ee77aa"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl>
+<dt><font face="helvetica, arial"><a href="rt.html#Rt">Rt</a>
+</font></dt></dl>
+ <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="Rt">class <strong>Rt</strong></a></font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>:term:`API`&nbsp;for&nbsp;Request&nbsp;Tracker&nbsp;according&nbsp;to<br>
+<a href="http://requesttracker.wikia.com/wiki/REST">http://requesttracker.wikia.com/wiki/REST</a>.&nbsp;Interface&nbsp;is&nbsp;based&nbsp;on&nbsp;REST<br>
+architecture,&nbsp;which&nbsp;is&nbsp;based&nbsp;on&nbsp;HTTP/1.1&nbsp;protocol.&nbsp;This&nbsp;library&nbsp;is<br>
+therefore&nbsp;mainly&nbsp;sending&nbsp;and&nbsp;parsing&nbsp;special&nbsp;HTTP&nbsp;messages.<br>
+&nbsp;<br>
+..&nbsp;note::&nbsp;Use&nbsp;only&nbsp;ASCII&nbsp;LF&nbsp;as&nbsp;newline&nbsp;(``\n``).&nbsp;Time&nbsp;is&nbsp;returned&nbsp;in&nbsp;UTC.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;All&nbsp;strings&nbsp;returned&nbsp;are&nbsp;encoded&nbsp;in&nbsp;UTF-8&nbsp;and&nbsp;the&nbsp;same&nbsp;is<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;expected&nbsp;as&nbsp;input&nbsp;for&nbsp;string&nbsp;values.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="Rt-__init__"><strong>__init__</strong></a>(self, url, default_login<font color="#909090">=None</font>, default_password<font color="#909090">=None</font>)</dt><dd><tt>API&nbsp;initialization.<br>
+&nbsp;<br>
+:keyword&nbsp;url:&nbsp;Base&nbsp;URL&nbsp;for&nbsp;Request&nbsp;Tracker&nbsp;API.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;E.g.:&nbsp;<a href="http://tracker.example.com/REST/1.0/">http://tracker.example.com/REST/1.0/</a><br>
+:keyword&nbsp;default_login:&nbsp;Default&nbsp;RT&nbsp;login&nbsp;used&nbsp;by&nbsp;self.<strong>login</strong>&nbsp;if&nbsp;no<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;other&nbsp;credentials&nbsp;are&nbsp;provided<br>
+:keyword&nbsp;default_password:&nbsp;Default&nbsp;RT&nbsp;password</tt></dd></dl>
+
+<dl><dt><a name="Rt-comment"><strong>comment</strong></a>(self, ticket_id, text<font color="#909090">=''</font>, cc<font color="#909090">=''</font>, bcc<font color="#909090">=''</font>)</dt><dd><tt>Adds&nbsp;comment&nbsp;to&nbsp;the&nbsp;given&nbsp;ticket&nbsp;Without&nbsp;attachments&nbsp;now.<br>
+&nbsp;<br>
+Form&nbsp;of&nbsp;message&nbsp;according&nbsp;to&nbsp;documentation::<br>
+&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;id:&nbsp;&lt;ticket-id&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Action:&nbsp;comment<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Text:&nbsp;the&nbsp;text&nbsp;comment<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;second&nbsp;line&nbsp;starts&nbsp;with&nbsp;the&nbsp;same&nbsp;indentation&nbsp;as&nbsp;first<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Attachment:&nbsp;an&nbsp;attachment&nbsp;filename/path<br>
+&nbsp;<br>
+:param&nbsp;ticket_id:&nbsp;ID&nbsp;of&nbsp;ticket&nbsp;to&nbsp;which&nbsp;comment&nbsp;belongs<br>
+:keyword&nbsp;text:&nbsp;Content&nbsp;of&nbsp;comment<br>
+:returns:&nbsp;``True``<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Operation&nbsp;was&nbsp;successful<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;``False``<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Sending&nbsp;failed&nbsp;(status&nbsp;code&nbsp;!=&nbsp;200)</tt></dd></dl>
+
+<dl><dt><a name="Rt-create_ticket"><strong>create_ticket</strong></a>(self, Queue<font color="#909090">='General'</font>, **kwargs)</dt><dd><tt>Create&nbsp;new&nbsp;ticket&nbsp;and&nbsp;set&nbsp;given&nbsp;parameters.<br>
+&nbsp;<br>
+Example&nbsp;of&nbsp;message&nbsp;sended&nbsp;to&nbsp;``<a href="http://tracker.example.com/REST/1.0/ticket/new">http://tracker.example.com/REST/1.0/ticket/new</a>``::<br>
+&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;content=id:&nbsp;ticket/new<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Queue:&nbsp;General<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Owner:&nbsp;Nobody<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Requestors:&nbsp;somebody@example.com<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Subject:&nbsp;Ticket&nbsp;created&nbsp;through&nbsp;REST&nbsp;API<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Text:&nbsp;Lorem&nbsp;Ipsum<br>
+&nbsp;<br>
+In&nbsp;case&nbsp;of&nbsp;success&nbsp;returned&nbsp;message&nbsp;has&nbsp;this&nbsp;form::<br>
+&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;RT/3.8.7&nbsp;200&nbsp;Ok<br>
+&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;#&nbsp;Ticket&nbsp;123456&nbsp;created.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;#&nbsp;Ticket&nbsp;123456&nbsp;updated.<br>
+&nbsp;<br>
+Otherwise::<br>
+&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;RT/3.8.7&nbsp;200&nbsp;Ok<br>
+&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;#&nbsp;Required:&nbsp;id,&nbsp;Queue<br>
+&nbsp;<br>
++&nbsp;list&nbsp;of&nbsp;some&nbsp;key,&nbsp;value&nbsp;pairs,&nbsp;probably&nbsp;default&nbsp;values.<br>
+&nbsp;<br>
+:keyword&nbsp;Queue:&nbsp;Queue&nbsp;where&nbsp;to&nbsp;create&nbsp;ticket<br>
+:keyword&nbsp;kwargs:&nbsp;Other&nbsp;arguments&nbsp;possible&nbsp;to&nbsp;set:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Requestors,&nbsp;Subject,&nbsp;Cc,&nbsp;AdminCc,&nbsp;Owner,&nbsp;Status,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Priority,&nbsp;InitialPriority,&nbsp;FinalPriority,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;TimeEstimated,&nbsp;Starts,&nbsp;Due,&nbsp;Text,...&nbsp;(according&nbsp;to&nbsp;RT<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;fields)<br>
+&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Custom&nbsp;fields&nbsp;CF.{&lt;CustomFieldName&gt;}&nbsp;could&nbsp;be&nbsp;set<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;with&nbsp;keywords&nbsp;CF_CustomFieldName.<br>
+:returns:&nbsp;ID&nbsp;of&nbsp;new&nbsp;ticket&nbsp;or&nbsp;``-1``,&nbsp;if&nbsp;creating&nbsp;failed</tt></dd></dl>
+
+<dl><dt><a name="Rt-edit_ticket"><strong>edit_ticket</strong></a>(self, ticket_id, **kwargs)</dt><dd><tt>Edit&nbsp;ticket&nbsp;values.<br>
+&nbsp;<br>
+:param&nbsp;ticket_id:&nbsp;ID&nbsp;of&nbsp;ticket&nbsp;to&nbsp;edit<br>
+:keyword&nbsp;kwargs:&nbsp;Other&nbsp;arguments&nbsp;possible&nbsp;to&nbsp;set:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Requestors,&nbsp;Subject,&nbsp;Cc,&nbsp;AdminCc,&nbsp;Owner,&nbsp;Status,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Priority,&nbsp;InitialPriority,&nbsp;FinalPriority,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;TimeEstimated,&nbsp;Starts,&nbsp;Due,&nbsp;Text,...&nbsp;(according&nbsp;to&nbsp;RT<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;fields)<br>
+&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Custom&nbsp;fields&nbsp;CF.{&lt;CustomFieldName&gt;}&nbsp;could&nbsp;be&nbsp;set<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;with&nbsp;keywords&nbsp;CF_CustomFieldName.<br>
+:returns:&nbsp;``True``<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Operation&nbsp;was&nbsp;successful<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;``False``<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Ticket&nbsp;with&nbsp;given&nbsp;ID&nbsp;does&nbsp;not&nbsp;exist&nbsp;or&nbsp;unknown&nbsp;parameter<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;was&nbsp;set&nbsp;(in&nbsp;this&nbsp;case&nbsp;all&nbsp;other&nbsp;valid&nbsp;fields&nbsp;are&nbsp;changed)</tt></dd></dl>
+
+<dl><dt><a name="Rt-edit_ticket_links"><strong>edit_ticket_links</strong></a>(self, ticket_id, **kwargs)</dt><dd><tt>Edit&nbsp;ticket&nbsp;links.<br>
+&nbsp;<br>
+:param&nbsp;ticket_id:&nbsp;ID&nbsp;of&nbsp;ticket&nbsp;to&nbsp;edit<br>
+:keyword&nbsp;kwargs:&nbsp;Other&nbsp;arguments&nbsp;possible&nbsp;to&nbsp;set:&nbsp;DependsOn,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DependedOnBy,&nbsp;RefersTo,&nbsp;ReferredToBy,&nbsp;Members,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;MemberOf.&nbsp;Each&nbsp;value&nbsp;should&nbsp;be&nbsp;either&nbsp;ticker&nbsp;ID&nbsp;or<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;external&nbsp;link.&nbsp;Int&nbsp;types&nbsp;are&nbsp;converted.&nbsp;Use&nbsp;empty<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;string&nbsp;as&nbsp;value&nbsp;to&nbsp;delete&nbsp;existing&nbsp;link.<br>
+:returns:&nbsp;``True``<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Operation&nbsp;was&nbsp;successful<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;``False``<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Ticket&nbsp;with&nbsp;given&nbsp;ID&nbsp;does&nbsp;not&nbsp;exist&nbsp;or&nbsp;unknown&nbsp;parameter<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;was&nbsp;set&nbsp;(in&nbsp;this&nbsp;case&nbsp;all&nbsp;other&nbsp;valid&nbsp;fields&nbsp;are&nbsp;changed)</tt></dd></dl>
+
+<dl><dt><a name="Rt-get_attachment"><strong>get_attachment</strong></a>(self, ticket_id, attachment_id)</dt><dd><tt>Get&nbsp;attachment.<br>
+&nbsp;<br>
+:param&nbsp;ticket_id:&nbsp;ID&nbsp;of&nbsp;ticket<br>
+:param&nbsp;attachment_id:&nbsp;ID&nbsp;of&nbsp;attachment&nbsp;for&nbsp;obtain<br>
+:returns:&nbsp;Attachment&nbsp;as&nbsp;dictionary&nbsp;with&nbsp;these&nbsp;keys:<br>
+&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;Transaction<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;ContentType<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;Parent<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;Creator<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;Created<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;Filename<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;Content<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;Headers<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;MessageId<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;ContentEncoding<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;id<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;Subject<br>
+&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;All&nbsp;these&nbsp;fields&nbsp;are&nbsp;strings,&nbsp;just&nbsp;'Headers'&nbsp;holds&nbsp;another<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;dictionary&nbsp;with&nbsp;attachment&nbsp;headers&nbsp;as&nbsp;strings&nbsp;e.g.:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;Delivered-To<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;From<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;Return-Path<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;Content-Length<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;To<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;X-Seznam-User<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;X-QM-Mark<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;Domainkey-Signature<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;RT-Message-ID<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;X-RT-Incoming-Encryption<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;X-Original-To<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;Message-ID<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;X-Spam-Status<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;In-Reply-To<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;Date<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;Received<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;X-Country<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;X-Spam-Checker-Version<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;X-Abuse<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;MIME-Version<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;Content-Type<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;Subject<br>
+&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;..&nbsp;warning::&nbsp;Content-Length&nbsp;parameter&nbsp;is&nbsp;set&nbsp;after&nbsp;opening<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ticket&nbsp;in&nbsp;web&nbsp;interface!<br>
+&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Set&nbsp;of&nbsp;headers&nbsp;available&nbsp;depends&nbsp;on&nbsp;mailservers&nbsp;sending<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;emails&nbsp;not&nbsp;on&nbsp;Request&nbsp;Tracker!<br>
+:raises&nbsp;Exception:&nbsp;Unexpected&nbsp;format&nbsp;of&nbsp;returned&nbsp;message.</tt></dd></dl>
+
+<dl><dt><a name="Rt-get_attachment_content"><strong>get_attachment_content</strong></a>(self, ticket_id, attachment_id)</dt><dd><tt>Get&nbsp;content&nbsp;of&nbsp;attachment&nbsp;without&nbsp;headers.<br>
+&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;This&nbsp;function&nbsp;is&nbsp;necessary&nbsp;to&nbsp;use&nbsp;for&nbsp;binary&nbsp;attachment,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;as&nbsp;it&nbsp;can&nbsp;contain&nbsp;``\n``&nbsp;chars,&nbsp;which&nbsp;would&nbsp;disrupt&nbsp;parsing<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;of&nbsp;message&nbsp;if&nbsp;:py:meth:`~<a href="#Rt">Rt</a>.get_attachment`&nbsp;is&nbsp;used.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Format&nbsp;of&nbsp;message::<br>
+&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;RT/3.8.7&nbsp;200&nbsp;Ok<br>
+&nbsp;<br>
+Start&nbsp;of&nbsp;the&nbsp;content...End&nbsp;of&nbsp;the&nbsp;content<br>
+&nbsp;<br>
+&nbsp;<br>
+&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:param&nbsp;ticket_id:&nbsp;ID&nbsp;of&nbsp;ticket<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:param&nbsp;attachment_id:&nbsp;ID&nbsp;of&nbsp;attachment<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns:&nbsp;string&nbsp;with&nbsp;content&nbsp;of&nbsp;attachment</tt></dd></dl>
+
+<dl><dt><a name="Rt-get_attachments_ids"><strong>get_attachments_ids</strong></a>(self, ticket_id)</dt><dd><tt>Get&nbsp;IDs&nbsp;of&nbsp;attachments&nbsp;for&nbsp;given&nbsp;ticket.<br>
+&nbsp;<br>
+:param&nbsp;ticket_id:&nbsp;ID&nbsp;of&nbsp;ticket<br>
+:returns:&nbsp;List&nbsp;of&nbsp;IDs&nbsp;(type&nbsp;int)&nbsp;of&nbsp;attachments&nbsp;belonging&nbsp;to&nbsp;given<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ticket</tt></dd></dl>
+
+<dl><dt><a name="Rt-get_history"><strong>get_history</strong></a>(self, ticket_id, transaction_id<font color="#909090">=None</font>)</dt><dd><tt>Get&nbsp;set&nbsp;of&nbsp;history&nbsp;items.<br>
+&nbsp;<br>
+:param&nbsp;ticket_id:&nbsp;ID&nbsp;of&nbsp;ticket<br>
+:keyword&nbsp;transaction_id:&nbsp;If&nbsp;set&nbsp;to&nbsp;None,&nbsp;all&nbsp;history&nbsp;items&nbsp;are<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;returned,&nbsp;if&nbsp;set&nbsp;to&nbsp;ID&nbsp;of&nbsp;valid&nbsp;transaction<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;just&nbsp;one&nbsp;history&nbsp;item&nbsp;is&nbsp;returned<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
+:returns:&nbsp;List&nbsp;of&nbsp;history&nbsp;items&nbsp;ordered&nbsp;increasingly&nbsp;by&nbsp;time&nbsp;of&nbsp;event.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Each&nbsp;history&nbsp;item&nbsp;is&nbsp;dictionary&nbsp;with&nbsp;following&nbsp;keys:<br>
+&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Description,&nbsp;Creator,&nbsp;Data,&nbsp;Created,&nbsp;TimeTaken,&nbsp;NewValue,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Content,&nbsp;Field,&nbsp;OldValue,&nbsp;Ticket,&nbsp;Type,&nbsp;id,&nbsp;Attachments<br>
+&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;All&nbsp;these&nbsp;fields&nbsp;are&nbsp;strings,&nbsp;just&nbsp;'Attachments'&nbsp;holds&nbsp;list<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;of&nbsp;pairs&nbsp;(attachment_id,filename_with_size).<br>
+:raises&nbsp;Exception:&nbsp;Unexpected&nbsp;format&nbsp;of&nbsp;returned&nbsp;message.</tt></dd></dl>
+
+<dl><dt><a name="Rt-get_links"><strong>get_links</strong></a>(self, ticket_id)</dt><dd><tt>Gets&nbsp;the&nbsp;ticket&nbsp;links&nbsp;for&nbsp;a&nbsp;single&nbsp;ticket.<br>
+&nbsp;<br>
+:param&nbsp;ticket_id:&nbsp;ticket&nbsp;ID<br>
+:returns:&nbsp;Links&nbsp;as&nbsp;strings&nbsp;in&nbsp;dictionary&nbsp;with&nbsp;these&nbsp;keys<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(just&nbsp;those&nbsp;which&nbsp;are&nbsp;defined):<br>
+&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;id<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;Members<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;MemberOf<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;RefersTo<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;ReferredToBy<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;DependsOn<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;DependedOnBy<br>
+&nbsp;<br>
+:raises&nbsp;Exception:&nbsp;In&nbsp;case&nbsp;that&nbsp;returned&nbsp;status&nbsp;code&nbsp;is&nbsp;not&nbsp;200</tt></dd></dl>
+
+<dl><dt><a name="Rt-get_queue"><strong>get_queue</strong></a>(self, queue_id)</dt><dd><tt>Get&nbsp;queue&nbsp;details.<br>
+&nbsp;<br>
+:param&nbsp;queue_id:&nbsp;Identification&nbsp;of&nbsp;queue&nbsp;by&nbsp;name&nbsp;(str)&nbsp;or&nbsp;queue&nbsp;ID<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(int)<br>
+:returns:&nbsp;Queue&nbsp;details&nbsp;as&nbsp;strings&nbsp;in&nbsp;dictionary&nbsp;with&nbsp;these&nbsp;keys<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(if&nbsp;queue&nbsp;exists):<br>
+&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;id<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;Name<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;Description<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;CorrespondAddress<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;CommentAddress<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;InitialPriority<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;FinalPriority<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;DefaultDueIn<br>
+&nbsp;<br>
+:raises&nbsp;Exception:&nbsp;In&nbsp;case&nbsp;that&nbsp;returned&nbsp;status&nbsp;code&nbsp;is&nbsp;not&nbsp;200</tt></dd></dl>
+
+<dl><dt><a name="Rt-get_ticket"><strong>get_ticket</strong></a>(self, ticket_id)</dt><dd><tt>Fetch&nbsp;ticket&nbsp;by&nbsp;its&nbsp;ID.<br>
+&nbsp;<br>
+:param&nbsp;ticket_id:&nbsp;ID&nbsp;of&nbsp;demanded&nbsp;ticket<br>
+&nbsp;<br>
+:returns:&nbsp;Dictionary&nbsp;with&nbsp;key,&nbsp;value&nbsp;pairs&nbsp;for&nbsp;ticket&nbsp;with<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*ticket_id*.&nbsp;List&nbsp;of&nbsp;keys:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;id<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;Queue<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;Owner<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;Creator<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;Subject<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;Status<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;Priority<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;InitialPriority<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;FinalPriority<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;Requestors<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;Cc<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;AdminCc<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;Created<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;Starts<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;Started<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;Due<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;Resolved<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;Told<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;TimeEstimated<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;TimeWorked<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;TimeLeft<br>
+:raises&nbsp;Exception:&nbsp;Unexpected&nbsp;format&nbsp;of&nbsp;returned&nbsp;message.</tt></dd></dl>
+
+<dl><dt><a name="Rt-get_user"><strong>get_user</strong></a>(self, user_id)</dt><dd><tt>Get&nbsp;user&nbsp;details.<br>
+&nbsp;<br>
+:param&nbsp;user_id:&nbsp;Identification&nbsp;of&nbsp;user&nbsp;by&nbsp;username&nbsp;(str)&nbsp;or&nbsp;user&nbsp;ID<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(int)<br>
+:returns:&nbsp;User&nbsp;details&nbsp;as&nbsp;strings&nbsp;in&nbsp;dictionary&nbsp;with&nbsp;these&nbsp;keys&nbsp;for&nbsp;RT<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;users:<br>
+&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;Lang<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;RealName<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;Privileged<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;Disabled<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;Gecos<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;EmailAddress<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;Password<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;id<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;Name<br>
+&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Or&nbsp;these&nbsp;keys&nbsp;for&nbsp;external&nbsp;users&nbsp;(e.g.&nbsp;Requestors&nbsp;replying<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;to&nbsp;email&nbsp;from&nbsp;RT:<br>
+&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;RealName<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;Disabled<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;EmailAddress<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;Password<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;id<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;Name<br>
+:raises&nbsp;Exception:&nbsp;In&nbsp;case&nbsp;that&nbsp;returned&nbsp;status&nbsp;code&nbsp;is&nbsp;not&nbsp;200</tt></dd></dl>
+
+<dl><dt><a name="Rt-last_updated"><strong>last_updated</strong></a>(self, since, queue<font color="#909090">='General'</font>)</dt><dd><tt>Obtains&nbsp;tickets&nbsp;changed&nbsp;after&nbsp;given&nbsp;date.<br>
+&nbsp;<br>
+:param&nbsp;since:&nbsp;Date&nbsp;as&nbsp;string&nbsp;in&nbsp;form&nbsp;'2011-02-24'<br>
+:keyword&nbsp;queue:&nbsp;Queue&nbsp;where&nbsp;to&nbsp;search<br>
+&nbsp;<br>
+:returns:&nbsp;List&nbsp;of&nbsp;tickets&nbsp;with&nbsp;LastUpdated&nbsp;parameter&nbsp;later&nbsp;than<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*since*&nbsp;ordered&nbsp;in&nbsp;decreasing&nbsp;order&nbsp;by&nbsp;LastUpdated.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Each&nbsp;tickets&nbsp;is&nbsp;dictionary,&nbsp;the&nbsp;same&nbsp;as&nbsp;in<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:py:meth:`~<a href="#Rt">Rt</a>.get_ticket`.</tt></dd></dl>
+
+<dl><dt><a name="Rt-login"><strong>login</strong></a>(self, login<font color="#909090">=None</font>, password<font color="#909090">=None</font>)</dt><dd><tt>Login&nbsp;with&nbsp;default&nbsp;or&nbsp;supplied&nbsp;credetials.<br>
+&nbsp;<br>
+:keyword&nbsp;login:&nbsp;Username&nbsp;used&nbsp;for&nbsp;RT,&nbsp;if&nbsp;not&nbsp;supplied&nbsp;together&nbsp;with<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*password*&nbsp;:py:attr:`~<a href="#Rt">Rt</a>.default_login`&nbsp;and<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:py:attr:`~<a href="#Rt">Rt</a>.default_password`&nbsp;are&nbsp;used&nbsp;instead<br>
+:keyword&nbsp;password:&nbsp;Similarly&nbsp;as&nbsp;*login*<br>
+&nbsp;<br>
+:returns:&nbsp;``True``<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Successful&nbsp;login<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;``False``<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Otherwise<br>
+:raises&nbsp;Exception:&nbsp;In&nbsp;case&nbsp;that&nbsp;credentials&nbsp;are&nbsp;not&nbsp;supplied&nbsp;neither<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;during&nbsp;inicialization&nbsp;or&nbsp;call&nbsp;of&nbsp;this&nbsp;method.</tt></dd></dl>
+
+<dl><dt><a name="Rt-logout"><strong>logout</strong></a>(self)</dt><dd><tt>Logout&nbsp;of&nbsp;user.<br>
+&nbsp;<br>
+:returns:&nbsp;``True``<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Successful&nbsp;logout<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;``False``<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Logout&nbsp;failed&nbsp;(mainly&nbsp;because&nbsp;user&nbsp;was&nbsp;not&nbsp;login)</tt></dd></dl>
+
+<dl><dt><a name="Rt-new_correspondence"><strong>new_correspondence</strong></a>(self, queue<font color="#909090">='General'</font>)</dt><dd><tt>Obtains&nbsp;tickets&nbsp;changed&nbsp;by&nbsp;other&nbsp;users&nbsp;than&nbsp;the&nbsp;system&nbsp;one.<br>
+&nbsp;<br>
+:keyword&nbsp;queue:&nbsp;Queue&nbsp;where&nbsp;to&nbsp;search<br>
+&nbsp;<br>
+:returns:&nbsp;List&nbsp;of&nbsp;tickets&nbsp;which&nbsp;were&nbsp;last&nbsp;updated&nbsp;by&nbsp;other&nbsp;user&nbsp;than<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;system&nbsp;one&nbsp;ordered&nbsp;in&nbsp;decreasing&nbsp;order&nbsp;by&nbsp;LastUpdated.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Each&nbsp;ticket&nbsp;is&nbsp;dictionary,&nbsp;the&nbsp;same&nbsp;as&nbsp;in<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:py:meth:`~<a href="#Rt">Rt</a>.get_ticket`.</tt></dd></dl>
+
+<dl><dt><a name="Rt-reply"><strong>reply</strong></a>(self, ticket_id, text<font color="#909090">=''</font>, cc<font color="#909090">=''</font>, bcc<font color="#909090">=''</font>)</dt><dd><tt>Sends&nbsp;email&nbsp;message&nbsp;to&nbsp;the&nbsp;contacts&nbsp;in&nbsp;``Requestors``&nbsp;field&nbsp;of<br>
+given&nbsp;ticket&nbsp;with&nbsp;subject&nbsp;as&nbsp;is&nbsp;set&nbsp;in&nbsp;``Subject``&nbsp;field.&nbsp;Without<br>
+attachments&nbsp;now.<br>
+&nbsp;<br>
+Form&nbsp;of&nbsp;message&nbsp;according&nbsp;to&nbsp;documentation::<br>
+&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;id:&nbsp;&lt;ticket-id&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Action:&nbsp;correspond<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Text:&nbsp;the&nbsp;text&nbsp;comment<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;second&nbsp;line&nbsp;starts&nbsp;with&nbsp;the&nbsp;same&nbsp;indentation&nbsp;as&nbsp;first<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Cc:&nbsp;&lt;...&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Bcc:&nbsp;&lt;...&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;TimeWorked:&nbsp;&lt;...&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Attachment:&nbsp;an&nbsp;attachment&nbsp;filename/path<br>
+&nbsp;<br>
+:param&nbsp;ticket_id:&nbsp;ID&nbsp;of&nbsp;ticket&nbsp;to&nbsp;which&nbsp;message&nbsp;belongs<br>
+:keyword&nbsp;text:&nbsp;Content&nbsp;of&nbsp;email&nbsp;message<br>
+:keyword&nbsp;cc:&nbsp;Carbon&nbsp;copy&nbsp;just&nbsp;for&nbsp;this&nbsp;reply<br>
+:keyword&nbsp;bcc:&nbsp;Blind&nbsp;carbon&nbsp;copy&nbsp;just&nbsp;for&nbsp;this&nbsp;reply<br>
+:returns:&nbsp;``True``<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Operation&nbsp;was&nbsp;successful<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;``False``<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Sending&nbsp;failed&nbsp;(status&nbsp;code&nbsp;!=&nbsp;200)</tt></dd></dl>
+
+<dl><dt><a name="Rt-search"><strong>search</strong></a>(self, Queue<font color="#909090">='General'</font>, **kwargs)</dt><dd><tt>Search&nbsp;arbitrary&nbsp;needles&nbsp;in&nbsp;given&nbsp;fields&nbsp;and&nbsp;queue.<br>
+&nbsp;<br>
+Example::<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&gt;&gt;&gt;&nbsp;tracker&nbsp;=&nbsp;<a href="#Rt">Rt</a>('<a href="http://tracker.example.com/REST/1.0/">http://tracker.example.com/REST/1.0/</a>',&nbsp;'rt-username',&nbsp;'top-secret')<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&gt;&gt;&gt;&nbsp;tracker.<a href="#Rt-login">login</a>()<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&gt;&gt;&gt;&nbsp;tickets&nbsp;=&nbsp;tracker.<a href="#Rt-search">search</a>(CF_Domain='example.com')<br>
+&nbsp;<br>
+:keyword&nbsp;Queue:&nbsp;Queue&nbsp;where&nbsp;to&nbsp;search<br>
+:keyword&nbsp;kwargs:&nbsp;Other&nbsp;arguments&nbsp;possible&nbsp;to&nbsp;set:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Requestors,&nbsp;Subject,&nbsp;Cc,&nbsp;AdminCc,&nbsp;Owner,&nbsp;Status,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Priority,&nbsp;InitialPriority,&nbsp;FinalPriority,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;TimeEstimated,&nbsp;Starts,&nbsp;Due,&nbsp;Text,...&nbsp;(according&nbsp;to&nbsp;RT<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;fields)<br>
+&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Setting&nbsp;value&nbsp;for&nbsp;this&nbsp;arguments&nbsp;constrain&nbsp;search<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;results&nbsp;for&nbsp;only&nbsp;tickets&nbsp;exactly&nbsp;matching&nbsp;all<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;arguments.<br>
+&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Custom&nbsp;fields&nbsp;CF.{&lt;CustomFieldName&gt;}&nbsp;could&nbsp;be&nbsp;set<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;with&nbsp;keywords&nbsp;CF_CustomFieldName.<br>
+&nbsp;<br>
+:returns:&nbsp;List&nbsp;of&nbsp;matching&nbsp;tickets.&nbsp;Each&nbsp;ticket&nbsp;is&nbsp;the&nbsp;same&nbsp;dictionary<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;as&nbsp;in&nbsp;:py:meth:`~<a href="#Rt">Rt</a>.get_ticket`.<br>
+:raises&nbsp;Exception:&nbsp;Unexpected&nbsp;format&nbsp;of&nbsp;returned&nbsp;message.</tt></dd></dl>
+
+</td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#55aa55">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Data</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#55aa55"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><strong>__authors__</strong> = ['"Jiri Machalek" &lt;jiri.machalek@nic.cz&gt;']<br>
+<strong>__docformat__</strong> = 'reStructuredText en'<br>
+<strong>__license__</strong> = ' Copyright (C) 2012 CZ.NIC, z.s.p.o.<font color="#c040c0">\n\n</font>    This p...am.  If not, see &lt;http://www.gnu.org/licenses/&gt;.<font color="#c040c0">\n</font>'</td></tr></table>
+</body></html>

@@ -1,0 +1,59 @@
++==============================================+
+| Rt - Python interface to Request Tracker API |
++==============================================+
+
+Python implementation of REST API described here:
+http://requesttracker.wikia.com/wiki/REST
+
+REQUIREMENTS
+============
+
+This module uses following Python modules:
+- re
+- os
+- urllib
+- pycurl
+- StringIO
+
+LICENCE
+=======
+
+This module is distributed under the terms of GNU General Public Licence v3
+and was developed by CZ.NIC Labs - research and development department of
+CZ.NIC association - top level domain registy for .CZ.  Copy of the GNU
+General Public License is distibuted along with this program.
+
+USAGE
+=====
+
+Example says more than a thousand words.
+
+>>> import rt
+>>> tracker = rt.Rt('http://localhost/rt/REST/1.0/', 'user_login', 'user_pass')
+>>> tracker.login()
+True
+>>> map(lambda x: x['id'], tracker.search(Queue='helpdesk', Status='open'))
+['ticket/1', 'ticket/2', 'ticket/10', 'ticket/15']
+>>> tracker.create_ticket(Queue='helpdesk', \
+... Subject='Coffee (important)', Text='Help I Ran Out of Coffee!')
+19
+>>> tracker.edit_ticket(19, Requestors='addicted@example.com')
+True
+>>> tracker.reply(19, text='Do you know Starbucks?')
+True
+>>> tracker.logout()
+True
+
+Please use docstrings to see how to use different functions. They are written
+in ReStructuredText because this module is part of larger software, but I am
+sure you will understand it clearly. The same is also in file rt.html.
+
+OFFICIAL SITE
+=============
+This module is part of Malicious Domain Manager (MDM), but can be used
+separately. Future changes will be first done for MDM, later can be included
+to the github version.
+
+Rt module on GitHub: https://github.com/machalekj/rt
+Malicious Domain Manager: https://git.nic.cz/redmine/projects/mdm
+
