@@ -82,7 +82,7 @@ class Rt:
                 else:
                     self.curl_connect.setopt(pycurl.POSTFIELDS, '')
                     self.curl_connect.setopt(pycurl.POST, 0)
-                self.curl_connect.setopt(pycurl.URL, os.path.join(self.url, url))
+                self.curl_connect.setopt(pycurl.URL, str(os.path.join(self.url, url)))
                 response = StringIO.StringIO()
                 self.curl_connect.setopt(pycurl.WRITEFUNCTION, response.write)
                 self.curl_connect.perform()
@@ -91,7 +91,7 @@ class Rt:
                 raise Exception('Log in required')
         except pycurl.error as e:
             raise Exception('Request error: %r' % (e,))
-
+    
     def __get_status_code(self, msg):
         """ Select status code given message.
 
@@ -233,12 +233,12 @@ class Rt:
                   as in :py:meth:`~Rt.get_ticket`.
         :raises Exception: Unexpected format of returned message.
         """
-        query = 'search/ticket?query=(Queue=\'%s\')'%(Queue)
+        query = 'search/ticket?query=(Queue=\'%s\')' % (Queue,)
         for key in kwargs:
             if key[:3] != 'CF_':
-                query += "+AND+(%s=\'%s\')"%(key, kwargs[key])
+                query += "+AND+(%s=\'%s\')" % (key, kwargs[key])
             else:
-                query += "+AND+(CF.{%s}=\'%s\')"%(key[3:], kwargs[key])
+                query += "+AND+(CF.{%s}=\'%s\')" % (key[3:], kwargs[key])
         query += "&format=l"
 
         msgs = self.__request(query)
