@@ -12,8 +12,9 @@ Description of Request Tracker REST API: http://requesttracker.wikia.com/wiki/RE
 
 Provided functionality: login to RT, logout, getting, creating and editing
 tickets, getting attachments, getting history of ticket, replying to ticket
-requestors, adding comments, getting and editing ticket links, searching and
-providing lists of last updated tickets and tickets with new correspondence.
+requestors, adding comments, getting and editing ticket links, searching,
+providing lists of last updated tickets and tickets with new correspondence
+and merging tickets.
 """
 
 __license__ = """ Copyright (C) 2012 CZ.NIC, z.s.p.o.
@@ -810,4 +811,22 @@ Text: %s""" % (str(ticket_id), re.sub(r'\n', r'\n      ', text))}
         if not hasattr(self, 'links_updated_pattern'):
             self.links_updated_pattern = re.compile('^# Links for ticket [0-9]+ updated.$')
         return self.links_updated_pattern.match(state) != None
+
+    def merge_ticket(self, ticket_id, into_id, **kwargs):
+        """ Merge ticket into another (undocumented API feature)
+    
+        :param ticket_id: ID of ticket to be merged
+        :param into: ID of destination ticket
+        :returns: ``True``
+                      Operation was successful
+                  ``False``
+                      Either origin or destination ticket does not
+                      exist or user does not have ModifyTicket permission.
+        """
+        msg = self.__request('ticket/merge/%s' % (str(ticket_id),),
+                             urllib.urlencode({'into':into_id}))
+        state = msg.split('\n')[2]
+        if not hasattr(self, 'merge_successful_pattern'):
+            self.merge_successful_pattern = re.compile('^Merge Successful$')
+        return self.merge_successful_pattern.match(state) != None
 
