@@ -11,9 +11,7 @@ REQUIREMENTS
 This module uses following Python modules:
 - re
 - os
-- urllib
-- pycurl
-- StringIO
+- requests (http://docs.python-requests.org/)
 
 LICENCE
 =======

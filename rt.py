@@ -1,12 +1,12 @@
 import re
 import os
-import urllib
-import pycurl
-import StringIO
+import requests
 
 """ Python library :term:`API` to Request Tracker's :term:`REST` interface.
 
-Implements functions needed by Malicious Domain Manager (https://git.nic.cz/redmine/projects/mdm), but is not directly connected with it, so this library can also be use separatly.
+Implements functions needed by `Malicious Domain Manager
+<https://git.nic.cz/redmine/projects/mdm>`_, but is not directly connected with
+it, so this library can also be use separatly.
 
 Description of Request Tracker REST API: http://requesttracker.wikia.com/wiki/REST
 
@@ -61,14 +61,21 @@ class Rt:
         self.url = url
         self.default_login = default_login
         self.default_password = default_password
+        self.session = requests.session()
+        self.login_result = None
 
-    def __request(self, url, post_data=''):
+    def __request(self, selector, post_data={}, files=[], without_login=False):
         """ General request for :term:`API`.
  
-        :keyword url: End part of URL compliting self.url parameter set during
-                      class inicialization. E.g.: ``ticket/123456/show``
-        :keywork post_data: Content of HTTP message, should be in the standard
-                            application/x-www-form-urlencoded format
+        :keyword selector: End part of URL which completes self.url parameter
+                           set during class inicialization.
+                           E.g.: ``ticket/123456/show``
+        :keyword post_data: Dictionary with POST method fields
+        :keyword files: List of pairs (filename, file-like object) describing
+                        files to attach as multipart/form-data
+                        (list is necessary to keep files ordered)
+        :keyword without_login: Turns off checking last login result
+                                (usually needed just for login itself)
         :returns: Requested messsage including state line in form
                   ``RT/3.8.7 200 Ok\\n``
         :rtype: string
@@ -76,22 +83,23 @@ class Rt:
                            login or any other connection error.
         """
         try:
-            if hasattr(self, 'curl_connect'):
-                if post_data:
-                    self.curl_connect.setopt(pycurl.POSTFIELDS, post_data)
-                    self.curl_connect.setopt(pycurl.POST, 1)
+            url = str(os.path.join(self.url, selector))
+            if self.login_result or without_login:
+                if not files:
+                    if post_data:
+                        response = self.session.post(url, data=post_data)
+                    else:
+                        response = self.session.get(url)
                 else:
-                    self.curl_connect.setopt(pycurl.POSTFIELDS, '')
-                    self.curl_connect.setopt(pycurl.POST, 0)
-                self.curl_connect.setopt(pycurl.URL, str(os.path.join(self.url, url)))
-                response = StringIO.StringIO()
-                self.curl_connect.setopt(pycurl.WRITEFUNCTION, response.write)
-                self.curl_connect.perform()
-                return response.getvalue()
+                    files_data = {}
+                    for i in range(len(files)):
+                        files_data['attachment_%d' % (i+1)] = files[i]
+                    response = self.session.post(url, data=post_data, files=files_data)
+                return response.content
             else:
                 raise Exception('Log in required')
-        except pycurl.error as e:
-            raise Exception('Request error: %r' % (e,))
+        except requests.exceptions.ConnectionError as e:
+            raise Exception(e.args[0].message)
     
     def __get_status_code(self, msg):
         """ Select status code given message.
@@ -116,15 +124,6 @@ class Rt:
         :raises Exception: In case that credentials are not supplied neither
                            during inicialization or call of this method.
         """
-        HEADERS = ['Accept-Language: en-us;q=0.7,en;q=0.3',
-                   'Accept-Charset: utf-8',
-                   'Keep-Alive: 300',
-                   'Connection: Keep-Alive']
-        self.curl_connect = pycurl.Curl()
-        self.curl_connect.setopt(pycurl.ENCODING, '')
-        self.curl_connect.setopt(pycurl.HTTPHEADER, HEADERS)
-        self.curl_connect.setopt(pycurl.COOKIEFILE, '')
-        self.curl_connect.setopt(pycurl.FOLLOWLOCATION, 1)
 
         if (login != None) and (password != None):
             login_data = {'user':login, 'pass':password}
@@ -133,8 +132,10 @@ class Rt:
         else:
             raise Exception('Credentials required')
 
-        login_data_encoded = urllib.urlencode(login_data)
-        return self.__get_status_code(self.__request('', login_data_encoded)) == 200
+        self.login_result = self.__get_status_code(self.__request('',
+                                                                  post_data=login_data,
+                                                                  without_login=True)) == 200
+        return self.login_result
 
     def logout(self):
         """ Logout of user.
@@ -145,10 +146,9 @@ class Rt:
                       Logout failed (mainly because user was not login)
         """
         ret = False
-        if hasattr(self, 'curl_connect'):
+        if self.login_result == True:
             ret = self.__get_status_code(self.__request('logout')) == 200
-            self.curl_connect.close()
-            del self.curl_connect
+            self.login_result = None
         return ret
         
     def new_correspondence(self, queue='General'):
@@ -384,7 +384,7 @@ class Rt:
                 post_data += "%s: %s\n"%(key, kwargs[key])
             else:
                 post_data += "CF.{%s}: %s\n"%(key[3:], kwargs[key])
-        msg = self.__request('ticket/new', urllib.urlencode({'content':post_data}))
+        msg = self.__request('ticket/new', {'content':post_data})
         state = msg.split('\n')[2]
         res = re.search(' [0-9]+ ',state)
         if res != None:
@@ -417,7 +417,7 @@ class Rt:
                 post_data += "%s: %s\n"%(key, kwargs[key])
             else:
                 post_data += "CF.{%s}: %s\n" % (key[3:], kwargs[key])
-        msg = self.__request('ticket/%s/edit' % (str(ticket_id)), urllib.urlencode({'content':post_data}))
+        msg = self.__request('ticket/%s/edit' % (str(ticket_id)), {'content':post_data})
         state = msg.split('\n')[2]
         if not hasattr(self, 'update_pattern'):
             self.update_pattern = re.compile('^# Ticket [0-9]+ updated.$')
@@ -495,11 +495,10 @@ class Rt:
         except:
             return []
     
-    def reply(self, ticket_id, text='', cc='', bcc=''):
+    def reply(self, ticket_id, text='', cc='', bcc='', files=[]):
         """ Sends email message to the contacts in ``Requestors`` field of
-        given ticket with subject as is set in ``Subject`` field. Without
-        attachments now.
-        
+        given ticket with subject as is set in ``Subject`` field.
+
         Form of message according to documentation::
 
             id: <ticket-id>
@@ -515,6 +514,8 @@ class Rt:
         :keyword text: Content of email message
         :keyword cc: Carbon copy just for this reply
         :keyword bcc: Blind carbon copy just for this reply
+        :keyword files: List of pairs (filename, file-like object) describing
+                        files to attach as multipart/form-data
         :returns: ``True``
                       Operation was successful
                   ``False``
@@ -525,12 +526,14 @@ Action: correspond
 Text: %s
 Cc: %s
 Bcc: %s"""%(str(ticket_id), re.sub(r'\n', r'\n      ', text), cc, bcc)}
+        for file_pair in files:
+            post_data['content'] += "\nAttachment: %s" % (file_pair[0],)
         msg = self.__request('ticket/%s/comment' % (str(ticket_id),),
-                             urllib.urlencode(post_data))
+                             post_data, files)
         return self.__get_status_code(msg) == 200
 
-    def comment(self, ticket_id, text='', cc='', bcc=''):
-        """ Adds comment to the given ticket Without attachments now.
+    def comment(self, ticket_id, text='', cc='', bcc='', files=[]):
+        """ Adds comment to the given ticket.
         
         Form of message according to documentation::
 
@@ -542,6 +545,8 @@ Bcc: %s"""%(str(ticket_id), re.sub(r'\n', r'\n      ', text), cc, bcc)}
 
         :param ticket_id: ID of ticket to which comment belongs
         :keyword text: Content of comment
+        :keyword files: List of pairs (filename, file-like object) describing
+                        files to attach as multipart/form-data
         :returns: ``True``
                       Operation was successful
                   ``False``
@@ -550,11 +555,13 @@ Bcc: %s"""%(str(ticket_id), re.sub(r'\n', r'\n      ', text), cc, bcc)}
         post_data = {'content':"""id: %s
 Action: comment
 Text: %s""" % (str(ticket_id), re.sub(r'\n', r'\n      ', text))}
+        for file_pair in files:
+            post_data['content'] += "\nAttachment: %s" % (file_pair[0],)
         msg = self.__request('ticket/%s/comment' % (str(ticket_id),),
-                             urllib.urlencode(post_data))
+                             post_data, files)
         return self.__get_status_code(msg) == 200
-        
-        
+
+
     def get_attachments_ids(self, ticket_id):
         """ Get IDs of attachments for given ticket.
         
@@ -806,14 +813,15 @@ Text: %s""" % (str(ticket_id), re.sub(r'\n', r'\n      ', text))}
         for key in kwargs:
             post_data += "%s: %s\n"%(key, str(kwargs[key]))
         msg = self.__request('ticket/%s/links' % (str(ticket_id),),
-                             urllib.urlencode({'content':post_data}))
+                             {'content':post_data})
         state = msg.split('\n')[2]
         if not hasattr(self, 'links_updated_pattern'):
             self.links_updated_pattern = re.compile('^# Links for ticket [0-9]+ updated.$')
         return self.links_updated_pattern.match(state) != None
 
-    def merge_ticket(self, ticket_id, into_id, **kwargs):
-        """ Merge ticket into another (undocumented API feature)
+    def merge_ticket(self, ticket_id, into_id):
+        """ Merge ticket into another (undocumented API feature). May not work
+        in 4.x RT series.
     
         :param ticket_id: ID of ticket to be merged
         :param into: ID of destination ticket
@@ -824,7 +832,7 @@ Text: %s""" % (str(ticket_id), re.sub(r'\n', r'\n      ', text))}
                       exist or user does not have ModifyTicket permission.
         """
         msg = self.__request('ticket/merge/%s' % (str(ticket_id),),
-                             urllib.urlencode({'into':into_id}))
+                             {'into':into_id})
         state = msg.split('\n')[2]
         if not hasattr(self, 'merge_successful_pattern'):
             self.merge_successful_pattern = re.compile('^Merge Successful$')

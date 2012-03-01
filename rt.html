@@ -17,11 +17,9 @@
 <font color="#ffffff" face="helvetica, arial"><big><strong>Modules</strong></big></font></td></tr>
     
 <tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
-<td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="StringIO.html">StringIO</a><br>
-<a href="os.html">os</a><br>
-</td><td width="25%" valign=top><a href="pycurl.html">pycurl</a><br>
-<a href="re.html">re</a><br>
-</td><td width="25%" valign=top><a href="urllib.html">urllib</a><br>
+<td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="os.html">os</a><br>
+</td><td width="25%" valign=top><a href="re.html">re</a><br>
+</td><td width="25%" valign=top><a href="requests.html">requests</a><br>
 </td><td width="25%" valign=top></td></tr></table></td></tr></table><p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#ee77aa">
@@ -57,7 +55,7 @@ therefore&nbsp;mainly&nbsp;sending&nbsp;and&nbsp;parsing&nbsp;special&nbsp;HTTP&
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;other&nbsp;credentials&nbsp;are&nbsp;provided<br>
 :keyword&nbsp;default_password:&nbsp;Default&nbsp;RT&nbsp;password</tt></dd></dl>
 
-<dl><dt><a name="Rt-comment"><strong>comment</strong></a>(self, ticket_id, text<font color="#909090">=''</font>, cc<font color="#909090">=''</font>, bcc<font color="#909090">=''</font>)</dt><dd><tt>Adds&nbsp;comment&nbsp;to&nbsp;the&nbsp;given&nbsp;ticket&nbsp;Without&nbsp;attachments&nbsp;now.<br>
+<dl><dt><a name="Rt-comment"><strong>comment</strong></a>(self, ticket_id, text<font color="#909090">=''</font>, cc<font color="#909090">=''</font>, bcc<font color="#909090">=''</font>, files<font color="#909090">=[]</font>)</dt><dd><tt>Adds&nbsp;comment&nbsp;to&nbsp;the&nbsp;given&nbsp;ticket.<br>
 &nbsp;<br>
 Form&nbsp;of&nbsp;message&nbsp;according&nbsp;to&nbsp;documentation::<br>
 &nbsp;<br>
@@ -69,6 +67,8 @@ Form&nbsp;of&nbsp;message&nbsp;according&nbsp;to&nbsp;documentation::<br>
 &nbsp;<br>
 :param&nbsp;ticket_id:&nbsp;ID&nbsp;of&nbsp;ticket&nbsp;to&nbsp;which&nbsp;comment&nbsp;belongs<br>
 :keyword&nbsp;text:&nbsp;Content&nbsp;of&nbsp;comment<br>
+:keyword&nbsp;files:&nbsp;List&nbsp;of&nbsp;pairs&nbsp;(filename,&nbsp;file-like&nbsp;object)&nbsp;describing<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;files&nbsp;to&nbsp;attach&nbsp;as&nbsp;multipart/form-data<br>
 :returns:&nbsp;``True``<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Operation&nbsp;was&nbsp;successful<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;``False``<br>
@@ -362,6 +362,17 @@ Start&nbsp;of&nbsp;the&nbsp;content...End&nbsp;of&nbsp;the&nbsp;content<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;``False``<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Logout&nbsp;failed&nbsp;(mainly&nbsp;because&nbsp;user&nbsp;was&nbsp;not&nbsp;login)</tt></dd></dl>
 
+<dl><dt><a name="Rt-merge_ticket"><strong>merge_ticket</strong></a>(self, ticket_id, into_id)</dt><dd><tt>Merge&nbsp;ticket&nbsp;into&nbsp;another&nbsp;(undocumented&nbsp;API&nbsp;feature).&nbsp;May&nbsp;not&nbsp;work<br>
+in&nbsp;4.x&nbsp;RT&nbsp;series.<br>
+&nbsp;<br>
+:param&nbsp;ticket_id:&nbsp;ID&nbsp;of&nbsp;ticket&nbsp;to&nbsp;be&nbsp;merged<br>
+:param&nbsp;into:&nbsp;ID&nbsp;of&nbsp;destination&nbsp;ticket<br>
+:returns:&nbsp;``True``<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Operation&nbsp;was&nbsp;successful<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;``False``<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Either&nbsp;origin&nbsp;or&nbsp;destination&nbsp;ticket&nbsp;does&nbsp;not<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;exist&nbsp;or&nbsp;user&nbsp;does&nbsp;not&nbsp;have&nbsp;ModifyTicket&nbsp;permission.</tt></dd></dl>
+
 <dl><dt><a name="Rt-new_correspondence"><strong>new_correspondence</strong></a>(self, queue<font color="#909090">='General'</font>)</dt><dd><tt>Obtains&nbsp;tickets&nbsp;changed&nbsp;by&nbsp;other&nbsp;users&nbsp;than&nbsp;the&nbsp;system&nbsp;one.<br>
 &nbsp;<br>
 :keyword&nbsp;queue:&nbsp;Queue&nbsp;where&nbsp;to&nbsp;search<br>
@@ -371,9 +382,8 @@ Start&nbsp;of&nbsp;the&nbsp;content...End&nbsp;of&nbsp;the&nbsp;content<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Each&nbsp;ticket&nbsp;is&nbsp;dictionary,&nbsp;the&nbsp;same&nbsp;as&nbsp;in<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:py:meth:`~<a href="#Rt">Rt</a>.get_ticket`.</tt></dd></dl>
 
-<dl><dt><a name="Rt-reply"><strong>reply</strong></a>(self, ticket_id, text<font color="#909090">=''</font>, cc<font color="#909090">=''</font>, bcc<font color="#909090">=''</font>)</dt><dd><tt>Sends&nbsp;email&nbsp;message&nbsp;to&nbsp;the&nbsp;contacts&nbsp;in&nbsp;``Requestors``&nbsp;field&nbsp;of<br>
-given&nbsp;ticket&nbsp;with&nbsp;subject&nbsp;as&nbsp;is&nbsp;set&nbsp;in&nbsp;``Subject``&nbsp;field.&nbsp;Without<br>
-attachments&nbsp;now.<br>
+<dl><dt><a name="Rt-reply"><strong>reply</strong></a>(self, ticket_id, text<font color="#909090">=''</font>, cc<font color="#909090">=''</font>, bcc<font color="#909090">=''</font>, files<font color="#909090">=[]</font>)</dt><dd><tt>Sends&nbsp;email&nbsp;message&nbsp;to&nbsp;the&nbsp;contacts&nbsp;in&nbsp;``Requestors``&nbsp;field&nbsp;of<br>
+given&nbsp;ticket&nbsp;with&nbsp;subject&nbsp;as&nbsp;is&nbsp;set&nbsp;in&nbsp;``Subject``&nbsp;field.<br>
 &nbsp;<br>
 Form&nbsp;of&nbsp;message&nbsp;according&nbsp;to&nbsp;documentation::<br>
 &nbsp;<br>
@@ -390,6 +400,8 @@ Form&nbsp;of&nbsp;message&nbsp;according&nbsp;to&nbsp;documentation::<br>
 :keyword&nbsp;text:&nbsp;Content&nbsp;of&nbsp;email&nbsp;message<br>
 :keyword&nbsp;cc:&nbsp;Carbon&nbsp;copy&nbsp;just&nbsp;for&nbsp;this&nbsp;reply<br>
 :keyword&nbsp;bcc:&nbsp;Blind&nbsp;carbon&nbsp;copy&nbsp;just&nbsp;for&nbsp;this&nbsp;reply<br>
+:keyword&nbsp;files:&nbsp;List&nbsp;of&nbsp;pairs&nbsp;(filename,&nbsp;file-like&nbsp;object)&nbsp;describing<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;files&nbsp;to&nbsp;attach&nbsp;as&nbsp;multipart/form-data<br>
 :returns:&nbsp;``True``<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Operation&nbsp;was&nbsp;successful<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;``False``<br>
