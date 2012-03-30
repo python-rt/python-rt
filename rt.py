@@ -1,7 +1,3 @@
-import re
-import os
-import requests
-
 """ Python library :term:`API` to Request Tracker's :term:`REST` interface.
 
 Implements functions needed by `Malicious Domain Manager
@@ -37,6 +33,12 @@ __authors__ = [
   '"Jiri Machalek" <jiri.machalek@nic.cz>'
 ]
 
+import re
+import os
+import requests
+
+DEFAULT_QUEUE = 'General'
+""" Default queue used by |mdm|. """
 
 class Rt:
     """ :term:`API` for Request Tracker according to
@@ -92,7 +94,7 @@ class Rt:
                         response = self.session.get(url)
                 else:
                     files_data = {}
-                    for i in range(len(files)):
+                    for i in xrange(len(files)):
                         files_data['attachment_%d' % (i+1)] = files[i]
                     response = self.session.post(url, data=post_data, files=files_data)
                 return response.content
@@ -125,9 +127,9 @@ class Rt:
                            during inicialization or call of this method.
         """
 
-        if (login != None) and (password != None):
+        if (login is not None) and (password is not None):
             login_data = {'user':login, 'pass':password}
-        elif (self.default_login != None) and (self.default_password != None):
+        elif (self.default_login is not None) and (self.default_password is not None):
             login_data = {'user':self.default_login, 'pass':self.default_password}
         else:
             raise Exception('Credentials required')
@@ -151,7 +153,7 @@ class Rt:
             self.login_result = None
         return ret
         
-    def new_correspondence(self, queue='General'):
+    def new_correspondence(self, queue=DEFAULT_QUEUE):
         """ Obtains tickets changed by other users than the system one.
         
         :keyword queue: Queue where to search
@@ -165,10 +167,10 @@ class Rt:
         msgs = msgs.split('\n--\n')
         items = []
         try:
-            for i in range(len(msgs)):
+            for i in xrange(len(msgs)):
                 pairs = {}
                 msg = msgs[i].split('\n')
-                for i in range(len(msg)):
+                for i in xrange(len(msg)):
                     colon = msg[i].find(': ')
                     if colon > 0:
                         pairs[msg[i][:colon].strip()] = msg[i][colon+1:].strip()
@@ -178,7 +180,7 @@ class Rt:
         except:
             return []
         
-    def last_updated(self, since, queue='General'):
+    def last_updated(self, since, queue=DEFAULT_QUEUE):
         """ Obtains tickets changed after given date.
         
         :param since: Date as string in form '2011-02-24'
@@ -193,10 +195,10 @@ class Rt:
         msgs = msgs.split('\n--\n')
         items = []
         try:
-            for i in range(len(msgs)):
+            for i in xrange(len(msgs)):
                 pairs = {}
                 msg = msgs[i].split('\n')
-                for i in range(len(msg)):
+                for i in xrange(len(msg)):
                     colon = msg[i].find(': ')
                     if colon > 0:
                         pairs[msg[i][:colon].strip()] = msg[i][colon+1:].strip()
@@ -206,7 +208,7 @@ class Rt:
         except:
             return []
 
-    def search(self, Queue='General', **kwargs):
+    def search(self, Queue=DEFAULT_QUEUE, **kwargs):
         """ Search arbitrary needles in given fields and queue.
         
         Example::
@@ -248,16 +250,16 @@ class Rt:
         try:
             if not hasattr(self, 'requestors_pattern'):
                 self.requestors_pattern = re.compile('Requestors:')
-            for i in range(len(msgs)):
+            for i in xrange(len(msgs)):
                 pairs = {}
                 msg = msgs[i].split('\n')
 
-                req_id = [id for id in range(len(msg)) if self.requestors_pattern.match(msg[id]) != None]
+                req_id = [id for id in xrange(len(msg)) if self.requestors_pattern.match(msg[id]) is not None]
                 if len(req_id)==0:
                     raise Exception('Non standard ticket.')
                 else:
                     req_id = req_id[0]
-                for i in range(req_id):
+                for i in xrange(req_id):
                     colon = msg[i].find(': ')
                     if colon > 0:
                         pairs[msg[i][:colon].strip()] = msg[i][colon+1:].strip()
@@ -267,7 +269,7 @@ class Rt:
                     requestors.append(msg[req_id][12:])
                     req_id += 1
                 pairs['Requestors'] = requestors
-                for i in range(req_id,len(msg)):
+                for i in xrange(req_id,len(msg)):
                     colon = msg[i].find(': ')
                     if colon > 0:
                         pairs[msg[i][:colon].strip()] = msg[i][colon+1:].strip()
@@ -315,12 +317,12 @@ class Rt:
 
             if not hasattr(self, 'requestors_pattern'):
                 self.requestors_pattern = re.compile('Requestors:')
-            req_id = [id for id in range(len(msg)) if self.requestors_pattern.match(msg[id]) != None]
+            req_id = [id for id in xrange(len(msg)) if self.requestors_pattern.match(msg[id]) is not None]
             if len(req_id)==0:
                 raise Exception('Non standard ticket.')
             else:
                 req_id = req_id[0]
-            for i in range(req_id):
+            for i in xrange(req_id):
                 colon = msg[i].find(': ')
                 if colon > 0:
                     pairs[msg[i][:colon].strip()] = msg[i][colon+1:].strip()
@@ -330,7 +332,7 @@ class Rt:
                 requestors.append(msg[req_id][12:])
                 req_id += 1
             pairs['Requestors'] = requestors
-            for i in range(req_id,len(msg)):
+            for i in xrange(req_id,len(msg)):
                 colon = msg[i].find(': ')
                 if colon > 0:
                     pairs[msg[i][:colon].strip()] = msg[i][colon+1:].strip()
@@ -338,7 +340,7 @@ class Rt:
         else:
             raise Exception('Connection error')
 
-    def create_ticket(self, Queue='General', **kwargs):
+    def create_ticket(self, Queue=DEFAULT_QUEUE, **kwargs):
         """ Create new ticket and set given parameters.
         
         Example of message sended to ``http://tracker.example.com/REST/1.0/ticket/new``::
@@ -387,7 +389,7 @@ class Rt:
         msg = self.__request('ticket/new', {'content':post_data})
         state = msg.split('\n')[2]
         res = re.search(' [0-9]+ ',state)
-        if res != None:
+        if res is not None:
             return int(state[res.start():res.end()])
         else:
             return -1
@@ -421,7 +423,7 @@ class Rt:
         state = msg.split('\n')[2]
         if not hasattr(self, 'update_pattern'):
             self.update_pattern = re.compile('^# Ticket [0-9]+ updated.$')
-        return self.update_pattern.match(state) != None
+        return self.update_pattern.match(state) is not None
 
     def get_history(self, ticket_id, transaction_id=None):
         """ Get set of history items.
@@ -441,7 +443,7 @@ class Rt:
                   of pairs (attachment_id,filename_with_size).
         :raises Exception: Unexpected format of returned message.
         """
-        if transaction_id == None:
+        if transaction_id is None:
             # We are using "long" format to get all history items at once.
             # Each history item is then separated by double dash.
             msgs = self.__request('ticket/%s/history?format=l' % (str(ticket_id),))
@@ -454,22 +456,22 @@ class Rt:
                 self.content_pattern = re.compile('Content:')
             if not hasattr(self, 'attachments_pattern'):
                 self.attachments_pattern = re.compile('Attachments:')
-            for i in range(len(msgs)):
+            for i in xrange(len(msgs)):
                 pairs = {}
                 msg = msgs[i].split('\n')
-                cont_id = [id for id in range(len(msg)) if self.content_pattern.match(msg[id]) != None]
+                cont_id = [id for id in xrange(len(msg)) if self.content_pattern.match(msg[id]) is not None]
                 if len(cont_id) == 0:
                     raise Exception('Unexpected history entry. \
                                      Missing line starting with `Content:`.')
                 else:
                     cont_id = cont_id[0]
-                atta_id = [id for id in range(len(msg)) if self.attachments_pattern.match(msg[id]) != None]
+                atta_id = [id for id in xrange(len(msg)) if self.attachments_pattern.match(msg[id]) is not None]
                 if len(atta_id) == 0:
                     raise Exception('Unexpected attachment part of history entry. \
                                      Missing line starting with `Attachements:`.')
                 else:
                     atta_id = atta_id[0]
-                for i in range(cont_id):
+                for i in xrange(cont_id):
                     colon = msg[i].find(': ')
                     if colon > 0:
                         pairs[msg[i][:colon].strip()] = msg[i][colon + 1:].strip()
@@ -479,12 +481,12 @@ class Rt:
                     content += '\n'+msg[cont_id][9:]
                     cont_id += 1
                 pairs['Content'] = content
-                for i in range(cont_id, atta_id):
+                for i in xrange(cont_id, atta_id):
                     colon = msg[i].find(': ')
                     if colon > 0:
                         pairs[msg[i][:colon].strip()] = msg[i][colon + 1:].strip()
                 attachments = []
-                for i in range(atta_id + 1, len(msg)):
+                for i in xrange(atta_id + 1, len(msg)):
                     colon = msg[i].find(': ')
                     if colon > 0:
                         attachments.append((int(msg[i][:colon].strip()),
@@ -636,7 +638,7 @@ Text: %s""" % (str(ticket_id), re.sub(r'\n', r'\n      ', text))}
         msg = msg.split('\n')[2:]
         if not hasattr(self, 'headers_pattern'):
             self.headers_pattern = re.compile('Headers:')
-        head_id = [id for id in range(len(msg)) if self.headers_pattern.match(msg[id]) != None]
+        head_id = [id for id in xrange(len(msg)) if self.headers_pattern.match(msg[id]) is not None]
         if len(head_id) == 0:
             raise Exception('Unexpected headers part of attachment entry. \
                              Missing line starting with `Headers:`.')
@@ -645,7 +647,7 @@ Text: %s""" % (str(ticket_id), re.sub(r'\n', r'\n      ', text))}
         msg[head_id] = re.sub(r'^Headers: (.*)$', r'\1', msg[head_id])
         if not hasattr(self, 'content_pattern'):
             self.content_pattern = re.compile('Content:')
-        cont_id = [id for id in range(len(msg)) if self.content_pattern.match(msg[id]) != None]
+        cont_id = [id for id in xrange(len(msg)) if self.content_pattern.match(msg[id]) is not None]
         
         if len(cont_id) == 0:
             raise Exception('Unexpected content part of attachment entry. \
@@ -653,18 +655,18 @@ Text: %s""" % (str(ticket_id), re.sub(r'\n', r'\n      ', text))}
         else:
             cont_id = cont_id[0]
         pairs = {}
-        for i in range(head_id):
+        for i in xrange(head_id):
             colon = msg[i].find(': ')
             if colon > 0:
                 pairs[msg[i][:colon].strip()] = msg[i][colon + 1:].strip()
         headers = {}
-        for i in range(head_id, cont_id):
+        for i in xrange(head_id, cont_id):
             colon = msg[i].find(': ')
             if colon > 0:
                 headers[msg[i][:colon].strip()] = msg[i][colon + 1:].strip()
         pairs['Headers'] = headers
         content = msg[cont_id][9:]
-        for i in range(cont_id+1, len(msg)):
+        for i in xrange(cont_id+1, len(msg)):
             if msg[i][:9] == (' ' * 9):
                 content += '\n' + msg[i][9:]
         pairs['Content'] = content
@@ -724,7 +726,7 @@ Text: %s""" % (str(ticket_id), re.sub(r'\n', r'\n      ', text))}
         if(self.__get_status_code(msg) == 200):
             pairs = {}
             msg = msg.split('\n')[2:]
-            for i in range(len(msg)):
+            for i in xrange(len(msg)):
                 colon = msg[i].find(': ')
                 if colon > 0:
                     pairs[msg[i][:colon].strip()] = msg[i][colon + 1:].strip()
@@ -756,7 +758,7 @@ Text: %s""" % (str(ticket_id), re.sub(r'\n', r'\n      ', text))}
         if(self.__get_status_code(msg) == 200):
             pairs = {}
             msg = msg.split('\n')[2:]
-            for i in range(len(msg)):
+            for i in xrange(len(msg)):
                 colon = msg[i].find(': ')
                 if colon > 0:
                     pairs[msg[i][:colon].strip()] = msg[i][colon + 1:].strip()
@@ -786,7 +788,7 @@ Text: %s""" % (str(ticket_id), re.sub(r'\n', r'\n      ', text))}
         if(self.__get_status_code(msg) == 200):
             pairs = {}
             msg = msg.split('\n')[2:]
-            for i in range(len(msg)):
+            for i in xrange(len(msg)):
                 colon = msg[i].find(': ')
                 if colon > 0:
                     pairs[msg[i][:colon].strip()] = msg[i][colon + 1:].strip()
@@ -817,7 +819,7 @@ Text: %s""" % (str(ticket_id), re.sub(r'\n', r'\n      ', text))}
         state = msg.split('\n')[2]
         if not hasattr(self, 'links_updated_pattern'):
             self.links_updated_pattern = re.compile('^# Links for ticket [0-9]+ updated.$')
-        return self.links_updated_pattern.match(state) != None
+        return self.links_updated_pattern.match(state) is not None
 
     def merge_ticket(self, ticket_id, into_id):
         """ Merge ticket into another (undocumented API feature). May not work
@@ -836,5 +838,5 @@ Text: %s""" % (str(ticket_id), re.sub(r'\n', r'\n      ', text))}
         state = msg.split('\n')[2]
         if not hasattr(self, 'merge_successful_pattern'):
             self.merge_successful_pattern = re.compile('^Merge Successful$')
-        return self.merge_successful_pattern.match(state) != None
+        return self.merge_successful_pattern.match(state) is not None
 
