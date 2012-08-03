@@ -94,10 +94,13 @@ class Rt:
                         response = self.session.get(url)
                 else:
                     files_data = {}
-                    for i in xrange(len(files)):
+                    for i in range(len(files)):
                         files_data['attachment_%d' % (i+1)] = files[i]
                     response = self.session.post(url, data=post_data, files=files_data)
-                return response.content
+                if isinstance(response.content, bytes):
+                    return bytes.decode(response.content)
+                else:
+                    return response.content
             else:
                 raise Exception('Log in required')
         except requests.exceptions.ConnectionError as e:
@@ -167,10 +170,10 @@ class Rt:
         msgs = msgs.split('\n--\n')
         items = []
         try:
-            for i in xrange(len(msgs)):
+            for i in range(len(msgs)):
                 pairs = {}
                 msg = msgs[i].split('\n')
-                for i in xrange(len(msg)):
+                for i in range(len(msg)):
                     colon = msg[i].find(': ')
                     if colon > 0:
                         pairs[msg[i][:colon].strip()] = msg[i][colon+1:].strip()
@@ -195,10 +198,10 @@ class Rt:
         msgs = msgs.split('\n--\n')
         items = []
         try:
-            for i in xrange(len(msgs)):
+            for i in range(len(msgs)):
                 pairs = {}
                 msg = msgs[i].split('\n')
-                for i in xrange(len(msg)):
+                for i in range(len(msg)):
                     colon = msg[i].find(': ')
                     if colon > 0:
                         pairs[msg[i][:colon].strip()] = msg[i][colon+1:].strip()
@@ -250,16 +253,16 @@ class Rt:
         try:
             if not hasattr(self, 'requestors_pattern'):
                 self.requestors_pattern = re.compile('Requestors:')
-            for i in xrange(len(msgs)):
+            for i in range(len(msgs)):
                 pairs = {}
                 msg = msgs[i].split('\n')
 
-                req_id = [id for id in xrange(len(msg)) if self.requestors_pattern.match(msg[id]) is not None]
+                req_id = [id for id in range(len(msg)) if self.requestors_pattern.match(msg[id]) is not None]
                 if len(req_id)==0:
                     raise Exception('Non standard ticket.')
                 else:
                     req_id = req_id[0]
-                for i in xrange(req_id):
+                for i in range(req_id):
                     colon = msg[i].find(': ')
                     if colon > 0:
                         pairs[msg[i][:colon].strip()] = msg[i][colon+1:].strip()
@@ -269,7 +272,7 @@ class Rt:
                     requestors.append(msg[req_id][12:])
                     req_id += 1
                 pairs['Requestors'] = requestors
-                for i in xrange(req_id,len(msg)):
+                for i in range(req_id,len(msg)):
                     colon = msg[i].find(': ')
                     if colon > 0:
                         pairs[msg[i][:colon].strip()] = msg[i][colon+1:].strip()
@@ -317,12 +320,12 @@ class Rt:
 
             if not hasattr(self, 'requestors_pattern'):
                 self.requestors_pattern = re.compile('Requestors:')
-            req_id = [id for id in xrange(len(msg)) if self.requestors_pattern.match(msg[id]) is not None]
+            req_id = [id for id in range(len(msg)) if self.requestors_pattern.match(msg[id]) is not None]
             if len(req_id)==0:
                 raise Exception('Non standard ticket.')
             else:
                 req_id = req_id[0]
-            for i in xrange(req_id):
+            for i in range(req_id):
                 colon = msg[i].find(': ')
                 if colon > 0:
                     pairs[msg[i][:colon].strip()] = msg[i][colon+1:].strip()
@@ -332,7 +335,7 @@ class Rt:
                 requestors.append(msg[req_id][12:])
                 req_id += 1
             pairs['Requestors'] = requestors
-            for i in xrange(req_id,len(msg)):
+            for i in range(req_id,len(msg)):
                 colon = msg[i].find(': ')
                 if colon > 0:
                     pairs[msg[i][:colon].strip()] = msg[i][colon+1:].strip()
@@ -456,22 +459,22 @@ class Rt:
                 self.content_pattern = re.compile('Content:')
             if not hasattr(self, 'attachments_pattern'):
                 self.attachments_pattern = re.compile('Attachments:')
-            for i in xrange(len(msgs)):
+            for i in range(len(msgs)):
                 pairs = {}
                 msg = msgs[i].split('\n')
-                cont_id = [id for id in xrange(len(msg)) if self.content_pattern.match(msg[id]) is not None]
+                cont_id = [id for id in range(len(msg)) if self.content_pattern.match(msg[id]) is not None]
                 if len(cont_id) == 0:
                     raise Exception('Unexpected history entry. \
                                      Missing line starting with `Content:`.')
                 else:
                     cont_id = cont_id[0]
-                atta_id = [id for id in xrange(len(msg)) if self.attachments_pattern.match(msg[id]) is not None]
+                atta_id = [id for id in range(len(msg)) if self.attachments_pattern.match(msg[id]) is not None]
                 if len(atta_id) == 0:
                     raise Exception('Unexpected attachment part of history entry. \
                                      Missing line starting with `Attachements:`.')
                 else:
                     atta_id = atta_id[0]
-                for i in xrange(cont_id):
+                for i in range(cont_id):
                     colon = msg[i].find(': ')
                     if colon > 0:
                         pairs[msg[i][:colon].strip()] = msg[i][colon + 1:].strip()
@@ -481,12 +484,12 @@ class Rt:
                     content += '\n'+msg[cont_id][9:]
                     cont_id += 1
                 pairs['Content'] = content
-                for i in xrange(cont_id, atta_id):
+                for i in range(cont_id, atta_id):
                     colon = msg[i].find(': ')
                     if colon > 0:
                         pairs[msg[i][:colon].strip()] = msg[i][colon + 1:].strip()
                 attachments = []
-                for i in xrange(atta_id + 1, len(msg)):
+                for i in range(atta_id + 1, len(msg)):
                     colon = msg[i].find(': ')
                     if colon > 0:
                         attachments.append((int(msg[i][:colon].strip()),
@@ -638,7 +641,7 @@ Text: %s""" % (str(ticket_id), re.sub(r'\n', r'\n      ', text))}
         msg = msg.split('\n')[2:]
         if not hasattr(self, 'headers_pattern'):
             self.headers_pattern = re.compile('Headers:')
-        head_id = [id for id in xrange(len(msg)) if self.headers_pattern.match(msg[id]) is not None]
+        head_id = [id for id in range(len(msg)) if self.headers_pattern.match(msg[id]) is not None]
         if len(head_id) == 0:
             raise Exception('Unexpected headers part of attachment entry. \
                              Missing line starting with `Headers:`.')
@@ -647,7 +650,7 @@ Text: %s""" % (str(ticket_id), re.sub(r'\n', r'\n      ', text))}
         msg[head_id] = re.sub(r'^Headers: (.*)$', r'\1', msg[head_id])
         if not hasattr(self, 'content_pattern'):
             self.content_pattern = re.compile('Content:')
-        cont_id = [id for id in xrange(len(msg)) if self.content_pattern.match(msg[id]) is not None]
+        cont_id = [id for id in range(len(msg)) if self.content_pattern.match(msg[id]) is not None]
         
         if len(cont_id) == 0:
             raise Exception('Unexpected content part of attachment entry. \
@@ -655,18 +658,18 @@ Text: %s""" % (str(ticket_id), re.sub(r'\n', r'\n      ', text))}
         else:
             cont_id = cont_id[0]
         pairs = {}
-        for i in xrange(head_id):
+        for i in range(head_id):
             colon = msg[i].find(': ')
             if colon > 0:
                 pairs[msg[i][:colon].strip()] = msg[i][colon + 1:].strip()
         headers = {}
-        for i in xrange(head_id, cont_id):
+        for i in range(head_id, cont_id):
             colon = msg[i].find(': ')
             if colon > 0:
                 headers[msg[i][:colon].strip()] = msg[i][colon + 1:].strip()
         pairs['Headers'] = headers
         content = msg[cont_id][9:]
-        for i in xrange(cont_id+1, len(msg)):
+        for i in range(cont_id+1, len(msg)):
             if msg[i][:9] == (' ' * 9):
                 content += '\n' + msg[i][9:]
         pairs['Content'] = content
@@ -690,7 +693,7 @@ Text: %s""" % (str(ticket_id), re.sub(r'\n', r'\n      ', text))}
         """
     
         msg = self.__request('ticket/%s/attachments/%s/content' % (str(ticket_id), str(attachment_id)))
-        return msg[re.search('\n', msg).start() + 2:-3]
+        return msg[re.search(b'\n', msg).start() + 2:-3]
 
     def get_user(self, user_id):
         """ Get user details.
@@ -726,7 +729,7 @@ Text: %s""" % (str(ticket_id), re.sub(r'\n', r'\n      ', text))}
         if(self.__get_status_code(msg) == 200):
             pairs = {}
             msg = msg.split('\n')[2:]
-            for i in xrange(len(msg)):
+            for i in range(len(msg)):
                 colon = msg[i].find(': ')
                 if colon > 0:
                     pairs[msg[i][:colon].strip()] = msg[i][colon + 1:].strip()
@@ -758,7 +761,7 @@ Text: %s""" % (str(ticket_id), re.sub(r'\n', r'\n      ', text))}
         if(self.__get_status_code(msg) == 200):
             pairs = {}
             msg = msg.split('\n')[2:]
-            for i in xrange(len(msg)):
+            for i in range(len(msg)):
                 colon = msg[i].find(': ')
                 if colon > 0:
                     pairs[msg[i][:colon].strip()] = msg[i][colon + 1:].strip()
@@ -788,7 +791,7 @@ Text: %s""" % (str(ticket_id), re.sub(r'\n', r'\n      ', text))}
         if(self.__get_status_code(msg) == 200):
             pairs = {}
             msg = msg.split('\n')[2:]
-            for i in xrange(len(msg)):
+            for i in range(len(msg)):
                 colon = msg[i].find(': ')
                 if colon > 0:
                     pairs[msg[i][:colon].strip()] = msg[i][colon + 1:].strip()
