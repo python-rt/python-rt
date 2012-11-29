@@ -16,7 +16,7 @@ setup(name='rt',
     license='GNU General Public License (GPL)',
     author='Jiri Machalek',
     author_email='jiri.machalek@nic.cz',
-    url='https://github.com/machalekj/rt',
+    url='https://git.nic.cz/redmine/projects/python-rt',
     install_requires=['requests'],
     py_modules=['rt'],
     )
