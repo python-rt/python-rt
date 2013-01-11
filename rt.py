@@ -1,16 +1,25 @@
-""" Python library :term:`API` to Request Tracker's :term:`REST` interface.
+"""
+======================================================
+ Rt - Python interface to Request Tracker :term:`API`
+======================================================
 
-Implements functions needed by `Malicious Domain Manager
-<https://git.nic.cz/redmine/projects/mdm>`_, but is not directly connected with
-it, so this library can also be use separatly.
+Description of Request Tracker :term:`REST` :term:`API`:
+http://requesttracker.wikia.com/wiki/REST
 
-Description of Request Tracker REST API: http://requesttracker.wikia.com/wiki/REST
+Provided functionality:
 
-Provided functionality: login to RT, logout, getting, creating and editing
-tickets, getting attachments, getting history of ticket, replying to ticket
-requestors, adding comments, getting and editing ticket links, searching,
-providing lists of last updated tickets and tickets with new correspondence
-and merging tickets.
+* login to RT
+* logout
+* getting, creating and editing tickets
+* getting attachments
+* getting history of ticket
+* replying to ticket requestors
+* adding comments
+* getting and editing ticket links
+* searching
+* providing lists of last updated tickets
+* providing tickets with new correspondence
+* merging tickets
 """
 
 __license__ = """ Copyright (C) 2012 CZ.NIC, z.s.p.o.
@@ -38,13 +47,13 @@ import os
 import requests
 
 DEFAULT_QUEUE = 'General'
-""" Default queue used by |mdm|. """
+""" Default queue used. """
 
 class Rt:
     """ :term:`API` for Request Tracker according to
-    http://requesttracker.wikia.com/wiki/REST. Interface is based on REST
-    architecture, which is based on HTTP/1.1 protocol. This library is
-    therefore mainly sending and parsing special HTTP messages.
+    http://requesttracker.wikia.com/wiki/REST. Interface is based on
+    :term:`REST` architecture, which is based on HTTP/1.1 protocol. This module
+    is therefore mainly sending and parsing special HTTP messages.
     
     .. note:: Use only ASCII LF as newline (``\\n``). Time is returned in UTC.
               All strings returned are encoded in UTF-8 and the same is
