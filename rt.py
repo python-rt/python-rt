@@ -60,7 +60,7 @@ class Rt:
               expected as input for string values.
     """
 
-    def __init__(self, url, default_login=None, default_password=None):
+    def __init__(self, url, default_login=None, default_password=None, proxy=None):
         """ API initialization.
         
         :keyword url: Base URL for Request Tracker API.
@@ -68,11 +68,17 @@ class Rt:
         :keyword default_login: Default RT login used by self.login if no
                                 other credentials are provided
         :keyword default_password: Default RT password
+        :keyword proxy: Proxy server (string with http://user:password@host/ syntax)
         """
         self.url = url
         self.default_login = default_login
         self.default_password = default_password
-        self.session = requests.session()
+        if proxy is not None:
+            if url.lower().startswith("https://"):
+                proxy = {"https": proxy}
+            else:
+                proxy = {"http": proxy}
+        self.session = requests.session(proxies=proxy)
         self.login_result = None
 
     def __request(self, selector, post_data={}, files=[], without_login=False):
