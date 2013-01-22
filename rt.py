@@ -782,7 +782,7 @@ Text: %s""" % (str(ticket_id), re.sub(r'\n', r'\n      ', text))}
         """ Gets the ticket links for a single ticket.
         
         :param ticket_id: ticket ID
-        :returns: Links as strings in dictionary with these keys
+        :returns: Links as lists of strings in dictionary with these keys
                   (just those which are defined):
 
                       * id
@@ -800,10 +800,22 @@ Text: %s""" % (str(ticket_id), re.sub(r'\n', r'\n      ', text))}
         if(self.__get_status_code(msg) == 200):
             pairs = {}
             msg = msg.split('\n')[2:]
-            for i in range(len(msg)):
+            i = 0
+            while i < len(msg):
                 colon = msg[i].find(': ')
                 if colon > 0:
-                    pairs[msg[i][:colon].strip()] = msg[i][colon + 1:].strip()
+                    key = msg[i][:colon]
+                    links = [msg[i][colon + 1:].strip()]
+                    j = i + 1
+                    pad = len(key) + 2
+                    # loop over next lines for the same key 
+                    while (j < len(msg)) and msg[j].startswith(' ' * pad):
+                        links[-1] = links[-1][:-1] # remove trailing comma from previous item
+                        links.append(msg[j][pad:].strip())
+                        j += 1
+                    pairs[key] = links
+                    i = j - 1
+                i += 1
             return pairs
         else:
             raise Exception('Connection error')
