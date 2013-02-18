@@ -563,6 +563,17 @@ Bcc: %s"""%(str(ticket_id), re.sub(r'\n', r'\n      ', text), cc, bcc)}
                   second line starts with the same indentation as first
             Attachment: an attachment filename/path
 
+        Example::
+            
+            >>> tracker = Rt('http://tracker.example.com/REST/1.0/', 'rt-username', 'top-secret')
+            >>> attachment_name = sys.argv[1]
+            >>> message_text = ' '.join(sys.argv[2:])
+            >>> ret = tracker.comment(ticket_id, text=message_text,
+            ... files=[(attachment_name, open(attachment_name, 'rb'))])
+            >>> if not ret:
+            ...     print('Error: could not send attachment', file=sys.stderr)
+            ...     exit(1)
+
         :param ticket_id: ID of ticket to which comment belongs
         :keyword text: Content of comment
         :keyword files: List of pairs (filename, file-like object) describing
