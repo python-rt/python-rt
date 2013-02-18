@@ -10,7 +10,7 @@ here = os.path.abspath(os.path.dirname(__file__))
 README = open(os.path.join(here, 'README')).read()
 
 setup(name='rt',
-    version='1.0.1',
+    version='1.0.2',
     description='Python interface to Request Tracker API',
     long_description=README,
     license='GNU General Public License (GPL)',
