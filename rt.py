@@ -78,7 +78,8 @@ class Rt:
                 proxy = {"https": proxy}
             else:
                 proxy = {"http": proxy}
-        self.session = requests.session(proxies=proxy)
+        self.session = requests.session()
+        self.session.proxies = proxy
         self.login_result = None
 
     def __request(self, selector, post_data={}, files=[], without_login=False):
