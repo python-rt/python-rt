@@ -60,7 +60,7 @@ class Rt:
               expected as input for string values.
     """
 
-    def __init__(self, url, default_login=None, default_password=None, proxy=None):
+    def __init__(self, url, default_login=None, default_password=None, proxy=None, default_queue=DEFAULT_QUEUE):
         """ API initialization.
         
         :keyword url: Base URL for Request Tracker API.
@@ -69,6 +69,7 @@ class Rt:
                                 other credentials are provided
         :keyword default_password: Default RT password
         :keyword proxy: Proxy server (string with http://user:password@host/ syntax)
+        :keyword default_queue: Default RT queue
         """
         self.url = url
         self.default_login = default_login
@@ -80,6 +81,7 @@ class Rt:
                 proxy = {"http": proxy}
         self.session = requests.session()
         self.session.proxies = proxy
+        self.default_queue = default_queue
         self.login_result = None
 
     def __request(self, selector, post_data={}, files=[], without_login=False):
@@ -114,7 +116,7 @@ class Rt:
                         files_data['attachment_%d' % (i+1)] = files[i]
                     response = self.session.post(url, data=post_data, files=files_data)
                 if isinstance(response.content, bytes):
-                    return bytes.decode(response.content)
+                    return response.content.decode('utf-8')
                 else:
                     return response.content
             else:
@@ -172,7 +174,7 @@ class Rt:
             self.login_result = None
         return ret
         
-    def new_correspondence(self, queue=DEFAULT_QUEUE):
+    def new_correspondence(self, queue=None):
         """ Obtains tickets changed by other users than the system one.
         
         :keyword queue: Queue where to search
@@ -182,7 +184,7 @@ class Rt:
                   Each ticket is dictionary, the same as in
                   :py:meth:`~Rt.get_ticket`.
         """
-        msgs = self.__request('search/ticket?query=Queue=\'%s\'+AND+(LastUpdatedBy!=\'%s\')&orderby=-LastUpdated&format=l' % (queue, self.default_login))
+        msgs = self.__request('search/ticket?query=Queue=\'%s\'+AND+(LastUpdatedBy!=\'%s\')&orderby=-LastUpdated&format=l' % (queue or self.default_queue, self.default_login))
         msgs = msgs.split('\n--\n')
         items = []
         try:
@@ -199,7 +201,7 @@ class Rt:
         except:
             return []
         
-    def last_updated(self, since, queue=DEFAULT_QUEUE):
+    def last_updated(self, since, queue=None):
         """ Obtains tickets changed after given date.
         
         :param since: Date as string in form '2011-02-24'
@@ -210,7 +212,7 @@ class Rt:
                   Each tickets is dictionary, the same as in
                   :py:meth:`~Rt.get_ticket`.
         """
-        msgs = self.__request('search/ticket?query=(Queue=\'%s\')+AND+(LastUpdatedBy!=\'%s\')+AND+(LastUpdated>\'%s\')&orderby=-LastUpdated&format=l' % (queue, self.default_login, since))
+        msgs = self.__request('search/ticket?query=(Queue=\'%s\')+AND+(LastUpdatedBy!=\'%s\')+AND+(LastUpdated>\'%s\')&orderby=-LastUpdated&format=l' % (queue or self.default_queue, self.default_login, since))
         msgs = msgs.split('\n--\n')
         items = []
         try:
@@ -227,7 +229,7 @@ class Rt:
         except:
             return []
 
-    def search(self, Queue=DEFAULT_QUEUE, **kwargs):
+    def search(self, Queue=None, **kwargs):
         """ Search arbitrary needles in given fields and queue.
         
         Example::
@@ -255,7 +257,7 @@ class Rt:
                   as in :py:meth:`~Rt.get_ticket`.
         :raises Exception: Unexpected format of returned message.
         """
-        query = 'search/ticket?query=(Queue=\'%s\')' % (Queue,)
+        query = 'search/ticket?query=(Queue=\'%s\')' % (Queue or self.default_queue,)
         for key in kwargs:
             if key[:3] != 'CF_':
                 query += "+AND+(%s=\'%s\')" % (key, kwargs[key])
@@ -359,7 +361,7 @@ class Rt:
         else:
             raise Exception('Connection error')
 
-    def create_ticket(self, Queue=DEFAULT_QUEUE, **kwargs):
+    def create_ticket(self, Queue=None, **kwargs):
         """ Create new ticket and set given parameters.
         
         Example of message sended to ``http://tracker.example.com/REST/1.0/ticket/new``::
@@ -399,7 +401,7 @@ class Rt:
         :returns: ID of new ticket or ``-1``, if creating failed
         """
 
-        post_data = 'id: ticket/new\nQueue: %s\n'%(Queue)
+        post_data = 'id: ticket/new\nQueue: %s\n' % (Queue or self.default_queue,)
         for key in kwargs:
             if key[:3] != 'CF_':
                 post_data += "%s: %s\n"%(key, kwargs[key])
