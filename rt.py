@@ -184,22 +184,7 @@ class Rt:
                   Each ticket is dictionary, the same as in
                   :py:meth:`~Rt.get_ticket`.
         """
-        msgs = self.__request('search/ticket?query=Queue=\'%s\'+AND+(LastUpdatedBy!=\'%s\')&orderby=-LastUpdated&format=l' % (queue or self.default_queue, self.default_login))
-        msgs = msgs.split('\n--\n')
-        items = []
-        try:
-            for i in range(len(msgs)):
-                pairs = {}
-                msg = msgs[i].split('\n')
-                for i in range(len(msg)):
-                    colon = msg[i].find(': ')
-                    if colon > 0:
-                        pairs[msg[i][:colon].strip()] = msg[i][colon+1:].strip()
-                if len(pairs) > 0:
-                    items.append(pairs)    
-            return items
-        except:
-            return []
+        return self.search(Queue=queue, order='-LastUpdated', LastUpdatedBy__notexact=self.default_login)
         
     def last_updated(self, since, queue=None):
         """ Obtains tickets changed after given date.
@@ -212,33 +197,21 @@ class Rt:
                   Each tickets is dictionary, the same as in
                   :py:meth:`~Rt.get_ticket`.
         """
-        msgs = self.__request('search/ticket?query=(Queue=\'%s\')+AND+(LastUpdatedBy!=\'%s\')+AND+(LastUpdated>\'%s\')&orderby=-LastUpdated&format=l' % (queue or self.default_queue, self.default_login, since))
-        msgs = msgs.split('\n--\n')
-        items = []
-        try:
-            for i in range(len(msgs)):
-                pairs = {}
-                msg = msgs[i].split('\n')
-                for i in range(len(msg)):
-                    colon = msg[i].find(': ')
-                    if colon > 0:
-                        pairs[msg[i][:colon].strip()] = msg[i][colon+1:].strip()
-                if len(pairs)>0:
-                    items.append(pairs)    
-            return items
-        except:
-            return []
+        return self.search(Queue=queue, order='-LastUpdated', LastUpdatedBy__notexact=self.default_login, LastUpdated__gt=since)
 
-    def search(self, Queue=None, **kwargs):
+    def search(self, Queue=None, order=None, **kwargs):
         """ Search arbitrary needles in given fields and queue.
         
         Example::
             
             >>> tracker = Rt('http://tracker.example.com/REST/1.0/', 'rt-username', 'top-secret')
             >>> tracker.login()
-            >>> tickets = tracker.search(CF_Domain='example.com')
+            >>> tickets = tracker.search(CF_Domain='example.com', Subject__like='warning')
 
         :keyword Queue: Queue where to search
+        :keyword order: Name of field sorting result list, for descending
+                        order put - before the field name. E.g. -Created
+                        will pu the newest tickets at the beginning
         :keyword kwargs: Other arguments possible to set:
                          
                          Requestors, Subject, Cc, AdminCc, Owner, Status,
@@ -246,23 +219,48 @@ class Rt:
                          TimeEstimated, Starts, Due, Text,... (according to RT
                          fields)
 
-                         Setting value for this arguments constrain search
-                         results for only tickets exactly matching all
-                         arguments.
-
                          Custom fields CF.{<CustomFieldName>} could be set
                          with keywords CF_CustomFieldName.
+
+                         To alter lookup operators you can append one of the
+                         following endings to each keyword:
+
+                         __exact    for operator = (default)
+                         __notexact for operator !=
+                         __gt       for operator >
+                         __lt       for operator <
+                         __like     for operator LIKE
+                         __notlike  for operator NOT LIKE
         
+                         Setting values to keywords constrain search
+                         result to the tickets satisfying all of them.
+
         :returns: List of matching tickets. Each ticket is the same dictionary
                   as in :py:meth:`~Rt.get_ticket`.
         :raises Exception: Unexpected format of returned message.
         """
+        operators_map = {
+            'gt':'>',
+            'lt':'<',
+            'exact':'=',
+            'notexact':'!=',
+            'like':' LIKE ',
+            'notlike':' NOT LIKE '
+            }
+
         query = 'search/ticket?query=(Queue=\'%s\')' % (Queue or self.default_queue,)
-        for key in kwargs:
+        for key, value in kwargs.iteritems():
+            op = '='
+            key_parts = key.split('__')
+            if len(key_parts) > 1:
+                key = '__'.join(key_parts[:-1])
+                op = operators_map.get(key_parts[-1], '=')
             if key[:3] != 'CF_':
-                query += "+AND+(%s=\'%s\')" % (key, kwargs[key])
+                query += "+AND+(%s%s\'%s\')" % (key, op, value)
             else:
-                query += "+AND+(CF.{%s}=\'%s\')" % (key[3:], kwargs[key])
+                query += "+AND+(CF.{%s}%s\'%s\')" % (key[3:], op, value)
+        if order:
+            query += "&orderby=" + order
         query += "&format=l"
 
         msgs = self.__request(query)
@@ -290,7 +288,7 @@ class Rt:
                     requestors.append(msg[req_id][12:])
                     req_id += 1
                 pairs['Requestors'] = requestors
-                for i in range(req_id,len(msg)):
+                for i in range(req_id, len(msg)):
                     colon = msg[i].find(': ')
                     if colon > 0:
                         pairs[msg[i][:colon].strip()] = msg[i][colon+1:].strip()
