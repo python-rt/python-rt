@@ -115,7 +115,7 @@ class Rt:
                     for i in range(len(files)):
                         files_data['attachment_%d' % (i+1)] = files[i]
                     response = self.session.post(url, data=post_data, files=files_data)
-                if isinstance(response.content, bytes):
+                if response.encoding and (response.encoding.lower() == 'utf-8'):
                     return response.content.decode('utf-8')
                 else:
                     return response.content
