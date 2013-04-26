@@ -1,3 +1,8 @@
+v1.0.5, 2013-04-26
+- fixed decoding of utf-8 only when needed
+- updated search function to support various
+  lookup operators and sorting
+
 v1.0.4, 2013-03-21
 - default queue added to init parameters
 
