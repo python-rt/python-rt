@@ -49,12 +49,9 @@ in ReStructuredText. You can also generate HTML documentation by running
 
 OFFICIAL SITE
 =============
-This module was developed as a part of Malicious Domain Manager (MDM),
-but can be used separately and also has its own Redmine project. We will
-make the best effort to keep the changes synchronized in both projects.
-
-python-rt module
+Project site and issue tracking:
     https://gitlab.labs.nic.cz/labs/python-rt
-Malicious Domain Manager
-    https://gitlab.labs.nic.cz/labs/mdm
+
+Git repository:
+    git://git.nic.cz/python-rt.git
 
