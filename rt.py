@@ -45,9 +45,46 @@ __authors__ = [
 import re
 import os
 import requests
+from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 
 DEFAULT_QUEUE = 'General'
 """ Default queue used. """
+
+class AuthorizationError(Exception):
+    """ Exception raised when module cannot access :term:`API` due to invalid
+    or missing credentials. """
+
+    pass
+
+class NotAllowed(Exception):
+    """ Exception raised when request cannot be finished due to
+    insufficient privileges. """
+
+    pass
+
+class UnexpectedResponse(Exception):
+    """ Exception raised when unexpected HTTP code is received. """
+
+    pass
+
+class UnexpectedMessageFormat(Exception):
+    """ Exception raised when response has bad status code (not the HTTP code,
+    but code in the first line of the body as 200 in `RT/4.0.7 200 Ok`)
+    or message parsing fails because of unexpected format. """
+
+    pass
+
+class ConnectionError(Exception):
+    """ Encapsulation of various exceptions indicating network problems. """
+
+    def __init__(self, message, cause):
+        """ Initialization of exception extented by cause parameter.
+        
+        :keyword message: Exception details
+        :keyword cause: Cause exception
+        """
+        super(ConnectionError, self).__init__(message + u' (Caused by ' + repr(cause) + ")")
+        self.cause = cause
 
 class Rt:
     """ :term:`API` for Request Tracker according to
@@ -60,7 +97,21 @@ class Rt:
               expected as input for string values.
     """
 
-    def __init__(self, url, default_login=None, default_password=None, proxy=None, default_queue=DEFAULT_QUEUE):
+    RE_PATTERNS = {
+        'not_allowed_pattern': re.compile('^# You are not allowed to'),
+        'credentials_required_pattern': re.compile('.* 401 Credentials required$'),
+        'requestors_pattern': re.compile('Requestors:'),
+        'update_pattern': re.compile('^# Ticket [0-9]+ updated.$'),
+        'content_pattern': re.compile('Content:'),
+        'attachments_pattern': re.compile('Attachments:'),
+        'headers_pattern': re.compile('Headers:'),
+        'links_updated_pattern': re.compile('^# Links for ticket [0-9]+ updated.$'),
+        'merge_successful_pattern': re.compile('^Merge Successful$'),
+    }
+
+    def __init__(self, url, default_login=None, default_password=None, proxy=None,
+                 default_queue=DEFAULT_QUEUE, basic_auth=None, digest_auth=None,
+                 skip_login=False):
         """ API initialization.
         
         :keyword url: Base URL for Request Tracker API.
@@ -70,19 +121,34 @@ class Rt:
         :keyword default_password: Default RT password
         :keyword proxy: Proxy server (string with http://user:password@host/ syntax)
         :keyword default_queue: Default RT queue
+        :keyword basic_auth: HTTP Basic authentication credentials, tuple (UN, PW)
+        :keyword digest_auth: HTTP Digest authentication credentials, tuple (UN, PW)
+        :keyword skip_login: Set this option True when HTTP Basic authentication
+                             credentials for RT are in .netrc file. You do not
+                             need to call login, because it is managed by
+                             requests library instantly.
         """
         self.url = url
         self.default_login = default_login
         self.default_password = default_password
+        self.default_queue = default_queue
+        self.login_result = None
+        self.session = requests.session()
         if proxy is not None:
             if url.lower().startswith("https://"):
                 proxy = {"https": proxy}
             else:
                 proxy = {"http": proxy}
-        self.session = requests.session()
         self.session.proxies = proxy
-        self.default_queue = default_queue
-        self.login_result = None
+        if basic_auth:
+            self.session.auth = HTTPBasicAuth(*basic_auth)
+        if digest_auth:
+            self.session.auth = HTTPDigestAuth(*digest_auth)
+        if basic_auth or digest_auth or skip_login:
+            # Assume valid credentials, because we do not need to call login()
+            # explicitly with basic or digest authentication (or if this is
+            # assured, that we are login in instantly)
+            self.login_result = True
 
     def __request(self, selector, post_data={}, files=[], without_login=False):
         """ General request for :term:`API`.
@@ -99,8 +165,9 @@ class Rt:
         :returns: Requested messsage including state line in form
                   ``RT/3.8.7 200 Ok\\n``
         :rtype: string
-        :raises Exception: In case that request is called without previous
-                           login or any other connection error.
+        :raises AuthorizationError: In case that request is called without previous
+                                    login or login attempt failed.
+        :raises ConnectionError: In case of connection error.
         """
         try:
             url = str(os.path.join(self.url, selector))
@@ -115,25 +182,55 @@ class Rt:
                     for i in range(len(files)):
                         files_data['attachment_%d' % (i+1)] = files[i]
                     response = self.session.post(url, data=post_data, files=files_data)
+                if response.status_code == 401:
+                    raise AuthorizationError('Server could not verify that you are authorized to access the requested document.')
+                if response.status_code != 200:
+                    raise UnexpectedResponse('Received status code %d instead of 200.' % response.status_code)
                 if response.encoding and (response.encoding.lower() == 'utf-8'):
-                    return response.content.decode('utf-8')
+                    result = response.content.decode('utf-8')
                 else:
-                    return response.content
+                    result = response.content
+                self.__check_response(result)
+                return result
             else:
-                raise Exception('Log in required')
+                raise AuthorizationError('First login by calling method `login`.')
         except requests.exceptions.ConnectionError as e:
-            raise Exception(e.args[0].message)
+            raise ConnectionError("Connection error", e)
     
     def __get_status_code(self, msg):
         """ Select status code given message.
 
+        :keyword msg: Result message
         :returns: Status code
         :rtype: int
         """
         return int(msg.split('\n')[0].split(' ')[1])
 
+    def __check_response(self, msg):
+        """ Search general errors in server response and raise exceptions when found.
+
+        :keyword msg: Result message
+        :raises NotAllowed: Exception raised when operation was called with
+                            insufficient privileges
+        :raises AuthorizationError: Credentials are invalid or missing
+        """
+        if not isinstance(msg, list):
+            msg = msg.split("\n")
+        if (len(msg) > 2) and self.RE_PATTERNS['not_allowed_pattern'].match(msg[2]):
+            raise NotAllowed(msg[2][2:])
+        if self.RE_PATTERNS['credentials_required_pattern'].match(msg[0]):
+            raise AuthorizationError('Credentials required.')
+
     def login(self, login=None, password=None):
         """ Login with default or supplied credetials.
+        
+        .. note::
+            
+            Calling this method is not necessary when HTTP basic or HTTP
+            digest_auth authentication is used and RT accepts it as external
+            authentication method, because the login in this case is done
+            transparently by requests module. Anyway this method can be useful
+            to check whether given credentials are valid or not.
         
         :keyword login: Username used for RT, if not supplied together with
                         *password* :py:attr:`~Rt.default_login` and
@@ -144,20 +241,27 @@ class Rt:
                       Successful login
                   ``False``
                       Otherwise
-        :raises Exception: In case that credentials are not supplied neither
-                           during inicialization or call of this method.
+        :raises AuthorizationError: In case that credentials are not supplied neither
+                                    during inicialization or call of this method.
         """
 
         if (login is not None) and (password is not None):
             login_data = {'user':login, 'pass':password}
         elif (self.default_login is not None) and (self.default_password is not None):
             login_data = {'user':self.default_login, 'pass':self.default_password}
+        elif self.session.auth:
+            login_data = None
         else:
-            raise Exception('Credentials required')
-
-        self.login_result = self.__get_status_code(self.__request('',
-                                                                  post_data=login_data,
-                                                                  without_login=True)) == 200
+            raise AuthorizationError('Credentials required, fill login and password.')
+        try:
+            self.login_result = self.__get_status_code(self.__request('',
+                                                                      post_data=login_data,
+                                                                      without_login=True)) == 200
+        except AuthorizationError:
+            # This happens when HTTP Basic or Digest authentication fails, but
+            # we will not raise the error but just return False to indicate
+            # invalid credentials
+            return False
         return self.login_result
 
     def logout(self):
@@ -237,7 +341,7 @@ class Rt:
 
         :returns: List of matching tickets. Each ticket is the same dictionary
                   as in :py:meth:`~Rt.get_ticket`.
-        :raises Exception: Unexpected format of returned message.
+        :raises UnexpectedMessageFormat: Unexpected format of returned message.
         """
         operators_map = {
             'gt':'>',
@@ -267,15 +371,13 @@ class Rt:
         msgs = msgs.split('\n--\n')
         items = []
         try:
-            if not hasattr(self, 'requestors_pattern'):
-                self.requestors_pattern = re.compile('Requestors:')
             for i in range(len(msgs)):
                 pairs = {}
                 msg = msgs[i].split('\n')
 
-                req_id = [id for id in range(len(msg)) if self.requestors_pattern.match(msg[id]) is not None]
+                req_id = [id for id in range(len(msg)) if self.RE_PATTERNS['requestors_pattern'].match(msg[id]) is not None]
                 if len(req_id)==0:
-                    raise Exception('Non standard ticket.')
+                    raise UnexpectedMessageFormat('Missing line starting with `Requestors:`.')
                 else:
                     req_id = req_id[0]
                 for i in range(req_id):
@@ -327,18 +429,17 @@ class Rt:
                       * TimeEstimated
                       * TimeWorked
                       * TimeLeft
-        :raises Exception: Unexpected format of returned message.
+        :raises UnexpectedMessageFormat: Unexpected format of returned message.
         """
         msg = self.__request('ticket/%s/show' % (str(ticket_id),))
-        if(self.__get_status_code(msg) == 200):
+        status_code = self.__get_status_code(msg)
+        if(status_code == 200):
             pairs = {}
             msg = msg.split('\n')
-
-            if not hasattr(self, 'requestors_pattern'):
-                self.requestors_pattern = re.compile('Requestors:')
-            req_id = [id for id in range(len(msg)) if self.requestors_pattern.match(msg[id]) is not None]
+            
+            req_id = [id for id in range(len(msg)) if self.RE_PATTERNS['requestors_pattern'].match(msg[id]) is not None]
             if len(req_id)==0:
-                raise Exception('Non standard ticket.')
+                raise UnexpectedMessageFormat('Missing line starting with `Requestors:`.')
             else:
                 req_id = req_id[0]
             for i in range(req_id):
@@ -357,7 +458,7 @@ class Rt:
                     pairs[msg[i][:colon].strip()] = msg[i][colon+1:].strip()
             return pairs
         else:
-            raise Exception('Connection error')
+            raise UnexpectedMessageFormat('Received status code is %d instead of 200.' % status_code)
 
     def create_ticket(self, Queue=None, **kwargs):
         """ Create new ticket and set given parameters.
@@ -440,9 +541,7 @@ class Rt:
                 post_data += "CF.{%s}: %s\n" % (key[3:], kwargs[key])
         msg = self.__request('ticket/%s/edit' % (str(ticket_id)), {'content':post_data})
         state = msg.split('\n')[2]
-        if not hasattr(self, 'update_pattern'):
-            self.update_pattern = re.compile('^# Ticket [0-9]+ updated.$')
-        return self.update_pattern.match(state) is not None
+        return self.RE_PATTERNS['update_pattern'].match(state) is not None
 
     def get_history(self, ticket_id, transaction_id=None):
         """ Get set of history items.
@@ -460,7 +559,7 @@ class Rt:
 
                   All these fields are strings, just 'Attachments' holds list
                   of pairs (attachment_id,filename_with_size).
-        :raises Exception: Unexpected format of returned message.
+        :raises UnexpectedMessageFormat: Unexpected format of returned message.
         """
         if transaction_id is None:
             # We are using "long" format to get all history items at once.
@@ -471,23 +570,19 @@ class Rt:
         msgs = msgs.split('\n--\n')
         items = []
         try:
-            if not hasattr(self, 'content_pattern'):
-                self.content_pattern = re.compile('Content:')
-            if not hasattr(self, 'attachments_pattern'):
-                self.attachments_pattern = re.compile('Attachments:')
             for i in range(len(msgs)):
                 pairs = {}
                 msg = msgs[i].split('\n')
-                cont_id = [id for id in range(len(msg)) if self.content_pattern.match(msg[id]) is not None]
+                cont_id = [id for id in range(len(msg)) if self.RE_PATTERNS['content_pattern'].match(msg[id]) is not None]
                 if len(cont_id) == 0:
-                    raise Exception('Unexpected history entry. \
-                                     Missing line starting with `Content:`.')
+                    raise UnexpectedMessageFormat('Unexpected history entry. \
+                                                   Missing line starting with `Content:`.')
                 else:
                     cont_id = cont_id[0]
-                atta_id = [id for id in range(len(msg)) if self.attachments_pattern.match(msg[id]) is not None]
+                atta_id = [id for id in range(len(msg)) if self.RE_PATTERNS['attachments_pattern'].match(msg[id]) is not None]
                 if len(atta_id) == 0:
-                    raise Exception('Unexpected attachment part of history entry. \
-                                     Missing line starting with `Attachements:`.')
+                    raise UnexpectedMessageFormat('Unexpected attachment part of history entry. \
+                                                   Missing line starting with `Attachements:`.')
                 else:
                     atta_id = atta_id[0]
                 for i in range(cont_id):
@@ -662,26 +757,22 @@ Text: %s""" % (str(ticket_id), re.sub(r'\n', r'\n      ', text))}
 
                   Set of headers available depends on mailservers sending
                   emails not on Request Tracker!
-        :raises Exception: Unexpected format of returned message.
+        :raises UnexpectedMessageFormat: Unexpected format of returned message.
         """
         msg = self.__request('ticket/%s/attachments/%s' % (str(ticket_id), str(attachment_id)))
         msg = msg.split('\n')[2:]
-        if not hasattr(self, 'headers_pattern'):
-            self.headers_pattern = re.compile('Headers:')
-        head_id = [id for id in range(len(msg)) if self.headers_pattern.match(msg[id]) is not None]
+        head_id = [id for id in range(len(msg)) if self.RE_PATTERNS['headers_pattern'].match(msg[id]) is not None]
         if len(head_id) == 0:
-            raise Exception('Unexpected headers part of attachment entry. \
-                             Missing line starting with `Headers:`.')
+            raise UnexpectedMessageFormat('Unexpected headers part of attachment entry. \
+                                           Missing line starting with `Headers:`.')
         else:
             head_id = head_id[0]
         msg[head_id] = re.sub(r'^Headers: (.*)$', r'\1', msg[head_id])
-        if not hasattr(self, 'content_pattern'):
-            self.content_pattern = re.compile('Content:')
-        cont_id = [id for id in range(len(msg)) if self.content_pattern.match(msg[id]) is not None]
+        cont_id = [id for id in range(len(msg)) if self.RE_PATTERNS['content_pattern'].match(msg[id]) is not None]
         
         if len(cont_id) == 0:
-            raise Exception('Unexpected content part of attachment entry. \
-                             Missing line starting with `Content:`.')
+            raise UnexpectedMessageFormat('Unexpected content part of attachment entry. \
+                                           Missing line starting with `Content:`.')
         else:
             cont_id = cont_id[0]
         pairs = {}
@@ -749,11 +840,11 @@ Text: %s""" % (str(ticket_id), re.sub(r'\n', r'\n      ', text))}
                       * Password
                       * id
                       * Name
-        :raises Exception: In case that returned status code is not 200
+        :raises UnexpectedMessageFormat: In case that returned status code is not 200
         """
         msg = self.__request('user/%s' % (str(user_id),))
-
-        if(self.__get_status_code(msg) == 200):
+        status_code = self.__get_status_code(msg)
+        if(status_code == 200):
             pairs = {}
             msg = msg.split('\n')[2:]
             for i in range(len(msg)):
@@ -762,7 +853,7 @@ Text: %s""" % (str(ticket_id), re.sub(r'\n', r'\n      ', text))}
                     pairs[msg[i][:colon].strip()] = msg[i][colon + 1:].strip()
             return pairs
         else:
-            raise Exception('Connection error')
+            raise UnexpectedMessageFormat('Received status code is %d instead of 200.' % status_code)
 
     def get_queue(self, queue_id):
         """ Get queue details.
@@ -781,11 +872,11 @@ Text: %s""" % (str(ticket_id), re.sub(r'\n', r'\n      ', text))}
                       * FinalPriority
                       * DefaultDueIn
 
-        :raises Exception: In case that returned status code is not 200
+        :raises UnexpectedMessageFormat: In case that returned status code is not 200
         """
         msg = self.__request('queue/%s' % str(queue_id))
-
-        if(self.__get_status_code(msg) == 200):
+        status_code = self.__get_status_code(msg)
+        if(status_code == 200):
             pairs = {}
             msg = msg.split('\n')[2:]
             for i in range(len(msg)):
@@ -794,7 +885,7 @@ Text: %s""" % (str(ticket_id), re.sub(r'\n', r'\n      ', text))}
                     pairs[msg[i][:colon].strip()] = msg[i][colon + 1:].strip()
             return pairs
         else:
-            raise Exception('Connection error')
+            raise UnexpectedMessageFormat('Received status code is %d instead of 200.' % status_code)
 
     def get_links(self, ticket_id):
         """ Gets the ticket links for a single ticket.
@@ -811,11 +902,12 @@ Text: %s""" % (str(ticket_id), re.sub(r'\n', r'\n      ', text))}
                       * DependsOn
                       * DependedOnBy
 
-        :raises Exception: In case that returned status code is not 200
+        :raises UnexpectedMessageFormat: In case that returned status code is not 200
         """
         msg = self.__request('ticket/%s/links/show' % (str(ticket_id),))
 
-        if(self.__get_status_code(msg) == 200):
+        status_code = self.__get_status_code(msg)
+        if(status_code == 200):
             pairs = {}
             msg = msg.split('\n')[2:]
             i = 0
@@ -836,7 +928,7 @@ Text: %s""" % (str(ticket_id), re.sub(r'\n', r'\n      ', text))}
                 i += 1
             return pairs
         else:
-            raise Exception('Connection error')
+            raise UnexpectedMessageFormat('Received status code is %d instead of 200.' % status_code)
 
     def edit_ticket_links(self, ticket_id, **kwargs):
         """ Edit ticket links.
@@ -859,9 +951,7 @@ Text: %s""" % (str(ticket_id), re.sub(r'\n', r'\n      ', text))}
         msg = self.__request('ticket/%s/links' % (str(ticket_id),),
                              {'content':post_data})
         state = msg.split('\n')[2]
-        if not hasattr(self, 'links_updated_pattern'):
-            self.links_updated_pattern = re.compile('^# Links for ticket [0-9]+ updated.$')
-        return self.links_updated_pattern.match(state) is not None
+        return self.RE_PATTERNS['links_updated_pattern'].match(state) is not None
 
     def merge_ticket(self, ticket_id, into_id):
         """ Merge ticket into another (undocumented API feature). May not work
@@ -878,7 +968,5 @@ Text: %s""" % (str(ticket_id), re.sub(r'\n', r'\n      ', text))}
         msg = self.__request('ticket/merge/%s' % (str(ticket_id),),
                              {'into':into_id})
         state = msg.split('\n')[2]
-        if not hasattr(self, 'merge_successful_pattern'):
-            self.merge_successful_pattern = re.compile('^Merge Successful$')
-        return self.merge_successful_pattern.match(state) is not None
+        return self.RE_PATTERNS['merge_successful_pattern'].match(state) is not None
 
