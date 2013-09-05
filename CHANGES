@@ -1,3 +1,7 @@
+v1.0.6, 2013-09-05
+- added support for HTTP basic and digest authentication
+- specification of errors to different exceptions
+
 v1.0.5, 2013-04-26
 - fixed decoding of utf-8 only when needed
 - updated search function to support various
