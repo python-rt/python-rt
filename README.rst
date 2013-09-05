@@ -54,6 +54,7 @@ but can be used separately and also has its own Redmine project. We will
 make the best effort to keep the changes synchronized in both projects.
 
 python-rt module
-    https://git.nic.cz/redmine/projects/python-rt
+    https://gitlab.labs.nic.cz/labs/python-rt
 Malicious Domain Manager
-    https://git.nic.cz/redmine/projects/mdm
+    https://gitlab.labs.nic.cz/labs/mdm
+

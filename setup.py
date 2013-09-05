@@ -7,7 +7,7 @@ except:
     from distutils.core import setup
 
 here = os.path.abspath(os.path.dirname(__file__))
-README = open(os.path.join(here, 'README')).read()
+README = open(os.path.join(here, 'README.rst')).read()
 
 setup(name='rt',
     version='1.0.5',
@@ -16,7 +16,7 @@ setup(name='rt',
     license='GNU General Public License (GPL)',
     author='Jiri Machalek',
     author_email='jiri.machalek@nic.cz',
-    url='https://git.nic.cz/redmine/projects/python-rt',
+    url='https://gitlab.labs.nic.cz/labs/python-rt',
     install_requires=['requests'],
     py_modules=['rt'],
     classifiers=[
