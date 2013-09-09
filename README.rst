@@ -10,9 +10,12 @@ REQUIREMENTS
 
 This module uses following Python modules:
 
-- re
-- os
 - requests (http://docs.python-requests.org/)
+- nose (http://nose.readthedocs.org)
+
+Requirements can be installed running::
+
+    pip install -r requirements.txt
 
 LICENCE
 =======
@@ -20,7 +23,7 @@ LICENCE
 This module is distributed under the terms of GNU General Public Licence v3
 and was developed by CZ.NIC Labs - research and development department of
 CZ.NIC association - top level domain registy for .CZ.  Copy of the GNU
-General Public License is distibuted along with this program.
+General Public License is distributed along with this module.
 
 USAGE
 =====
@@ -49,6 +52,7 @@ in ReStructuredText. You can also generate HTML documentation by running
 
 OFFICIAL SITE
 =============
+
 Project site and issue tracking:
     https://gitlab.labs.nic.cz/labs/python-rt
 
