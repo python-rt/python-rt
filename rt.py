@@ -185,8 +185,8 @@ class Rt:
                         response = self.session.get(url)
                 else:
                     files_data = {}
-                    for i in range(len(files)):
-                        files_data['attachment_%d' % (i+1)] = files[i]
+                    for i, file_pair in enumerate(files):
+                        files_data['attachment_%d' % (i+1)] = file_pair
                     response = self.session.post(url, data=post_data, files=files_data)
                 if response.status_code == 401:
                     raise AuthorizationError('Server could not verify that you are authorized to access the requested document.')
@@ -229,6 +229,12 @@ class Rt:
             raise AuthorizationError('Credentials required.')
         if self.RE_PATTERNS['syntax_error_pattern'].match(msg[0]):
             raise APISyntaxError(msg[2][2:] if len(msg) > 2 else 'Syntax error.')
+
+    def __normalize_list(self, msg):
+        """Split message to list by commas and trim whitespace."""
+        if isinstance(msg, list):
+            msg = "".join(msg)
+        return map(lambda x: x.strip(), msg.split(","))
 
     def login(self, login=None, password=None):
         """ Login with default or supplied credetials.
@@ -398,7 +404,7 @@ class Rt:
                 while (req_id < len(msg)) and (msg[req_id][:12] == ' '*12):
                     requestors.append(msg[req_id][12:])
                     req_id += 1
-                pairs['Requestors'] = requestors
+                pairs['Requestors'] = self.__normalize_list(requestors)
                 for i in range(req_id, len(msg)):
                     colon = msg[i].find(': ')
                     if colon > 0:
@@ -460,7 +466,7 @@ class Rt:
             while (req_id < len(msg)) and (msg[req_id][:12] == ' '*12):
                 requestors.append(msg[req_id][12:])
                 req_id += 1
-            pairs['Requestors'] = requestors
+            pairs['Requestors'] = self.__normalize_list(requestors)
             for i in range(req_id,len(msg)):
                 colon = msg[i].find(': ')
                 if colon > 0:
@@ -543,11 +549,13 @@ class Rt:
                       was set (in this case all other valid fields are changed)
         """
         post_data = ''
-        for key in kwargs:
+        for key, value in kwargs.iteritems():
+            if isinstance(value, (list, tuple)):
+                value = ", ".join(value)
             if key[:3] != 'CF_':
-                post_data += "%s: %s\n"%(key, kwargs[key])
+                post_data += "%s: %s\n"%(key, value)
             else:
-                post_data += "CF.{%s}: %s\n" % (key[3:], kwargs[key])
+                post_data += "CF.{%s}: %s\n" % (key[3:], value)
         msg = self.__request('ticket/%s/edit' % (str(ticket_id)), {'content':post_data})
         state = msg.split('\n')[2]
         return self.RE_PATTERNS['update_pattern'].match(state) is not None
