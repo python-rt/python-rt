@@ -80,16 +80,13 @@ class RtTestCase(unittest.TestCase):
         for name, params in self.RT_INVALID_CREDENTIALS.iteritems():
             tracker = rt.Rt(**params)
             self.assertFalse(tracker.login(), 'Login to RT demo site ' + name + ' should fail but did not')
-            with self.assertRaises(rt.AuthorizationError):
-                tracker.search()
+            self.assertRaises(rt.AuthorizationError, lambda: tracker.search())
         for name, params in self.RT_MISSING_CREDENTIALS.iteritems():
             tracker = rt.Rt(**params)
-            with self.assertRaises(rt.AuthorizationError):
-                tracker.login()
+            self.assertRaises(rt.AuthorizationError, lambda: tracker.login())
         for name, params in self.RT_BAD_URL.iteritems():
             tracker = rt.Rt(**params)
-            with self.assertRaises(rt.UnexpectedResponse):
-                tracker.login()
+            self.assertRaises(rt.UnexpectedResponse, lambda: tracker.login())
 
     def test_ticket_operations(self):
         ticket_subject = 'Testing issue ' + "".join([random.choice(string.letters) for i in xrange(15)])

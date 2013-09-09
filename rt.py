@@ -88,7 +88,7 @@ class ConnectionError(Exception):
         :keyword message: Exception details
         :keyword cause: Cause exception
         """
-        super(ConnectionError, self).__init__(message + u' (Caused by ' + repr(cause) + ")")
+        super(ConnectionError, self).__init__(message + ' (Caused by ' + repr(cause) + ")")
         self.cause = cause
 
 class Rt:
