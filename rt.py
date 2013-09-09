@@ -74,6 +74,11 @@ class UnexpectedMessageFormat(Exception):
 
     pass
 
+class APISyntaxError(Exception):
+    """ Exception raised when syntax error is received. """
+
+    pass
+
 class ConnectionError(Exception):
     """ Encapsulation of various exceptions indicating network problems. """
 
@@ -100,6 +105,7 @@ class Rt:
     RE_PATTERNS = {
         'not_allowed_pattern': re.compile('^# You are not allowed to'),
         'credentials_required_pattern': re.compile('.* 401 Credentials required$'),
+        'syntax_error_pattern': re.compile('.* 409 Syntax Error$'),
         'requestors_pattern': re.compile('Requestors:'),
         'update_pattern': re.compile('^# Ticket [0-9]+ updated.$'),
         'content_pattern': re.compile('Content:'),
@@ -213,6 +219,7 @@ class Rt:
         :raises NotAllowed: Exception raised when operation was called with
                             insufficient privileges
         :raises AuthorizationError: Credentials are invalid or missing
+        :raises APISyntaxError: Syntax error
         """
         if not isinstance(msg, list):
             msg = msg.split("\n")
@@ -220,6 +227,8 @@ class Rt:
             raise NotAllowed(msg[2][2:])
         if self.RE_PATTERNS['credentials_required_pattern'].match(msg[0]):
             raise AuthorizationError('Credentials required.')
+        if self.RE_PATTERNS['syntax_error_pattern'].match(msg[0]):
+            raise APISyntaxError(msg[2][2:] if len(msg) > 2 else 'Syntax error.')
 
     def login(self, login=None, password=None):
         """ Login with default or supplied credetials.
