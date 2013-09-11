@@ -110,6 +110,7 @@ class Rt:
         'update_pattern': re.compile('^# Ticket [0-9]+ updated.$'),
         'content_pattern': re.compile('Content:'),
         'attachments_pattern': re.compile('Attachments:'),
+        'attachments_list_pattern': re.compile(r'[^0-9]*(\d+): ([\w().]+) \((\w+/[\w.]+) / ([0-9a-z.]+)\),?$'),
         'headers_pattern': re.compile('Headers:'),
         'links_updated_pattern': re.compile('^# Links for ticket [0-9]+ updated.$'),
         'merge_successful_pattern': re.compile('^Merge Successful$'),
@@ -706,6 +707,29 @@ Text: %s""" % (str(ticket_id), re.sub(r'\n', r'\n      ', text))}
         return self.__get_status_code(msg) == 200
 
 
+    def get_attachments(self, ticket_id):
+        """ Get attachment list for a given ticket
+        
+        :param ticket_id: ID of ticket
+        :returns: List of tuples for attachments belonging to given ticket.
+                  Tuple format: (id, name, content_type, size)
+        """
+        at = self.__request('ticket/%s/attachments' % (str(ticket_id),))
+        if (len(at) != 0) and (self.__get_status_code(at) == 200):
+            atlines = at.split('\n')
+            attachment_infos = []
+            if len(atlines) >= 4:
+                for line in atlines[4:]:
+                    if len(line) > 0:
+                        info = self.RE_PATTERNS['attachments_list_pattern'].match(line).groups()
+                        if info:
+                            attachment_infos.append(info)
+                return attachment_infos
+            else:
+                return []
+        else:
+            return []
+
     def get_attachments_ids(self, ticket_id):
         """ Get IDs of attachments for given ticket.
         
@@ -713,15 +737,7 @@ Text: %s""" % (str(ticket_id), re.sub(r'\n', r'\n      ', text))}
         :returns: List of IDs (type int) of attachments belonging to given
                   ticket
         """
-        at = self.__request('ticket/%s/attachments' % (str(ticket_id),))
-        if (len(at) != 0) and (self.__get_status_code(at) == 200):
-            atlines = at.split('\n')
-            if len(atlines) >= 4:
-                return [int(re.sub(r'[^0-9]*([0-9]+):.*', r'\1', line)) for line in atlines[4:] if len(line) > 0]
-            else:
-                return []
-        else:
-            return []
+        return [int(att[0]) for att in self.get_attachments(ticket_id)]
         
     def get_attachment(self, ticket_id, attachment_id):
         """ Get attachment.
