@@ -12,6 +12,7 @@ This module uses following Python modules:
 
 - requests (http://docs.python-requests.org/)
 - nose (http://nose.readthedocs.org)
+- six (http://pythonhosted.org/six/)
 
 Requirements can be installed running::
 

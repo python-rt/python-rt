@@ -1,2 +1,3 @@
 requests
 nose
+six

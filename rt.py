@@ -47,6 +47,9 @@ import os
 import requests
 from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 
+from six import iteritems
+from six.moves import range
+
 DEFAULT_QUEUE = 'General'
 """ Default queue used. """
 
@@ -156,7 +159,8 @@ class Rt:
             # assured, that we are login in instantly)
             self.login_result = True
 
-    def __request(self, selector, post_data={}, files=[], without_login=False):
+    def __request(self, selector, post_data={}, files=[], without_login=False,
+                  text_response=True):
         """ General request for :term:`API`.
  
         :keyword selector: End part of URL which completes self.url parameter
@@ -176,30 +180,38 @@ class Rt:
         :raises ConnectionError: In case of connection error.
         """
         try:
-            url = str(os.path.join(self.url, selector))
-            if self.login_result or without_login:
-                if not files:
-                    if post_data:
-                        response = self.session.post(url, data=post_data)
-                    else:
-                        response = self.session.get(url)
-                else:
-                    files_data = {}
-                    for i, file_pair in enumerate(files):
-                        files_data['attachment_%d' % (i+1)] = file_pair
-                    response = self.session.post(url, data=post_data, files=files_data)
-                if response.status_code == 401:
-                    raise AuthorizationError('Server could not verify that you are authorized to access the requested document.')
-                if response.status_code != 200:
-                    raise UnexpectedResponse('Received status code %d instead of 200.' % response.status_code)
-                if response.encoding and (response.encoding.lower() == 'utf-8'):
-                    result = response.content.decode('utf-8')
-                else:
-                    result = response.content
-                self.__check_response(result)
-                return result
-            else:
+            if (not self.login_result) and (not without_login):
                 raise AuthorizationError('First login by calling method `login`.')
+            url = str(os.path.join(self.url, selector))
+            if not files:
+                if post_data:
+                    response = self.session.post(url, data=post_data)
+                else:
+                    response = self.session.get(url)
+            else:
+                files_data = {}
+                for i, file_pair in enumerate(files):
+                    files_data['attachment_%d' % (i+1)] = file_pair
+                response = self.session.post(url, data=post_data, files=files_data)
+            if response.status_code == 401:
+                raise AuthorizationError('Server could not verify that you are authorized to access the requested document.')
+            if response.status_code != 200:
+                raise UnexpectedResponse('Received status code %d instead of 200.' % response.status_code)
+            if response.encoding:
+                try:
+                    result = response.content.decode(response.encoding.lower())
+                except LookupError:
+                    raise UnexpectedResponse('Unknown response encoding: %s.' % response.encoding)
+            else:
+                # try utf-8 if encoding is not filled
+                try:
+                    result = response.content.decode('utf-8')
+                except UnicodeError:
+                    raise UnexpectedResponse('Unknown response encoding (UTF-8 does not work).')
+            self.__check_response(result)
+            if not text_response:
+                return response.content
+            return result
         except requests.exceptions.ConnectionError as e:
             raise ConnectionError("Connection error", e)
     
@@ -234,7 +246,7 @@ class Rt:
         """Split message to list by commas and trim whitespace."""
         if isinstance(msg, list):
             msg = "".join(msg)
-        return map(lambda x: x.strip(), msg.split(","))
+        return list(map(lambda x: x.strip(), msg.split(",")))
 
     def login(self, login=None, password=None):
         """ Login with default or supplied credetials.
@@ -368,7 +380,7 @@ class Rt:
             }
 
         query = 'search/ticket?query=(Queue=\'%s\')' % (Queue or self.default_queue,)
-        for key, value in kwargs.iteritems():
+        for key, value in iteritems(kwargs):
             op = '='
             key_parts = key.split('__')
             if len(key_parts) > 1:
@@ -549,7 +561,7 @@ class Rt:
                       was set (in this case all other valid fields are changed)
         """
         post_data = ''
-        for key, value in kwargs.iteritems():
+        for key, value in iteritems(kwargs):
             if isinstance(value, (list, tuple)):
                 value = ", ".join(value)
             if key[:3] != 'CF_':
@@ -827,7 +839,9 @@ Text: %s""" % (str(ticket_id), re.sub(r'\n', r'\n      ', text))}
         Returns: string with content of attachment
         """
     
-        msg = self.__request('ticket/%s/attachments/%s/content' % (str(ticket_id), str(attachment_id)))
+        msg = self.__request('ticket/%s/attachments/%s/content' %
+                             (str(ticket_id), str(attachment_id)),
+                             text_response=False)
         return msg[re.search(b'\n', msg).start() + 2:-3]
 
     def get_user(self, user_id):

@@ -23,6 +23,10 @@ __authors__ = [
 import unittest
 import random
 import string
+
+from six import iteritems
+from six.moves import range
+
 import rt
 
 class RtTestCase(unittest.TestCase):
@@ -73,23 +77,23 @@ class RtTestCase(unittest.TestCase):
     }
 
     def test_login_and_logout(self):
-        for name, params in self.RT_VALID_CREDENTIALS.iteritems():
+        for name, params in iteritems(self.RT_VALID_CREDENTIALS):
             tracker = rt.Rt(**params)
             self.assertTrue(tracker.login(), 'Invalid login to RT demo site ' + name)
             self.assertTrue(tracker.logout(), 'Invalid logout from RT demo site ' + name)
-        for name, params in self.RT_INVALID_CREDENTIALS.iteritems():
+        for name, params in iteritems(self.RT_INVALID_CREDENTIALS):
             tracker = rt.Rt(**params)
             self.assertFalse(tracker.login(), 'Login to RT demo site ' + name + ' should fail but did not')
             self.assertRaises(rt.AuthorizationError, lambda: tracker.search())
-        for name, params in self.RT_MISSING_CREDENTIALS.iteritems():
+        for name, params in iteritems(self.RT_MISSING_CREDENTIALS):
             tracker = rt.Rt(**params)
             self.assertRaises(rt.AuthorizationError, lambda: tracker.login())
-        for name, params in self.RT_BAD_URL.iteritems():
+        for name, params in iteritems(self.RT_BAD_URL):
             tracker = rt.Rt(**params)
             self.assertRaises(rt.UnexpectedResponse, lambda: tracker.login())
 
     def test_ticket_operations(self):
-        ticket_subject = 'Testing issue ' + "".join([random.choice(string.letters) for i in xrange(15)])
+        ticket_subject = 'Testing issue ' + "".join([random.choice(string.ascii_letters) for i in range(15)])
         ticket_text = 'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'
         for name in ('RT4 stable (john.foo)', 'RT3.8 stable (john.foo)'):
             params = self.RT_VALID_CREDENTIALS[name]
@@ -97,7 +101,7 @@ class RtTestCase(unittest.TestCase):
             self.assertTrue(tracker.login(), 'Invalid login to RT demo site ' + name)
             # create
             ticket_id = tracker.create_ticket(Subject=ticket_subject, Text=ticket_text)
-            self.assertGreater(ticket_id, -1, 'Creating ticket failed.')
+            self.assertTrue(ticket_id > -1, 'Creating ticket failed.')
             # search
             search_result = tracker.search(Subject=ticket_subject)
             self.assertEqual(len(search_result), 1, 'Created ticket is not found by the subject.')
@@ -115,28 +119,30 @@ class RtTestCase(unittest.TestCase):
             self.assertEqual(ticket['Requestors'], requestors, 'Ticket requestors were not added properly.')
             # get_history
             hist = tracker.get_history(ticket_id)
-            self.assertGreater(len(hist), 0, 'Empty ticket history.')
+            self.assertTrue(len(hist) > 0, 'Empty ticket history.')
             self.assertEqual(hist[0]['Content'], ticket_text, 'Ticket text was not receives is it was submited.')
-            # create 2nd ticket
-            ticket2_subject = 'Testing issue ' + "".join([random.choice(string.letters) for i in xrange(15)])
-            ticket2_id = tracker.create_ticket(Subject=ticket2_subject)
-            self.assertGreater(ticket2_id, -1, 'Creating 2nd ticket failed.')
-            # edit_ticket_links
-            self.assertTrue(tracker.edit_ticket_links(ticket_id, DependsOn=ticket2_id))
-            # get_links
-            links1 = tracker.get_links(ticket_id)
-            self.assertIn('DependsOn', links1, 'Missing just created link DependsOn.')
-            self.assertTrue(links1['DependsOn'][0].endswith('ticket/' + str(ticket2_id)), 'Unexpected value of link DependsOn.')
-            links2 = tracker.get_links(ticket2_id)
-            self.assertIn('DependedOnBy', links2, 'Missing just created link DependedOnBy.')
-            self.assertTrue(links2['DependedOnBy'][0].endswith('ticket/' + str(ticket_id)), 'Unexpected value of link DependedOnBy.')
+            if name.startswith("RT4"):
+                # known bug with links in RT3.8, skip this test
+                # create 2nd ticket
+                ticket2_subject = 'Testing issue ' + "".join([random.choice(string.ascii_letters) for i in range(15)])
+                ticket2_id = tracker.create_ticket(Subject=ticket2_subject)
+                self.assertTrue(ticket2_id > -1, 'Creating 2nd ticket failed.')
+                # edit_ticket_links
+                self.assertTrue(tracker.edit_ticket_links(ticket_id, DependsOn=ticket2_id))
+                # get_links
+                links1 = tracker.get_links(ticket_id)
+                self.assertTrue('DependsOn' in links1, 'Missing just created link DependsOn.')
+                self.assertTrue(links1['DependsOn'][0].endswith('ticket/' + str(ticket2_id)), 'Unexpected value of link DependsOn.')
+                links2 = tracker.get_links(ticket2_id)
+                self.assertTrue('DependedOnBy' in links2, 'Missing just created link DependedOnBy.')
+                self.assertTrue(links2['DependedOnBy'][0].endswith('ticket/' + str(ticket_id)), 'Unexpected value of link DependedOnBy.')
             # reply with attachment
-            attachment_content = 'Content of attachment.'
+            attachment_content = b'Content of attachment.'
             attachment_name = 'attachment.txt'
             reply_text = 'Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.'
             self.assertTrue(tracker.reply(ticket_id, text=reply_text, files=[(attachment_name, attachment_content)]), 'Reply to ticket returned False indicating error.')
             at_ids = tracker.get_attachments_ids(ticket_id)
-            self.assertGreater(at_ids, 0, 'Emply list with attachment ids, something went wrong.')
+            self.assertTrue(at_ids, 'Emply list with attachment ids, something went wrong.')
             at_content = tracker.get_attachment_content(ticket_id, at_ids[-1])
             self.assertEqual(at_content, attachment_content, 'Recorded attachment is not equal to the original file.')
 
