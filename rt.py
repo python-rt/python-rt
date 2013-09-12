@@ -82,6 +82,11 @@ class APISyntaxError(Exception):
 
     pass
 
+class InvalidUse(Exception):
+    """ Exception raised when API method is not used correctly. """
+
+    pass
+
 class ConnectionError(Exception):
     """ Encapsulation of various exceptions indicating network problems. """
 
@@ -115,6 +120,8 @@ class Rt:
         'attachments_pattern': re.compile('Attachments:'),
         'headers_pattern': re.compile('Headers:'),
         'links_updated_pattern': re.compile('^# Links for ticket [0-9]+ updated.$'),
+        'created_link_pattern': re.compile('.* Created link '),
+        'deleted_link_pattern': re.compile('.* Deleted link '),
         'merge_successful_pattern': re.compile('^# Merge completed.|^Merge Successful$'),
     }
 
@@ -214,7 +221,7 @@ class Rt:
             return result
         except requests.exceptions.ConnectionError as e:
             raise ConnectionError("Connection error", e)
-    
+
     def __get_status_code(self, msg):
         """ Select status code given message.
 
@@ -963,6 +970,11 @@ Text: %s""" % (str(ticket_id), re.sub(r'\n', r'\n      ', text))}
 
     def edit_ticket_links(self, ticket_id, **kwargs):
         """ Edit ticket links.
+
+        .. warning:: This method is deprecated in favour of edit_link method, because
+           there exists bug in RT 3.8 REST API causing mapping created links to
+           ticket/1. The only drawback is that edit_link cannot process multiple
+           links all at once.
     
         :param ticket_id: ID of ticket to edit
         :keyword kwargs: Other arguments possible to set: DependsOn,
@@ -983,6 +995,38 @@ Text: %s""" % (str(ticket_id), re.sub(r'\n', r'\n      ', text))}
                              {'content':post_data})
         state = msg.split('\n')[2]
         return self.RE_PATTERNS['links_updated_pattern'].match(state) is not None
+
+    def edit_link(self, ticket_id, link_name, link_value, delete=False):
+        """ Creates or deletes a link between the specified tickets (undocumented API feature).
+    
+        :param ticket_id: ID of ticket to edit
+        :param link_name: Name of link to edit (DependsOn, DependedOnBy,
+                          RefersTo, ReferredToBy, HasMember or MemberOf)
+        :param link_value: Either ticker ID or external link.
+        :param delete: if True the link is deleted instead of created
+        :returns: ``True``
+                      Operation was successful
+                  ``False``
+                      Ticket with given ID does not exist or link to delete is
+                      not found
+        :raises InvalidUse: When none or more then one links are specified. Also
+                            when wrong link name is used.
+        """
+        valid_link_names = set(('dependson', 'dependedonby', 'refersto', 
+                           'referredtoby', 'hasmember', 'memberof'))
+        if not link_name.lower() in valid_link_names:
+            raise InvalidUse("Unsupported name of link.")
+        post_data = {'rel': link_name.lower(),
+                     'to': link_value,
+                     'id': ticket_id,
+                     'del': 1 if delete else 0
+                    }
+        msg = self.__request('ticket/link', post_data)
+        state = msg.split('\n')[2]
+        if delete:
+            return self.RE_PATTERNS['deleted_link_pattern'].match(state) is not None
+        else:
+            return self.RE_PATTERNS['created_link_pattern'].match(state) is not None
 
     def merge_ticket(self, ticket_id, into_id):
         """ Merge ticket into another (undocumented API feature).
