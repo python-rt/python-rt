@@ -115,7 +115,7 @@ class Rt:
         'attachments_pattern': re.compile('Attachments:'),
         'headers_pattern': re.compile('Headers:'),
         'links_updated_pattern': re.compile('^# Links for ticket [0-9]+ updated.$'),
-        'merge_successful_pattern': re.compile('^Merge Successful$'),
+        'merge_successful_pattern': re.compile('^# Merge completed.|^Merge Successful$'),
     }
 
     def __init__(self, url, default_login=None, default_password=None, proxy=None,
@@ -985,8 +985,7 @@ Text: %s""" % (str(ticket_id), re.sub(r'\n', r'\n      ', text))}
         return self.RE_PATTERNS['links_updated_pattern'].match(state) is not None
 
     def merge_ticket(self, ticket_id, into_id):
-        """ Merge ticket into another (undocumented API feature). May not work
-        in 4.x RT series.
+        """ Merge ticket into another (undocumented API feature).
     
         :param ticket_id: ID of ticket to be merged
         :param into: ID of destination ticket
@@ -996,8 +995,8 @@ Text: %s""" % (str(ticket_id), re.sub(r'\n', r'\n      ', text))}
                       Either origin or destination ticket does not
                       exist or user does not have ModifyTicket permission.
         """
-        msg = self.__request('ticket/merge/%s' % (str(ticket_id),),
-                             {'into':into_id})
+        msg = self.__request('ticket/%s/merge/%s' % (str(ticket_id),
+                                                     str(into_id)))
         state = msg.split('\n')[2]
         return self.RE_PATTERNS['merge_successful_pattern'].match(state) is not None
 
