@@ -107,35 +107,33 @@ class RtTestCase(unittest.TestCase):
             self.assertEqual(len(search_result), 1, 'Created ticket is not found by the subject.')
             self.assertEqual(search_result[0]['id'], 'ticket/' + str(ticket_id), 'Bad id in search result of just created ticket.')
             self.assertEqual(search_result[0]['Status'], 'new', 'Bad status in search result of just created ticket.')
-            # get_ticket
+            # get ticket
             ticket = tracker.get_ticket(ticket_id)
             self.assertEqual(ticket, search_result[0], 'Ticket get directly by its id is not equal to previous search result.')
-            # edit_ticket
+            # edit ticket
             requestors = ['tester1@example.com', 'tester2@example.com']
             tracker.edit_ticket(ticket_id, Status='open', Requestors=requestors)
-            # get_ticket (edited)
+            # get ticket (edited)
             ticket = tracker.get_ticket(ticket_id)
             self.assertEqual(ticket['Status'], 'open', 'Ticket status was not changed to open.')
             self.assertEqual(ticket['Requestors'], requestors, 'Ticket requestors were not added properly.')
-            # get_history
+            # get history
             hist = tracker.get_history(ticket_id)
             self.assertTrue(len(hist) > 0, 'Empty ticket history.')
             self.assertEqual(hist[0]['Content'], ticket_text, 'Ticket text was not receives is it was submited.')
-            if name.startswith("RT4"):
-                # known bug with links in RT3.8, skip this test
-                # create 2nd ticket
-                ticket2_subject = 'Testing issue ' + "".join([random.choice(string.ascii_letters) for i in range(15)])
-                ticket2_id = tracker.create_ticket(Subject=ticket2_subject)
-                self.assertTrue(ticket2_id > -1, 'Creating 2nd ticket failed.')
-                # edit_ticket_links
-                self.assertTrue(tracker.edit_ticket_links(ticket_id, DependsOn=ticket2_id))
-                # get_links
-                links1 = tracker.get_links(ticket_id)
-                self.assertTrue('DependsOn' in links1, 'Missing just created link DependsOn.')
-                self.assertTrue(links1['DependsOn'][0].endswith('ticket/' + str(ticket2_id)), 'Unexpected value of link DependsOn.')
-                links2 = tracker.get_links(ticket2_id)
-                self.assertTrue('DependedOnBy' in links2, 'Missing just created link DependedOnBy.')
-                self.assertTrue(links2['DependedOnBy'][0].endswith('ticket/' + str(ticket_id)), 'Unexpected value of link DependedOnBy.')
+            # create 2nd ticket
+            ticket2_subject = 'Testing issue ' + "".join([random.choice(string.ascii_letters) for i in range(15)])
+            ticket2_id = tracker.create_ticket(Subject=ticket2_subject)
+            self.assertTrue(ticket2_id > -1, 'Creating 2nd ticket failed.')
+            # edit link
+            self.assertTrue(tracker.edit_link(ticket_id, 'DependsOn', ticket2_id))
+            # get links
+            links1 = tracker.get_links(ticket_id)
+            self.assertTrue('DependsOn' in links1, 'Missing just created link DependsOn.')
+            self.assertTrue(links1['DependsOn'][0].endswith('ticket/' + str(ticket2_id)), 'Unexpected value of link DependsOn.')
+            links2 = tracker.get_links(ticket2_id)
+            self.assertTrue('DependedOnBy' in links2, 'Missing just created link DependedOnBy.')
+            self.assertTrue(links2['DependedOnBy'][0].endswith('ticket/' + str(ticket_id)), 'Unexpected value of link DependedOnBy.')
             # reply with attachment
             attachment_content = b'Content of attachment.'
             attachment_name = 'attachment.txt'
@@ -145,6 +143,10 @@ class RtTestCase(unittest.TestCase):
             self.assertTrue(at_ids, 'Emply list with attachment ids, something went wrong.')
             at_content = tracker.get_attachment_content(ticket_id, at_ids[-1])
             self.assertEqual(at_content, attachment_content, 'Recorded attachment is not equal to the original file.')
+            # merge tickets
+            self.assertTrue(tracker.merge_ticket(ticket2_id, ticket_id), 'Merging tickets failed.')
+            # delete ticket
+            self.assertTrue(tracker.edit_ticket(ticket_id, Status='deleted'), 'Ticket delete failed.')
 
 if __name__ == '__main__':
     unittest.main()
