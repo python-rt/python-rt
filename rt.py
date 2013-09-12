@@ -627,6 +627,24 @@ class Rt:
             return items
         except:
             return []
+
+    def get_short_history(self, ticket_id):
+        """ Get set of short history items
+        
+        :param ticket_id: ID of ticket
+        :returns: List of history items ordered increasingly by time of event.
+                  Each history item is a tuple containing (id, Description)
+        """
+        msg = self.__request('ticket/%s/history' % (str(ticket_id),))
+        items = []
+        if len(msg) != 0 and self.__get_status_code(msg) == 200:
+            short_hist_lines = msg.split('\n')
+            if len(short_hist_lines) >= 4:
+                for line in short_hist_lines[4:]:
+                    if ': ' in line:
+                        hist_id, desc = line.split(': ')
+                        items.append((int(hist_id), desc))
+        return items
     
     def reply(self, ticket_id, text='', cc='', bcc='', files=[]):
         """ Sends email message to the contacts in ``Requestors`` field of

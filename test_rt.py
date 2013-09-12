@@ -117,6 +117,10 @@ class RtTestCase(unittest.TestCase):
             hist = tracker.get_history(ticket_id)
             self.assertGreater(len(hist), 0, 'Empty ticket history.')
             self.assertEqual(hist[0]['Content'], ticket_text, 'Ticket text was not receives is it was submited.')
+            # get_short_history
+            short_hist = tracker.get_short_history(ticket_id)
+            self.assertGreater(len(short_hist), 0, 'Empty ticket short history.')
+            self.assertEqual(short_hist[0][1], 'Ticket created by john.foo')
             # create 2nd ticket
             ticket2_subject = 'Testing issue ' + "".join([random.choice(string.letters) for i in xrange(15)])
             ticket2_id = tracker.create_ticket(Subject=ticket2_subject)
