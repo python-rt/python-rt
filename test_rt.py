@@ -139,6 +139,10 @@ class RtTestCase(unittest.TestCase):
             self.assertGreater(at_ids, 0, 'Emply list with attachment ids, something went wrong.')
             at_content = tracker.get_attachment_content(ticket_id, at_ids[-1])
             self.assertEqual(at_content, attachment_content, 'Recorded attachment is not equal to the original file.')
+            # attachments list
+            at_list = tracker.get_attachments(ticket_id)
+            at_names = [at[1] for at in at_list]
+            self.assertIn(attachment_name, at_names)
 
 if __name__ == '__main__':
     unittest.main()
