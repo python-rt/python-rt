@@ -99,6 +99,11 @@ class ConnectionError(Exception):
         super(ConnectionError, self).__init__(message + ' (Caused by ' + repr(cause) + ")")
         self.cause = cause
 
+class InvalidQueryError(Exception):
+    """ Exception raised when attempting to search RT with an invalid raw query. """
+
+    pass
+
 class Rt:
     """ :term:`API` for Request Tracker according to
     http://requesttracker.wikia.com/wiki/REST. Interface is based on
@@ -338,7 +343,7 @@ class Rt:
         """
         return self.search(Queue=queue, order='-LastUpdated', LastUpdatedBy__notexact=self.default_login, LastUpdated__gt=since)
 
-    def search(self, Queue=None, order=None, **kwargs):
+    def search(self, Queue=None, order=None, raw_query=None, **kwargs):
         """ Search arbitrary needles in given fields and queue.
         
         Example::
@@ -346,63 +351,77 @@ class Rt:
             >>> tracker = Rt('http://tracker.example.com/REST/1.0/', 'rt-username', 'top-secret')
             >>> tracker.login()
             >>> tickets = tracker.search(CF_Domain='example.com', Subject__like='warning')
+            >>> tickets = tracker.search(Queue='General', order='Status', raw_query="id='1'+OR+id='2'+OR+id='3'")
 
-        :keyword Queue: Queue where to search
-        :keyword order: Name of field sorting result list, for descending
-                        order put - before the field name. E.g. -Created
-                        will pu the newest tickets at the beginning
-        :keyword kwargs: Other arguments possible to set:
+        :keyword Queue:      Queue where to search
+        :keyword order:      Name of field sorting result list, for descending
+                             order put - before the field name. E.g. -Created
+                             will put the newest tickets at the beginning
+        :keyword raw_query:  A raw query to provide to RT if you know what
+                             you are doing. You may still pass Queue and order 
+                             kwargs, so use these instead of including them in 
+                             the raw query. You can refer to the RT query builder.
+                             If passing raw_query, all other **kwargs will be ignored.
+        :keyword kwargs:     Other arguments possible to set if not passing raw_query:
                          
-                         Requestors, Subject, Cc, AdminCc, Owner, Status,
-                         Priority, InitialPriority, FinalPriority,
-                         TimeEstimated, Starts, Due, Text,... (according to RT
-                         fields)
+                             Requestors, Subject, Cc, AdminCc, Owner, Status,
+                             Priority, InitialPriority, FinalPriority,
+                             TimeEstimated, Starts, Due, Text,... (according to RT
+                             fields)
 
-                         Custom fields CF.{<CustomFieldName>} could be set
-                         with keywords CF_CustomFieldName.
+                             Custom fields CF.{<CustomFieldName>} could be set
+                             with keywords CF_CustomFieldName.
 
-                         To alter lookup operators you can append one of the
-                         following endings to each keyword:
+                             To alter lookup operators you can append one of the
+                             following endings to each keyword:
 
-                         __exact    for operator = (default)
-                         __notexact for operator !=
-                         __gt       for operator >
-                         __lt       for operator <
-                         __like     for operator LIKE
-                         __notlike  for operator NOT LIKE
-        
-                         Setting values to keywords constrain search
-                         result to the tickets satisfying all of them.
+                             __exact    for operator = (default)
+                             __notexact for operator !=
+                             __gt       for operator >
+                             __lt       for operator <
+                             __like     for operator LIKE
+                             __notlike  for operator NOT LIKE
+            
+                             Setting values to keywords constrain search
+                             result to the tickets satisfying all of them.
 
         :returns: List of matching tickets. Each ticket is the same dictionary
                   as in :py:meth:`~Rt.get_ticket`.
-        :raises UnexpectedMessageFormat: Unexpected format of returned message.
+        :raises:  UnexpectedMessageFormat: Unexpected format of returned message.
+                  InvalidQueryError: If raw query is malformed
         """
-        operators_map = {
-            'gt':'>',
-            'lt':'<',
-            'exact':'=',
-            'notexact':'!=',
-            'like':' LIKE ',
-            'notlike':' NOT LIKE '
-            }
-
         query = 'search/ticket?query=(Queue=\'%s\')' % (Queue or self.default_queue,)
-        for key, value in iteritems(kwargs):
-            op = '='
-            key_parts = key.split('__')
-            if len(key_parts) > 1:
-                key = '__'.join(key_parts[:-1])
-                op = operators_map.get(key_parts[-1], '=')
-            if key[:3] != 'CF_':
-                query += "+AND+(%s%s\'%s\')" % (key, op, value)
-            else:
-                query += "+AND+(CF.{%s}%s\'%s\')" % (key[3:], op, value)
+        if not raw_query:
+            operators_map = {
+                'gt':'>',
+                'lt':'<',
+                'exact':'=',
+                'notexact':'!=',
+                'like':' LIKE ',
+                'notlike':' NOT LIKE '
+                }
+
+            for key, value in iteritems(kwargs):
+                op = '='
+                key_parts = key.split('__')
+                if len(key_parts) > 1:
+                    key = '__'.join(key_parts[:-1])
+                    op = operators_map.get(key_parts[-1], '=')
+                if key[:3] != 'CF_':
+                    query += "+AND+(%s%s\'%s\')" % (key, op, value)
+                else:
+                    query += "+AND+(CF.{%s}%s\'%s\')" % (key[3:], op, value)
+        else:
+            query += '+AND+(' + raw_query + ')'
         if order:
             query += "&orderby=" + order
         query += "&format=l"
 
         msgs = self.__request(query)
+
+        if self.__get_status_code(msgs) != 200 and msgs[2].startswith('Invalid query:'):
+            raise InvalidQueryError(msgs[2])
+
         msgs = msgs.split('\n--\n')
         items = []
         try:
