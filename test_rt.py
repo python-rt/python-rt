@@ -103,6 +103,11 @@ class RtTestCase(unittest.TestCase):
             self.assertEqual(len(search_result), 1, 'Created ticket is not found by the subject.')
             self.assertEqual(search_result[0]['id'], 'ticket/' + str(ticket_id), 'Bad id in search result of just created ticket.')
             self.assertEqual(search_result[0]['Status'], 'new', 'Bad status in search result of just created ticket.')
+            # raw search
+            search_result = tracker.search(raw_query='Subject="%s"' % ticket_subject)
+            self.assertEqual(len(search_result), 1, 'Created ticket is not found by the subject.')
+            self.assertEqual(search_result[0]['id'], 'ticket/' + str(ticket_id), 'Bad id in search result of just created ticket.')
+            self.assertEqual(search_result[0]['Status'], 'new', 'Bad status in search result of just created ticket.')
             # get_ticket
             ticket = tracker.get_ticket(ticket_id)
             self.assertEqual(ticket, search_result[0], 'Ticket get directly by its id is not equal to previous search result.')
