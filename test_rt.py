@@ -143,6 +143,10 @@ class RtTestCase(unittest.TestCase):
             self.assertTrue(at_ids, 'Emply list with attachment ids, something went wrong.')
             at_content = tracker.get_attachment_content(ticket_id, at_ids[-1])
             self.assertEqual(at_content, attachment_content, 'Recorded attachment is not equal to the original file.')
+            # attachments list
+            at_list = tracker.get_attachments(ticket_id)
+            at_names = [at[1] for at in at_list]
+            self.assertTrue(attachment_name in at_names, 'Attachment name is not in the list of attachments.')
             # merge tickets
             self.assertTrue(tracker.merge_ticket(ticket2_id, ticket_id), 'Merging tickets failed.')
             # delete ticket
