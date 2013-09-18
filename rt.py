@@ -228,7 +228,9 @@ class Rt:
                 try:
                     result = response.content.decode('utf-8')
                 except UnicodeError:
-                    raise UnexpectedResponse('Unknown response encoding (UTF-8 does not work).')
+                    if text_response:
+                        raise UnexpectedResponse('Unknown response encoding (UTF-8 does not work).')
+                    result = response.content
             self.__check_response(result)
             if not text_response:
                 return response.content
