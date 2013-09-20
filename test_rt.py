@@ -161,7 +161,7 @@ class RtTestCase(unittest.TestCase):
             # delete ticket
             self.assertTrue(tracker.edit_ticket(ticket_id, Status='deleted'), 'Ticket delete failed.')
             # get user
-            self.assertEqual(self.get_user(params['default_login'])['EmailAddress'], params['default_login'] + '@no.mail', 'Bad user email received.')
+            self.assertEqual(tracker.get_user(params['default_login'])['EmailAddress'], params['default_login'] + '@no.mail', 'Bad user email received.')
 
 if __name__ == '__main__':
     unittest.main()
