@@ -136,6 +136,7 @@ class Rt:
         'merge_successful_pattern': re.compile('^# Merge completed.|^Merge Successful$'),
         'bad_request_pattern': re.compile('.* 400 Bad Request$'),
         'user_pattern': re.compile('^# User ([0-9]*) (?:updated|created)\.$'),
+        'queue_pattern': re.compile('^# Queue (\w*) (?:updated|created)\.$'),
     }
 
     def __init__(self, url, default_login=None, default_password=None, proxy=None,
@@ -1027,7 +1028,7 @@ Text: %s""" % (str(ticket_id), re.sub(r'\n', r'\n      ', text))}
         post_data = 'id: user/%s\n' % str(user_id)
         for key, val in iteritems(kwargs):
             post_data += '%s: %s\n' % (key, val)
-        msg = self.__request('edit', {'content':post_data})
+        msg = self.__request('edit', {'content': post_data})
         msgs = msg.split('\n')
         if (self.__get_status_code(msg) == 200) and (len(msgs) > 2):
             match = self.RE_PATTERNS['user_pattern'].match(msgs[2])
@@ -1040,7 +1041,7 @@ Text: %s""" % (str(ticket_id), re.sub(r'\n', r'\n      ', text))}
         """ Get queue details.
         
         :param queue_id: Identification of queue by name (str) or queue ID
-            (int)
+                         (int)
         :returns: Queue details as strings in dictionary with these keys
                   (if queue exists):
 
@@ -1067,6 +1068,57 @@ Text: %s""" % (str(ticket_id), re.sub(r'\n', r'\n      ', text))}
             return pairs
         else:
             raise UnexpectedMessageFormat('Received status code is %d instead of 200.' % status_code)
+
+
+    def edit_queue(self, queue_id, **kwargs):
+        """ Edit queue (undocumented API feature).
+
+        :param queue_id: Identification of queue by name (str) or ID (int)
+        :param kwargs: Other fields to edit from the following list:
+
+                          * Name
+                          * Description
+                          * CorrespondAddress
+                          * CommentAddress
+                          * InitialPriority
+                          * FinalPriority
+                          * DefaultDueIn
+
+        :returns: ID or name of edited queue or False when edit fails
+        :raises BadRequest: When queue does not exist
+        :raises InvalidUse: When invalid fields are set
+        """
+
+        valid_fields = set(('name', 'description', 'correspondaddress', 'commentaddress', 'initialpriority', 'finalpriority', 'defaultduein'))
+        used_fields = set(map(lambda x: x.lower(), kwargs.keys()))
+
+        if not used_fields <= valid_fields:
+            invalid_fields = ", ".join(list(used_fields - valid_fields))
+            raise InvalidUse("Unsupported names of fields: %s." % invalid_fields)
+        post_data = 'id: queue/%s\n' % str(queue_id)
+        for key, val in iteritems(kwargs):
+            post_data += '%s: %s\n' % (key, val)
+        msg = self.__request('edit', {'content': post_data})
+        msgs = msg.split('\n')
+        if (self.__get_status_code(msg) == 200) and (len(msgs) > 2):
+            match = self.RE_PATTERNS['queue_pattern'].match(msgs[2])
+            if match:
+                return match.group(1)
+        return False
+
+
+    def create_queue(self, Name, **kwargs):
+        """ Create queue (undocumented API feature).
+        
+        :param Name: Queue name (required)
+        :param kwargs: Optional fields to set (see edit_queue)
+        :returns: ID of new queue or False when create fails
+        :raises BadRequest: When queue already exists
+        :raises InvalidUse: When invalid fields are set
+        """
+
+        return int(self.edit_queue('new', Name=Name, **kwargs))
+
 
     def get_links(self, ticket_id):
         """ Gets the ticket links for a single ticket.
