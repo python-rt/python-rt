@@ -87,6 +87,11 @@ class InvalidUse(Exception):
 
     pass
 
+class BadRequest(Exception):
+    """ Exception raised when HTTP code 400 (Bad Request) is received. """
+
+    pass
+
 class ConnectionError(Exception):
     """ Encapsulation of various exceptions indicating network problems. """
 
@@ -129,6 +134,8 @@ class Rt:
         'created_link_pattern': re.compile('.* Created link '),
         'deleted_link_pattern': re.compile('.* Deleted link '),
         'merge_successful_pattern': re.compile('^# Merge completed.|^Merge Successful$'),
+        'bad_request_pattern': re.compile('.* 400 Bad Request$'),
+        'user_pattern': re.compile('^# User ([0-9]*) (?:updated|created)\.$'),
     }
 
     def __init__(self, url, default_login=None, default_password=None, proxy=None,
@@ -254,6 +261,8 @@ class Rt:
             raise AuthorizationError('Credentials required.')
         if self.RE_PATTERNS['syntax_error_pattern'].match(msg[0]):
             raise APISyntaxError(msg[2][2:] if len(msg) > 2 else 'Syntax error.')
+        if self.RE_PATTERNS['bad_request_pattern'].match(msg[0]):
+            raise BadRequest(msg[2][2:] if len(msg) > 2 else 'Bad request.')
 
     def __normalize_list(self, msg):
         """Split message to list by commas and trim whitespace."""
@@ -946,11 +955,92 @@ Text: %s""" % (str(ticket_id), re.sub(r'\n', r'\n      ', text))}
         else:
             raise UnexpectedMessageFormat('Received status code is %d instead of 200.' % status_code)
 
+
+    def create_user(self, Name, EmailAddress, **kwargs):
+        """ Create user (undocumented API feature).
+        
+        :param Name: User name (login for privileged, required)
+        :param EmailAddress: Email address (required)
+        :param kwargs: Optional fields to set (see edit_user)
+        :returns: ID of new user or False when create fails
+        :raises BadRequest: When user already exists
+        :raises InvalidUse: When invalid fields are set
+        """
+
+        return self.edit_user('new', Name=Name, EmailAddress=EmailAddress, **kwargs)
+
+
+    def edit_user(self, user_id, **kwargs):
+        """ Edit user profile (undocumented API feature).
+
+        :param user_id: Identification of user by username (str) or user ID
+                        (int)
+        :param kwargs: Other fields to edit from the following list:
+
+                          * Name
+                          * Password
+                          * EmailAddress
+                          * RealName
+                          * NickName
+                          * Gecos
+                          * Organization
+                          * Address1
+                          * Address2
+                          * City
+                          * State
+                          * Zip
+                          * Country
+                          * HomePhone
+                          * WorkPhone
+                          * MobilePhone
+                          * PagerPhone
+                          * ContactInfo
+                          * Comments
+                          * Signature
+                          * Lang
+                          * EmailEncoding
+                          * WebEncoding
+                          * ExternalContactInfoId
+                          * ContactInfoSystem
+                          * ExternalAuthId
+                          * AuthSystem
+                          * Privileged
+                          * Disabled
+
+        :returns: ID of edited user or False when edit fails
+        :raises BadRequest: When user does not exist
+        :raises InvalidUse: When invalid fields are set
+        """
+
+        valid_fields = set(('name', 'password', 'emailaddress', 'realname',
+            'nickname', 'gecos', 'organization', 'address1', 'address2',
+            'city', 'state', 'zip', 'country', 'homephone', 'workphone',
+            'mobilephone', 'pagerphone', 'contactinfo', 'comments',
+            'signature', 'lang', 'emailencoding', 'webencoding',
+            'externalcontactinfoid', 'contactinfosystem', 'externalauthid',
+            'authsystem', 'privileged', 'disabled'))
+        used_fields = set(map(lambda x: x.lower(), kwargs.keys()))
+
+        if not used_fields <= valid_fields:
+            invalid_fields = ", ".join(list(used_fields - valid_fields))
+            raise InvalidUse("Unsupported names of fields: %s." % invalid_fields)
+        post_data = 'id: user/%s\n' % str(user_id)
+        for key, val in iteritems(kwargs):
+            post_data += '%s: %s\n' % (key, val)
+        msg = self.__request('edit', {'content':post_data})
+        msgs = msg.split('\n')
+        if (self.__get_status_code(msg) == 200) and (len(msgs) > 2):
+            match = self.RE_PATTERNS['user_pattern'].match(msgs[2])
+            if match:
+                return int(match.group(1))
+        return False
+                        
+
     def get_queue(self, queue_id):
         """ Get queue details.
         
         :param queue_id: Identification of queue by name (str) or queue ID
-                        (int)
+            (int)
         :returns: Queue details as strings in dictionary with these keys
                   (if queue exists):
 
