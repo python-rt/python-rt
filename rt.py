@@ -138,6 +138,7 @@ class Rt:
         'bad_request_pattern': re.compile('.* 400 Bad Request$'),
         'user_pattern': re.compile('^# User ([0-9]*) (?:updated|created)\.$'),
         'queue_pattern': re.compile('^# Queue (\w*) (?:updated|created)\.$'),
+        'does_not_exist_pattern': re.compile('^# (?:Queue|User|Ticket) \w* does not exist\.$'),
     }
 
     def __init__(self, url, default_login=None, default_password=None, proxy=None,
@@ -476,7 +477,7 @@ class Rt:
         :param ticket_id: ID of demanded ticket
         
         :returns: Dictionary with key, value pairs for ticket with
-                  *ticket_id*. List of keys:
+                  *ticket_id* or None if ticket does not exist. List of keys:
                   
                       * id
                       * Queue
@@ -506,7 +507,8 @@ class Rt:
         if(status_code == 200):
             pairs = {}
             msg = msg.split('\n')
-            
+            if (len(msg) > 2) and self.RE_PATTERNS['does_not_exist_pattern'].match(msg[2]):
+                return None
             req_id = [id for id in range(len(msg)) if self.RE_PATTERNS['requestors_pattern'].match(msg[id]) is not None]
             if len(req_id)==0:
                 raise UnexpectedMessageFormat('Missing line starting with `Requestors:`.')
@@ -948,14 +950,18 @@ Text: %s""" % (str(ticket_id), re.sub(r'\n', r'\n      ', text))}
                       * Password
                       * id
                       * Name
+
+                  None is returned if user does not exist.
         :raises UnexpectedMessageFormat: In case that returned status code is not 200
         """
         msg = self.__request('user/%s' % (str(user_id),))
         status_code = self.__get_status_code(msg)
         if(status_code == 200):
             pairs = {}
-            msg = msg.split('\n')[2:]
-            for i in range(len(msg)):
+            msg = msg.split('\n')
+            if (len(msg) > 2) and self.RE_PATTERNS['does_not_exist_pattern'].match(msg[2]):
+                return None
+            for i in range(2, len(msg)):
                 colon = msg[i].find(': ')
                 if colon > 0:
                     pairs[msg[i][:colon].strip()] = msg[i][colon + 1:].strip()
@@ -1050,7 +1056,7 @@ Text: %s""" % (str(ticket_id), re.sub(r'\n', r'\n      ', text))}
         :param queue_id: Identification of queue by name (str) or queue ID
                          (int)
         :returns: Queue details as strings in dictionary with these keys
-                  (if queue exists):
+                  if queue exists (otherwise None):
 
                       * id
                       * Name
@@ -1067,8 +1073,10 @@ Text: %s""" % (str(ticket_id), re.sub(r'\n', r'\n      ', text))}
         status_code = self.__get_status_code(msg)
         if(status_code == 200):
             pairs = {}
-            msg = msg.split('\n')[2:]
-            for i in range(len(msg)):
+            msg = msg.split('\n')
+            if (len(msg) > 2) and self.RE_PATTERNS['does_not_exist_pattern'].match(msg[2]):
+                return None
+            for i in range(2, len(msg)):
                 colon = msg[i].find(': ')
                 if colon > 0:
                     pairs[msg[i][:colon].strip()] = msg[i][colon + 1:].strip()
@@ -1142,6 +1150,7 @@ Text: %s""" % (str(ticket_id), re.sub(r'\n', r'\n      ', text))}
                       * DependsOn
                       * DependedOnBy
 
+                  None is returned if ticket does not exist.
         :raises UnexpectedMessageFormat: In case that returned status code is not 200
         """
         msg = self.__request('ticket/%s/links/show' % (str(ticket_id),))
@@ -1149,8 +1158,10 @@ Text: %s""" % (str(ticket_id), re.sub(r'\n', r'\n      ', text))}
         status_code = self.__get_status_code(msg)
         if(status_code == 200):
             pairs = {}
-            msg = msg.split('\n')[2:]
-            i = 0
+            msg = msg.split('\n')
+            if (len(msg) > 2) and self.RE_PATTERNS['does_not_exist_pattern'].match(msg[2]):
+                return None
+            i = 2
             while i < len(msg):
                 colon = msg[i].find(': ')
                 if colon > 0:
