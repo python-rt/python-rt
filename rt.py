@@ -127,9 +127,10 @@ class Rt:
         'requestors_pattern': re.compile('Requestors:'),
         'update_pattern': re.compile('^# Ticket [0-9]+ updated.$'),
         'content_pattern': re.compile('Content:'),
+        'content_pattern_bytes': re.compile(b'Content:'),
         'attachments_pattern': re.compile('Attachments:'),
         'attachments_list_pattern': re.compile(r'[^0-9]*(\d+): ([\w().]+) \((\w+/[\w.]+) / ([0-9a-z.]+)\),?$'),
-        'headers_pattern': re.compile('Headers:'),
+        'headers_pattern_bytes': re.compile(b'Headers:'),
         'links_updated_pattern': re.compile('^# Links for ticket [0-9]+ updated.$'),
         'created_link_pattern': re.compile('.* Created link '),
         'deleted_link_pattern': re.compile('.* Deleted link '),
@@ -193,9 +194,11 @@ class Rt:
                         (list is necessary to keep files ordered)
         :keyword without_login: Turns off checking last login result
                                 (usually needed just for login itself)
+        :keyword text_response: If set to false the received message will be
+                                returned without decoding (useful for attachments)
         :returns: Requested messsage including state line in form
                   ``RT/3.8.7 200 Ok\\n``
-        :rtype: string
+        :rtype: string or bytes if text_response is False
         :raises AuthorizationError: In case that request is called without previous
                                     login or login attempt failed.
         :raises ConnectionError: In case of connection error.
@@ -218,19 +221,20 @@ class Rt:
                 raise AuthorizationError('Server could not verify that you are authorized to access the requested document.')
             if response.status_code != 200:
                 raise UnexpectedResponse('Received status code %d instead of 200.' % response.status_code)
-            if response.encoding:
-                try:
+            try:
+                if response.encoding:
                     result = response.content.decode(response.encoding.lower())
-                except LookupError:
-                    raise UnexpectedResponse('Unknown response encoding: %s.' % response.encoding)
-            else:
-                # try utf-8 if encoding is not filled
-                try:
+                else:
+                    # try utf-8 if encoding is not filled
                     result = response.content.decode('utf-8')
-                except UnicodeError:
-                    if text_response:
-                        raise UnexpectedResponse('Unknown response encoding (UTF-8 does not work).')
-                    result = response.content
+            except LookupError:
+                raise UnexpectedResponse('Unknown response encoding: %s.' % response.encoding)
+            except UnicodeError:
+                if text_response:
+                    raise UnexpectedResponse('Unknown response encoding (UTF-8 does not work).')
+                else:
+                    # replace errors - we need decoded content just to check for error codes in __check_response
+                    result = response.content.decode('utf-8', errors='replace')
             self.__check_response(result)
             if not text_response:
                 return response.content
@@ -820,7 +824,7 @@ Text: %s""" % (str(ticket_id), re.sub(r'\n', r'\n      ', text))}
                       * Creator
                       * Created
                       * Filename
-                      * Content
+                      * Content (bytes type)
                       * Headers
                       * MessageId
                       * ContentEncoding
@@ -860,16 +864,17 @@ Text: %s""" % (str(ticket_id), re.sub(r'\n', r'\n      ', text))}
                   emails not on Request Tracker!
         :raises UnexpectedMessageFormat: Unexpected format of returned message.
         """
-        msg = self.__request('ticket/%s/attachments/%s' % (str(ticket_id), str(attachment_id)))
-        msg = msg.split('\n')[2:]
-        head_id = [id for id in range(len(msg)) if self.RE_PATTERNS['headers_pattern'].match(msg[id]) is not None]
+        msg = self.__request('ticket/%s/attachments/%s' % (str(ticket_id), str(attachment_id)),
+                             text_response=False)
+        msg = msg.split(b'\n')[2:]
+        head_id = [id for id in range(len(msg)) if self.RE_PATTERNS['headers_pattern_bytes'].match(msg[id]) is not None]
         if len(head_id) == 0:
             raise UnexpectedMessageFormat('Unexpected headers part of attachment entry. \
                                            Missing line starting with `Headers:`.')
         else:
             head_id = head_id[0]
-        msg[head_id] = re.sub(r'^Headers: (.*)$', r'\1', msg[head_id])
-        cont_id = [id for id in range(len(msg)) if self.RE_PATTERNS['content_pattern'].match(msg[id]) is not None]
+        msg[head_id] = re.sub(b'^Headers: (.*)$', r'\1', msg[head_id])
+        cont_id = [id for id in range(len(msg)) if self.RE_PATTERNS['content_pattern_bytes'].match(msg[id]) is not None]
         
         if len(cont_id) == 0:
             raise UnexpectedMessageFormat('Unexpected content part of attachment entry. \
@@ -878,19 +883,19 @@ Text: %s""" % (str(ticket_id), re.sub(r'\n', r'\n      ', text))}
             cont_id = cont_id[0]
         pairs = {}
         for i in range(head_id):
-            colon = msg[i].find(': ')
+            colon = msg[i].find(b': ')
             if colon > 0:
-                pairs[msg[i][:colon].strip()] = msg[i][colon + 1:].strip()
+                pairs[msg[i][:colon].strip().decode('utf-8')] = msg[i][colon + 1:].strip().decode('utf-8')
         headers = {}
         for i in range(head_id, cont_id):
-            colon = msg[i].find(': ')
+            colon = msg[i].find(b': ')
             if colon > 0:
-                headers[msg[i][:colon].strip()] = msg[i][colon + 1:].strip()
+                headers[msg[i][:colon].strip().decode('utf-8')] = msg[i][colon + 1:].strip().decode('utf-8')
         pairs['Headers'] = headers
         content = msg[cont_id][9:]
         for i in range(cont_id+1, len(msg)):
-            if msg[i][:9] == (' ' * 9):
-                content += '\n' + msg[i][9:]
+            if msg[i][:9] == (b' ' * 9):
+                content += b'\n' + msg[i][9:]
         pairs['Content'] = content
         return pairs
 
