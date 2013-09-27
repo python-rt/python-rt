@@ -139,6 +139,9 @@ class Rt:
         'user_pattern': re.compile('^# User ([0-9]*) (?:updated|created)\.$'),
         'queue_pattern': re.compile('^# Queue (\w*) (?:updated|created)\.$'),
         'does_not_exist_pattern': re.compile('^# (?:Queue|User|Ticket) \w* does not exist\.$'),
+        'does_not_exist_pattern_bytes': re.compile(b'^# (?:Queue|User|Ticket) \w* does not exist\.$'),
+        'not_related_pattern': re.compile('^# Transaction \d+ is not related to Ticket \d+'),
+        'invalid_attachment_pattern_bytes': re.compile(b'^# Invalid attachment id: \d+$'),
     }
 
     def __init__(self, url, default_login=None, default_password=None, proxy=None,
@@ -250,7 +253,10 @@ class Rt:
         :returns: Status code
         :rtype: int
         """
-        return int(msg.split('\n')[0].split(' ')[1])
+        try:
+            return int(msg.split('\n')[0].split(' ')[1])
+        except:
+            return None
 
     def __check_response(self, msg):
         """ Search general errors in server response and raise exceptions when found.
@@ -441,35 +447,31 @@ class Rt:
 
         msgs = msgs.split('\n--\n')
         items = []
-        try:
-            for i in range(len(msgs)):
-                pairs = {}
-                msg = msgs[i].split('\n')
+        for i in range(len(msgs)):
+            pairs = {}
+            msg = msgs[i].split('\n')
 
-                req_id = [id for id in range(len(msg)) if self.RE_PATTERNS['requestors_pattern'].match(msg[id]) is not None]
-                if len(req_id)==0:
-                    raise UnexpectedMessageFormat('Missing line starting with `Requestors:`.')
-                else:
-                    req_id = req_id[0]
-                for i in range(req_id):
-                    colon = msg[i].find(': ')
-                    if colon > 0:
-                        pairs[msg[i][:colon].strip()] = msg[i][colon+1:].strip()
-                requestors = [msg[req_id][12:]]
+            req_matching = [i for i, m in enumerate(msg) if self.RE_PATTERNS['requestors_pattern'].match(m)]
+            req_id = req_matching[0] if req_matching else None
+            if not req_id:
+                raise UnexpectedMessageFormat('Missing line starting with `Requestors:`.')
+            for i in range(req_id):
+                if ': ' in msg[i]:
+                    header, content = msg[i].split(': ', 1)
+                    pairs[header.strip()] = content.strip()
+            requestors = [msg[req_id][12:]]
+            req_id += 1
+            while (req_id < len(msg)) and (msg[req_id][:12] == ' ' * 12):
+                requestors.append(msg[req_id][12:])
                 req_id += 1
-                while (req_id < len(msg)) and (msg[req_id][:12] == ' '*12):
-                    requestors.append(msg[req_id][12:])
-                    req_id += 1
-                pairs['Requestors'] = self.__normalize_list(requestors)
-                for i in range(req_id, len(msg)):
-                    colon = msg[i].find(': ')
-                    if colon > 0:
-                        pairs[msg[i][:colon].strip()] = msg[i][colon+1:].strip()
-                if len(pairs) > 0:
-                    items.append(pairs)    
-            return items
-        except:
-            return []
+            pairs['Requestors'] = self.__normalize_list(requestors)
+            for i in range(req_id, len(msg)):
+                if ': ' in msg[i]:
+                    header, content = msg[i].split(': ', 1)
+                    pairs[header.strip()] = content.strip()
+            if pairs:
+                items.append(pairs)    
+        return items
 
     def get_ticket(self, ticket_id):
         """ Fetch ticket by its ID.
@@ -504,30 +506,29 @@ class Rt:
         """
         msg = self.__request('ticket/%s/show' % (str(ticket_id),))
         status_code = self.__get_status_code(msg)
-        if(status_code == 200):
+        if status_code == 200:
             pairs = {}
             msg = msg.split('\n')
             if (len(msg) > 2) and self.RE_PATTERNS['does_not_exist_pattern'].match(msg[2]):
                 return None
-            req_id = [id for id in range(len(msg)) if self.RE_PATTERNS['requestors_pattern'].match(msg[id]) is not None]
-            if len(req_id)==0:
+            req_matching = [i for i, m in enumerate(msg) if self.RE_PATTERNS['requestors_pattern'].match(m)]
+            req_id = req_matching[0] if req_matching else None
+            if not req_id:
                 raise UnexpectedMessageFormat('Missing line starting with `Requestors:`.')
-            else:
-                req_id = req_id[0]
             for i in range(req_id):
-                colon = msg[i].find(': ')
-                if colon > 0:
-                    pairs[msg[i][:colon].strip()] = msg[i][colon+1:].strip()
+                if ': ' in msg[i]:
+                    header, content = msg[i].split(': ', 1)
+                    pairs[header.strip()] = content.strip()
             requestors = [msg[req_id][12:]]
             req_id += 1
-            while (req_id < len(msg)) and (msg[req_id][:12] == ' '*12):
+            while (req_id < len(msg)) and (msg[req_id][:12] == ' ' * 12):
                 requestors.append(msg[req_id][12:])
                 req_id += 1
             pairs['Requestors'] = self.__normalize_list(requestors)
-            for i in range(req_id,len(msg)):
-                colon = msg[i].find(': ')
-                if colon > 0:
-                    pairs[msg[i][:colon].strip()] = msg[i][colon+1:].strip()
+            for i in range(req_id, len(msg)):
+                if ': ' in msg[i]:
+                    header, content = msg[i].split(': ', 1)
+                    pairs[header.strip()] = content.strip()
             return pairs
         else:
             raise UnexpectedMessageFormat('Received status code is %d instead of 200.' % status_code)
@@ -633,6 +634,8 @@ class Rt:
 
                   All these fields are strings, just 'Attachments' holds list
                   of pairs (attachment_id,filename_with_size).
+
+                  Returns None if ticket or transaction does not exist.
         :raises UnexpectedMessageFormat: Unexpected format of returned message.
         """
         if transaction_id is None:
@@ -641,65 +644,68 @@ class Rt:
             msgs = self.__request('ticket/%s/history?format=l' % (str(ticket_id),))
         else:
             msgs = self.__request('ticket/%s/history/id/%s' % (str(ticket_id), str(transaction_id)))
+        lines = msgs.split('\n')
+        if (len(lines) > 2) and \
+               (self.RE_PATTERNS['does_not_exist_pattern'].match(lines[2]) or \
+                self.RE_PATTERNS['not_related_pattern'].match(lines[2])):
+            return None
         msgs = msgs.split('\n--\n')
         items = []
-        try:
-            for i in range(len(msgs)):
-                pairs = {}
-                msg = msgs[i].split('\n')
-                cont_id = [id for id in range(len(msg)) if self.RE_PATTERNS['content_pattern'].match(msg[id]) is not None]
-                if len(cont_id) == 0:
-                    raise UnexpectedMessageFormat('Unexpected history entry. \
-                                                   Missing line starting with `Content:`.')
-                else:
-                    cont_id = cont_id[0]
-                atta_id = [id for id in range(len(msg)) if self.RE_PATTERNS['attachments_pattern'].match(msg[id]) is not None]
-                if len(atta_id) == 0:
-                    raise UnexpectedMessageFormat('Unexpected attachment part of history entry. \
-                                                   Missing line starting with `Attachements:`.')
-                else:
-                    atta_id = atta_id[0]
-                for i in range(cont_id):
-                    colon = msg[i].find(': ')
-                    if colon > 0:
-                        pairs[msg[i][:colon].strip()] = msg[i][colon + 1:].strip()
-                content = msg[cont_id][9:]
+        for msg in msgs:
+            pairs = {}
+            msg = msg.split('\n')
+            cont_matching = [i for i, m in enumerate(msg) if self.RE_PATTERNS['content_pattern'].match(m)]
+            cont_id = cont_matching[0] if cont_matching else None
+            if not cont_id:
+                raise UnexpectedMessageFormat('Unexpected history entry. \
+                                               Missing line starting with `Content:`.')
+            atta_matching = [i for i, m in enumerate(msg) if self.RE_PATTERNS['attachments_pattern'].match(m)]
+            atta_id = atta_matching[0] if atta_matching else None
+            if not atta_id:
+                raise UnexpectedMessageFormat('Unexpected attachment part of history entry. \
+                                               Missing line starting with `Attachements:`.')
+            for i in range(cont_id):
+                if ': ' in msg[i]:
+                    header, content = msg[i].split(': ', 1)
+                    pairs[header.strip()] = content.strip()
+            content = msg[cont_id][9:]
+            cont_id += 1
+            while (cont_id < len(msg)) and (msg[cont_id][:9] == ' ' * 9):
+                content += '\n' + msg[cont_id][9:]
                 cont_id += 1
-                while (cont_id < len(msg)) and (msg[cont_id][:9] == ' ' * 9):
-                    content += '\n'+msg[cont_id][9:]
-                    cont_id += 1
-                pairs['Content'] = content
-                for i in range(cont_id, atta_id):
-                    colon = msg[i].find(': ')
-                    if colon > 0:
-                        pairs[msg[i][:colon].strip()] = msg[i][colon + 1:].strip()
-                attachments = []
-                for i in range(atta_id + 1, len(msg)):
-                    colon = msg[i].find(': ')
-                    if colon > 0:
-                        attachments.append((int(msg[i][:colon].strip()),
-                                            msg[i][colon + 1:].strip()))
-                pairs['Attachments'] = attachments
-                items.append(pairs)    
-            return items
-        except:
-            return []
+            pairs['Content'] = content
+            for i in range(cont_id, atta_id):
+                if ': ' in msg[i]:
+                    header, content = msg[i].split(': ', 1)
+                    pairs[header.strip()] = content.strip()
+            attachments = []
+            for i in range(atta_id + 1, len(msg)):
+                if ': ' in msg[i]:
+                    header, content = msg[i].split(': ', 1)
+                    attachments.append((int(header),
+                                        content.strip()))
+            pairs['Attachments'] = attachments
+            items.append(pairs)    
+        return items
 
     def get_short_history(self, ticket_id):
         """ Get set of short history items
         
         :param ticket_id: ID of ticket
         :returns: List of history items ordered increasingly by time of event.
-                  Each history item is a tuple containing (id, Description)
+                  Each history item is a tuple containing (id, Description).
+                  Returns None if ticket does not exist.
         """
         msg = self.__request('ticket/%s/history' % (str(ticket_id),))
         items = []
-        if len(msg) != 0 and self.__get_status_code(msg) == 200:
-            short_hist_lines = msg.split('\n')
-            if len(short_hist_lines) >= 4:
-                for line in short_hist_lines[4:]:
+        lines = msg.split('\n')
+        if self.__get_status_code(lines[0]) == 200:
+            if (len(lines) > 2) and self.RE_PATTERNS['does_not_exist_pattern'].match(lines[2]):
+                return None
+            if len(lines) >= 4:
+                for line in lines[4:]:
                     if ': ' in line:
-                        hist_id, desc = line.split(': ')
+                        hist_id, desc = line.split(': ', 1)
                         items.append((int(hist_id), desc))
         return items
     
@@ -728,6 +734,7 @@ class Rt:
                       Operation was successful
                   ``False``
                       Sending failed (status code != 200)
+        :raises BadRequest: When ticket does not exist
         """
         post_data = {'content':"""id: %s
 Action: correspond
@@ -770,6 +777,7 @@ Bcc: %s"""%(str(ticket_id), re.sub(r'\n', r'\n      ', text), cc, bcc)}
                       Operation was successful
                   ``False``
                       Sending failed (status code != 200)
+        :raises BadRequest: When ticket does not exist
         """
         post_data = {'content':"""id: %s
 Action: comment
@@ -787,31 +795,29 @@ Text: %s""" % (str(ticket_id), re.sub(r'\n', r'\n      ', text))}
         :param ticket_id: ID of ticket
         :returns: List of tuples for attachments belonging to given ticket.
                   Tuple format: (id, name, content_type, size)
+                  Returns None if ticket does not exist.
         """
-        at = self.__request('ticket/%s/attachments' % (str(ticket_id),))
-        if (len(at) != 0) and (self.__get_status_code(at) == 200):
-            atlines = at.split('\n')
-            attachment_infos = []
-            if len(atlines) >= 4:
-                for line in atlines[4:]:
-                    if len(line) > 0:
-                        info = self.RE_PATTERNS['attachments_list_pattern'].match(line).groups()
-                        if info:
-                            attachment_infos.append(info)
-                return attachment_infos
-            else:
-                return []
-        else:
-            return []
+        msg = self.__request('ticket/%s/attachments' % (str(ticket_id),))
+        lines = msg.split('\n')
+        if (len(lines) > 2) and self.RE_PATTERNS['does_not_exist_pattern'].match(lines[2]):
+            return None
+        attachment_infos = []
+        if (self.__get_status_code(lines[0]) == 200) and (len(lines) >= 4):
+            for line in lines[4:]:
+                info = self.RE_PATTERNS['attachments_list_pattern'].match(line)
+                if info:
+                    attachment_infos.append(info.groups())
+        return attachment_infos
 
     def get_attachments_ids(self, ticket_id):
         """ Get IDs of attachments for given ticket.
         
         :param ticket_id: ID of ticket
         :returns: List of IDs (type int) of attachments belonging to given
-                  ticket
+                  ticket. Returns None if ticket does not exist.
         """
-        return [int(att[0]) for att in self.get_attachments(ticket_id)]
+        attachments = self.get_attachments(ticket_id)
+        return [int(at[0]) for at in attachments] if attachments else attachments
         
     def get_attachment(self, ticket_id, attachment_id):
         """ Get attachment.
@@ -864,38 +870,42 @@ Text: %s""" % (str(ticket_id), re.sub(r'\n', r'\n      ', text))}
 
                   Set of headers available depends on mailservers sending
                   emails not on Request Tracker!
+
+                  Returns None if ticket or attachment does not exist.
         :raises UnexpectedMessageFormat: Unexpected format of returned message.
         """
         msg = self.__request('ticket/%s/attachments/%s' % (str(ticket_id), str(attachment_id)),
                              text_response=False)
-        msg = msg.split(b'\n')[2:]
-        head_id = [id for id in range(len(msg)) if self.RE_PATTERNS['headers_pattern_bytes'].match(msg[id]) is not None]
-        if len(head_id) == 0:
+        msg = msg.split(b'\n')
+        if (len(msg) > 2) and \
+               (self.RE_PATTERNS['invalid_attachment_pattern_bytes'].match(msg[2]) or \
+                self.RE_PATTERNS['does_not_exist_pattern_bytes'].match(msg[2])):
+            return None
+        msg = msg[2:]
+        head_matching = [i for i, m in enumerate(msg) if self.RE_PATTERNS['headers_pattern_bytes'].match(m)]
+        head_id = head_matching[0] if head_matching else None
+        if not head_id:
             raise UnexpectedMessageFormat('Unexpected headers part of attachment entry. \
                                            Missing line starting with `Headers:`.')
-        else:
-            head_id = head_id[0]
         msg[head_id] = re.sub(b'^Headers: (.*)$', r'\1', msg[head_id])
-        cont_id = [id for id in range(len(msg)) if self.RE_PATTERNS['content_pattern_bytes'].match(msg[id]) is not None]
-        
-        if len(cont_id) == 0:
+        cont_matching = [i for i, m in enumerate(msg) if self.RE_PATTERNS['content_pattern_bytes'].match(m)]
+        cont_id = cont_matching[0] if cont_matching else None
+        if not cont_matching:
             raise UnexpectedMessageFormat('Unexpected content part of attachment entry. \
                                            Missing line starting with `Content:`.')
-        else:
-            cont_id = cont_id[0]
         pairs = {}
         for i in range(head_id):
-            colon = msg[i].find(b': ')
-            if colon > 0:
-                pairs[msg[i][:colon].strip().decode('utf-8')] = msg[i][colon + 1:].strip().decode('utf-8')
+            if b': ' in msg[i]:
+                header, content = msg[i].split(b': ', 1)
+                pairs[header.strip().decode('utf-8')] = content.strip().decode('utf-8')
         headers = {}
         for i in range(head_id, cont_id):
-            colon = msg[i].find(b': ')
-            if colon > 0:
-                headers[msg[i][:colon].strip().decode('utf-8')] = msg[i][colon + 1:].strip().decode('utf-8')
+            if b': ' in msg[i]:
+                header, content = msg[i].split(b': ', 1)
+                headers[header.strip().decode('utf-8')] = content.strip().decode('utf-8')
         pairs['Headers'] = headers
         content = msg[cont_id][9:]
-        for i in range(cont_id+1, len(msg)):
+        for i in range(cont_id + 1, len(msg)):
             if msg[i][:9] == (b' ' * 9):
                 content += b'\n' + msg[i][9:]
         pairs['Content'] = content
@@ -915,13 +925,19 @@ Text: %s""" % (str(ticket_id), re.sub(r'\n', r'\n      ', text))}
         :param ticket_id: ID of ticket
         :param attachment_id: ID of attachment
         
-        Returns: string with content of attachment
+        Returns: Bytes with content of attachment or None if ticket or
+                 attachment does not exist.
         """
     
         msg = self.__request('ticket/%s/attachments/%s/content' %
                              (str(ticket_id), str(attachment_id)),
                              text_response=False)
-        return msg[re.search(b'\n', msg).start() + 2:-3]
+        lines = msg.split(b'\n', 3)
+        if (len(lines) == 4) and \
+               (self.RE_PATTERNS['invalid_attachment_pattern_bytes'].match(lines[2]) or \
+                self.RE_PATTERNS['does_not_exist_pattern_bytes'].match(lines[2])):
+            return None
+        return msg[msg.find(b'\n') + 2:-3]
 
     def get_user(self, user_id):
         """ Get user details.
@@ -958,13 +974,13 @@ Text: %s""" % (str(ticket_id), re.sub(r'\n', r'\n      ', text))}
         status_code = self.__get_status_code(msg)
         if(status_code == 200):
             pairs = {}
-            msg = msg.split('\n')
-            if (len(msg) > 2) and self.RE_PATTERNS['does_not_exist_pattern'].match(msg[2]):
+            lines = msg.split('\n')
+            if (len(lines) > 2) and self.RE_PATTERNS['does_not_exist_pattern'].match(lines[2]):
                 return None
-            for i in range(2, len(msg)):
-                colon = msg[i].find(': ')
-                if colon > 0:
-                    pairs[msg[i][:colon].strip()] = msg[i][colon + 1:].strip()
+            for line in lines[2:]:
+                if ': ' in line:
+                    header, content = line.split(': ', 1)
+                    pairs[header.strip()] = content.strip()
             return pairs
         else:
             raise UnexpectedMessageFormat('Received status code is %d instead of 200.' % status_code)
@@ -1073,13 +1089,13 @@ Text: %s""" % (str(ticket_id), re.sub(r'\n', r'\n      ', text))}
         status_code = self.__get_status_code(msg)
         if(status_code == 200):
             pairs = {}
-            msg = msg.split('\n')
-            if (len(msg) > 2) and self.RE_PATTERNS['does_not_exist_pattern'].match(msg[2]):
+            lines = msg.split('\n')
+            if (len(lines) > 2) and self.RE_PATTERNS['does_not_exist_pattern'].match(lines[2]):
                 return None
-            for i in range(2, len(msg)):
-                colon = msg[i].find(': ')
-                if colon > 0:
-                    pairs[msg[i][:colon].strip()] = msg[i][colon + 1:].strip()
+            for line in lines[2:]:
+                if ': ' in line:
+                    header, content = line.split(': ', 1)
+                    pairs[header.strip()] = content.strip()
             return pairs
         else:
             raise UnexpectedMessageFormat('Received status code is %d instead of 200.' % status_code)
@@ -1163,10 +1179,9 @@ Text: %s""" % (str(ticket_id), re.sub(r'\n', r'\n      ', text))}
                 return None
             i = 2
             while i < len(msg):
-                colon = msg[i].find(': ')
-                if colon > 0:
-                    key = msg[i][:colon]
-                    links = [msg[i][colon + 1:].strip()]
+                if ': ' in msg[i]:
+                    key, link = msg[i].split(': ', 1)
+                    links = [link.strip()]
                     j = i + 1
                     pad = len(key) + 2
                     # loop over next lines for the same key 
