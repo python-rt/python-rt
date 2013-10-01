@@ -1,3 +1,13 @@
+v1.0.7, 2013-10-01
+- unit tests
+- own exceptions
+- added create_user, create_queue, edit_user, edit_queue methods
+- added edit_link (replaces buggy edit_ticket_links)
+- added get_attachments, get_short_history methods
+- support merge_ticket in RT4
+- custom query to search method
+- strict binary handling with attachments
+
 v1.0.6, 2013-09-05
 - added support for HTTP basic and digest authentication
 - specification of errors to different exceptions
