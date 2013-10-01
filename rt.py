@@ -440,17 +440,18 @@ class Rt:
             query += "&orderby=" + order
         query += "&format=l"
 
-        msgs = self.__request(query)
+        msg = self.__request(query)
+        lines = msg.split('\n')
+        if len(lines) > 2:
+            if self.__get_status_code(lines[0]) != 200 and lines[2].startswith('Invalid query: '):
+                raise InvalidQueryError(lines[2])
+            if lines[2].startswith('No matching results.'):
+                return []
 
-        if self.__get_status_code(msgs) != 200 and msgs[2].startswith('Invalid query:'):
-            raise InvalidQueryError(msgs[2])
-
-        msgs = msgs.split('\n--\n')
+        msgs = map(lambda x: x.split('\n'), msg.split('\n--\n'))
         items = []
-        for i in range(len(msgs)):
+        for msg in msgs:
             pairs = {}
-            msg = msgs[i].split('\n')
-
             req_matching = [i for i, m in enumerate(msg) if self.RE_PATTERNS['requestors_pattern'].match(m)]
             req_id = req_matching[0] if req_matching else None
             if not req_id:
