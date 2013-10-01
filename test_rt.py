@@ -99,6 +99,9 @@ class RtTestCase(unittest.TestCase):
             params = self.RT_VALID_CREDENTIALS[name]
             tracker = rt.Rt(**params)
             self.assertTrue(tracker.login(), 'Invalid login to RT demo site ' + name)
+            # empty search result
+            search_result = tracker.search(Subject=ticket_subject)
+            self.assertEqual(search_result, [], 'Search for ticket with random subject returned non empty list.')
             # create
             ticket_id = tracker.create_ticket(Subject=ticket_subject, Text=ticket_text)
             self.assertTrue(ticket_id > -1, 'Creating ticket failed.')
