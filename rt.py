@@ -238,7 +238,7 @@ class Rt:
                     raise UnexpectedResponse('Unknown response encoding (UTF-8 does not work).')
                 else:
                     # replace errors - we need decoded content just to check for error codes in __check_response
-                    result = response.content.decode('utf-8', errors='replace')
+                    result = response.content.decode('utf-8', 'replace')
             self.__check_response(result)
             if not text_response:
                 return response.content
