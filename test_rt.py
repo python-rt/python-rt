@@ -32,39 +32,41 @@ import rt
 class RtTestCase(unittest.TestCase):
 
     RT_VALID_CREDENTIALS = {
-        'RT3.8 stable (admin)': {
-            'url': 'http://rt.easter-eggs.org/demos/oldstable/REST/1.0',
-            'default_login': 'admin',
-            'default_password': 'admin',
+        'RT3.8 stable': {
+            'url': 'http://rt.easter-eggs.org/demos/3.8/REST/1.0',
+            'admin': {
+                'default_login': 'admin',
+                'default_password': 'admin',
+            },
+            'john.foo': {
+                'default_login': 'john.foo',
+                'default_password': 'john.foo',
+            }
         },
-        'RT3.8 stable (john.foo)': {
-            'url': 'http://rt.easter-eggs.org/demos/oldstable/REST/1.0',
-            'default_login': 'john.foo',
-            'default_password': 'john.foo',
-        },
-        'RT4 stable (admin)': {
-            'url': 'http://rt.easter-eggs.org/demos/stable/REST/1.0',
-            'default_login': 'admin',
-            'default_password': 'admin',
-        },
-        'RT4 stable (john.foo)': {
-            'url': 'http://rt.easter-eggs.org/demos/stable/REST/1.0',
-            'default_login': 'john.foo',
-            'default_password': 'john.foo',
+        'RT4.0 stable': {
+            'url': 'http://rt.easter-eggs.org/demos/4.0/REST/1.0',
+            'admin': {
+                'default_login': 'admin',
+                'default_password': 'admin',
+            },
+            'john.foo': {
+                'default_login': 'john.foo',
+                'default_password': 'john.foo',
+            }
         },
     }
 
     RT_INVALID_CREDENTIALS = {
         'RT3.8 stable (bad credentials)': {
-            'url': 'http://rt.easter-eggs.org/demos/oldstable/REST/1.0',
+            'url': 'http://rt.easter-eggs.org/demos/3.8/REST/1.0',
             'default_login': 'idontexist',
             'default_password': 'idonthavepassword',
         },
     }
 
     RT_MISSING_CREDENTIALS = {
-        'RT4 stable (missing credentials)': {
-            'url': 'http://rt.easter-eggs.org/demos/stable/REST/1.0',
+        'RT4.0 stable (missing credentials)': {
+            'url': 'http://rt.easter-eggs.org/demos/4.0/REST/1.0',
         },
     }
 
@@ -77,8 +79,8 @@ class RtTestCase(unittest.TestCase):
     }
 
     def test_login_and_logout(self):
-        for name, params in iteritems(self.RT_VALID_CREDENTIALS):
-            tracker = rt.Rt(**params)
+        for name in self.RT_VALID_CREDENTIALS:
+            tracker = rt.Rt(self.RT_VALID_CREDENTIALS[name]['url'], **self.RT_VALID_CREDENTIALS[name]['john.foo'])
             self.assertTrue(tracker.login(), 'Invalid login to RT demo site ' + name)
             self.assertTrue(tracker.logout(), 'Invalid logout from RT demo site ' + name)
         for name, params in iteritems(self.RT_INVALID_CREDENTIALS):
@@ -92,12 +94,24 @@ class RtTestCase(unittest.TestCase):
             tracker = rt.Rt(**params)
             self.assertRaises(rt.UnexpectedResponse, lambda: tracker.login())
 
+    def check_or_create_queue(self, name):
+        tracker = rt.Rt(self.RT_VALID_CREDENTIALS[name]['url'], **self.RT_VALID_CREDENTIALS[name]['admin'])
+        tracker.login()
+        queue = tracker.get_queue('General')
+        if 'Name' not in queue:
+            queue_id = tracker.create_queue('General')
+        tracker.logout()
+
     def test_ticket_operations(self):
         ticket_subject = 'Testing issue ' + "".join([random.choice(string.ascii_letters) for i in range(15)])
         ticket_text = 'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'
-        for name in ('RT4 stable (john.foo)', 'RT3.8 stable (john.foo)'):
-            params = self.RT_VALID_CREDENTIALS[name]
-            tracker = rt.Rt(**params)
+        for name in ('RT4.0 stable', 'RT3.8 stable'):
+            self.check_or_create_queue(name)
+
+            url = self.RT_VALID_CREDENTIALS[name]['url']
+            default_login = self.RT_VALID_CREDENTIALS[name]['john.foo']['default_login']
+            default_password = self.RT_VALID_CREDENTIALS[name]['john.foo']['default_password']
+            tracker = rt.Rt(url, default_login=default_login, default_password=default_password)
             self.assertTrue(tracker.login(), 'Invalid login to RT demo site ' + name)
             # empty search result
             search_result = tracker.search(Subject=ticket_subject)
@@ -148,9 +162,10 @@ class RtTestCase(unittest.TestCase):
             self.assertTrue(links2['DependedOnBy'][0].endswith('ticket/' + str(ticket_id)), 'Unexpected value of link DependedOnBy.')
             # reply with attachment
             attachment_content = b'Content of attachment.'
-            attachment_name = 'attachment.txt'
+            attachment_name = 'attachment-name.txt'
             reply_text = 'Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.'
-            self.assertTrue(tracker.reply(ticket_id, text=reply_text, files=[(attachment_name, attachment_content)]), 'Reply to ticket returned False indicating error.')
+            # should provide a content type as RT 4.0 type guessing is broken (missing use statement for guess_media_type in REST.pm)
+            self.assertTrue(tracker.reply(ticket_id, text=reply_text, files=[(attachment_name, attachment_content, 'text/plain')]), 'Reply to ticket returned False indicating error.')
             at_ids = tracker.get_attachments_ids(ticket_id)
             self.assertTrue(at_ids, 'Emply list with attachment ids, something went wrong.')
             at_content = tracker.get_attachment_content(ticket_id, at_ids[-1])
@@ -164,7 +179,7 @@ class RtTestCase(unittest.TestCase):
             # delete ticket
             self.assertTrue(tracker.edit_ticket(ticket_id, Status='deleted'), 'Ticket delete failed.')
             # get user
-            self.assertEqual(tracker.get_user(params['default_login'])['EmailAddress'], params['default_login'] + '@no.mail', 'Bad user email received.')
+            self.assertEqual(tracker.get_user(default_login)['EmailAddress'], default_login + '@no.mail', 'Bad user email received.')
 
 if __name__ == '__main__':
     unittest.main()

@@ -129,7 +129,7 @@ class Rt:
         'content_pattern': re.compile('Content:'),
         'content_pattern_bytes': re.compile(b'Content:'),
         'attachments_pattern': re.compile('Attachments:'),
-        'attachments_list_pattern': re.compile(r'[^0-9]*(\d+): ([\w().]+) \((\w+/[\w.]+) / ([0-9a-z.]+)\),?$'),
+        'attachments_list_pattern': re.compile(r'[^0-9]*(\d+): (.+) \((.+) / (.+)\),?$'),
         'headers_pattern_bytes': re.compile(b'Headers:'),
         'links_updated_pattern': re.compile('^# Links for ticket [0-9]+ updated.$'),
         'created_link_pattern': re.compile('.* Created link '),
@@ -729,8 +729,8 @@ class Rt:
         :keyword text: Content of email message
         :keyword cc: Carbon copy just for this reply
         :keyword bcc: Blind carbon copy just for this reply
-        :keyword files: List of pairs (filename, file-like object) describing
-                        files to attach as multipart/form-data
+        :keyword files: Files to attach as multipart/form-data
+                        List of 2/3 tuples: (filename, file-like object, [content type])
         :returns: ``True``
                       Operation was successful
                   ``False``
@@ -742,8 +742,8 @@ Action: correspond
 Text: %s
 Cc: %s
 Bcc: %s"""%(str(ticket_id), re.sub(r'\n', r'\n      ', text), cc, bcc)}
-        for file_pair in files:
-            post_data['content'] += "\nAttachment: %s" % (file_pair[0],)
+        for file_info in files:
+            post_data['content'] += "\nAttachment: %s" % (file_info[0],)
         msg = self.__request('ticket/%s/comment' % (str(ticket_id),),
                              post_data, files)
         return self.__get_status_code(msg) == 200
@@ -772,8 +772,8 @@ Bcc: %s"""%(str(ticket_id), re.sub(r'\n', r'\n      ', text), cc, bcc)}
 
         :param ticket_id: ID of ticket to which comment belongs
         :keyword text: Content of comment
-        :keyword files: List of pairs (filename, file-like object) describing
-                        files to attach as multipart/form-data
+        :keyword files: Files to attach as multipart/form-data
+                        List of 2/3 tuples: (filename, file-like object, [content type])
         :returns: ``True``
                       Operation was successful
                   ``False``
@@ -783,8 +783,8 @@ Bcc: %s"""%(str(ticket_id), re.sub(r'\n', r'\n      ', text), cc, bcc)}
         post_data = {'content':"""id: %s
 Action: comment
 Text: %s""" % (str(ticket_id), re.sub(r'\n', r'\n      ', text))}
-        for file_pair in files:
-            post_data['content'] += "\nAttachment: %s" % (file_pair[0],)
+        for file_info in files:
+            post_data['content'] += "\nAttachment: %s" % (file_info[0],)
         msg = self.__request('ticket/%s/comment' % (str(ticket_id),),
                              post_data, files)
         return self.__get_status_code(msg) == 200
