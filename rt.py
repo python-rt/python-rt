@@ -574,7 +574,7 @@ class Rt:
                          TimeEstimated, Starts, Due, Text,... (according to RT
                          fields)
 
-                         Custom fields CF-{<CustomFieldName>} could be set
+                         Custom fields CF.{<CustomFieldName>} could be set
                          with keywords CF_CustomFieldName.
         :returns: ID of new ticket or ``-1``, if creating failed
         """
@@ -584,7 +584,7 @@ class Rt:
             if key[:3] != 'CF_':
                 post_data += "%s: %s\n"%(key, kwargs[key])
             else:
-                post_data += "CF-{%s}: %s\n"%(key[3:], kwargs[key])
+                post_data += "CF.{%s}: %s\n"%(key[3:], kwargs[key])
         msg = self.__request('ticket/new', {'content':post_data})
         state = msg.split('\n')[2]
         res = re.search(' [0-9]+ ',state)
@@ -604,7 +604,7 @@ class Rt:
                          TimeEstimated, Starts, Due, Text,... (according to RT
                          fields)
 
-                         Custom fields CF-{<CustomFieldName>} could be set
+                         Custom fields CF.{<CustomFieldName>} could be set
                          with keywords CF_CustomFieldName.
         :returns: ``True``
                       Operation was successful
@@ -619,7 +619,7 @@ class Rt:
             if key[:3] != 'CF_':
                 post_data += "%s: %s\n"%(key, value)
             else:
-                post_data += "CF-{%s}: %s\n" % (key[3:], value)
+                post_data += "CF.{%s}: %s\n" % (key[3:], value)
         msg = self.__request('ticket/%s/edit' % (str(ticket_id)), {'content':post_data})
         state = msg.split('\n')[2]
         return self.RE_PATTERNS['update_pattern'].match(state) is not None
