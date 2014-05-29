@@ -53,6 +53,8 @@ from six.moves import range
 DEFAULT_QUEUE = 'General'
 """ Default queue used. """
 
+ALL_QUEUES = object()
+
 class RtError(Exception):
     """ Super class of all Rt Errors """
 
@@ -190,7 +192,7 @@ class Rt:
             # assured, that we are login in instantly)
             self.login_result = True
 
-    def __request(self, selector, post_data={}, files=[], without_login=False,
+    def __request(self, selector, get_params={}, post_data={}, files=[], without_login=False,
                   text_response=True):
         """ General request for :term:`API`.
  
@@ -220,7 +222,7 @@ class Rt:
                 if post_data:
                     response = self.session.post(url, data=post_data)
                 else:
-                    response = self.session.get(url)
+                    response = self.session.get(url, params=get_params)
             else:
                 files_data = {}
                 for i, file_pair in enumerate(files):
@@ -381,7 +383,9 @@ class Rt:
             >>> tickets = tracker.search(CF_Domain='example.com', Subject__like='warning')
             >>> tickets = tracker.search(Queue='General', order='Status', raw_query="id='1'+OR+id='2'+OR+id='3'")
 
-        :keyword Queue:      Queue where to search
+        :keyword Queue:      Queue where to search. If you wish to search across
+                             all of your queues, pass the ALL_QUEUES object as the
+                             argument.
         :keyword order:      Name of field sorting result list, for descending
                              order put - before the field name. E.g. -Created
                              will put the newest tickets at the beginning
@@ -418,7 +422,11 @@ class Rt:
         :raises:  UnexpectedMessageFormat: Unexpected format of returned message.
                   InvalidQueryError: If raw query is malformed
         """
-        query = 'search/ticket?query=(Queue=\'%s\')' % (Queue or self.default_queue,)
+        get_params = {}
+        query = []
+        url = 'search/ticket'
+        if Queue is not ALL_QUEUES:
+            query.append("Queue=\'%s\'" % (Queue or self.default_queue))
         if not raw_query:
             operators_map = {
                 'gt':'>',
@@ -436,16 +444,17 @@ class Rt:
                     key = '__'.join(key_parts[:-1])
                     op = operators_map.get(key_parts[-1], '=')
                 if key[:3] != 'CF_':
-                    query += "+AND+(%s%s\'%s\')" % (key, op, value)
+                    query.append("%s%s\'%s\'" % (key, op, value))
                 else:
-                    query += "+AND+(CF.{%s}%s\'%s\')" % (key[3:], op, value)
+                    query.append("CF.{%s}%s\'%s\'" % (key[3:], op, value))
         else:
-            query += '+AND+(' + raw_query + ')'
+            query.append(raw_query)
+        get_params['query'] = ' AND '.join('(' + part + ')' for part in query)
         if order:
-            query += "&orderby=" + order
-        query += "&format=l"
+            get_params['orderby'] = order
+        get_params['format'] = 'l'
 
-        msg = self.__request(query)
+        msg = self.__request(url, get_params=get_params)
         lines = msg.split('\n')
         if len(lines) > 2:
             if self.__get_status_code(lines[0]) != 200 and lines[2].startswith('Invalid query: '):
@@ -585,7 +594,7 @@ class Rt:
                 post_data += "%s: %s\n"%(key, kwargs[key])
             else:
                 post_data += "CF.{%s}: %s\n"%(key[3:], kwargs[key])
-        msg = self.__request('ticket/new', {'content':post_data})
+        msg = self.__request('ticket/new', post_data={'content':post_data})
         state = msg.split('\n')[2]
         res = re.search(' [0-9]+ ',state)
         if res is not None:
@@ -620,7 +629,7 @@ class Rt:
                 post_data += "%s: %s\n"%(key, value)
             else:
                 post_data += "CF.{%s}: %s\n" % (key[3:], value)
-        msg = self.__request('ticket/%s/edit' % (str(ticket_id)), {'content':post_data})
+        msg = self.__request('ticket/%s/edit' % (str(ticket_id)), post_data={'content':post_data})
         state = msg.split('\n')[2]
         return self.RE_PATTERNS['update_pattern'].match(state) is not None
 
@@ -750,7 +759,7 @@ Bcc: %s"""%(str(ticket_id), re.sub(r'\n', r'\n      ', text), cc, bcc)}
         for file_info in files:
             post_data['content'] += "\nAttachment: %s" % (file_info[0],)
         msg = self.__request('ticket/%s/comment' % (str(ticket_id),),
-                             post_data, files)
+                             post_data=post_data, files=files)
         return self.__get_status_code(msg) == 200
 
     def comment(self, ticket_id, text='', cc='', bcc='', files=[]):
@@ -791,7 +800,7 @@ Text: %s""" % (str(ticket_id), re.sub(r'\n', r'\n      ', text))}
         for file_info in files:
             post_data['content'] += "\nAttachment: %s" % (file_info[0],)
         msg = self.__request('ticket/%s/comment' % (str(ticket_id),),
-                             post_data, files)
+                             post_data=post_data, files=files)
         return self.__get_status_code(msg) == 200
 
 
@@ -1063,7 +1072,7 @@ Text: %s""" % (str(ticket_id), re.sub(r'\n', r'\n      ', text))}
         post_data = 'id: user/%s\n' % str(user_id)
         for key, val in iteritems(kwargs):
             post_data += '%s: %s\n' % (key, val)
-        msg = self.__request('edit', {'content': post_data})
+        msg = self.__request('edit', post_data={'content': post_data})
         msgs = msg.split('\n')
         if (self.__get_status_code(msg) == 200) and (len(msgs) > 2):
             match = self.RE_PATTERNS['user_pattern'].match(msgs[2])
@@ -1135,7 +1144,7 @@ Text: %s""" % (str(ticket_id), re.sub(r'\n', r'\n      ', text))}
         post_data = 'id: queue/%s\n' % str(queue_id)
         for key, val in iteritems(kwargs):
             post_data += '%s: %s\n' % (key, val)
-        msg = self.__request('edit', {'content': post_data})
+        msg = self.__request('edit', post_data={'content': post_data})
         msgs = msg.split('\n')
         if (self.__get_status_code(msg) == 200) and (len(msgs) > 2):
             match = self.RE_PATTERNS['queue_pattern'].match(msgs[2])
@@ -1226,7 +1235,7 @@ Text: %s""" % (str(ticket_id), re.sub(r'\n', r'\n      ', text))}
         for key in kwargs:
             post_data += "%s: %s\n"%(key, str(kwargs[key]))
         msg = self.__request('ticket/%s/links' % (str(ticket_id),),
-                             {'content':post_data})
+                             post_data={'content':post_data})
         state = msg.split('\n')[2]
         return self.RE_PATTERNS['links_updated_pattern'].match(state) is not None
 
@@ -1255,7 +1264,7 @@ Text: %s""" % (str(ticket_id), re.sub(r'\n', r'\n      ', text))}
                      'id': ticket_id,
                      'del': 1 if delete else 0
                     }
-        msg = self.__request('ticket/link', post_data)
+        msg = self.__request('ticket/link', post_data=post_data)
         state = msg.split('\n')[2]
         if delete:
             return self.RE_PATTERNS['deleted_link_pattern'].match(state) is not None
