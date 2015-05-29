@@ -20,9 +20,13 @@ Provided functionality:
 * providing lists of last updated tickets
 * providing tickets with new correspondence
 * merging tickets
+* take tickets
+* steal tickets
+* untake tickets
 """
 
 __license__ = """ Copyright (C) 2012 CZ.NIC, z.s.p.o.
+    Copyright (c) 2015 Genome Research Ltd.
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -39,7 +43,8 @@ __license__ = """ Copyright (C) 2012 CZ.NIC, z.s.p.o.
 """
 __docformat__ = "reStructuredText en"
 __authors__ = [
-  '"Jiri Machalek" <jiri.machalek@nic.cz>'
+  '"Jiri Machalek" <jiri.machalek@nic.cz>',
+  '"Joshua C. randall" <jcrandall@alum.mit.edu>'
 ]
 
 import re
@@ -1286,4 +1291,46 @@ Text: %s""" % (str(ticket_id), re.sub(r'\n', r'\n      ', text))}
                                                      str(into_id)))
         state = msg.split('\n')[2]
         return self.RE_PATTERNS['merge_successful_pattern'].match(state) is not None
+
+    def take(self, ticket_id):
+        """ Take ticket
+
+        :param ticket_id: ID of ticket to be merged
+        :returns: ``True``
+                      Operation was successful
+                  ``False``
+                      Either the ticket does not exist or user does not 
+                      have TakeTicket permission.
+        """
+        post_data = {'content': "Ticket: %s\nAction: take" % (str(ticket_id))}
+        msg = self.__request('ticket/%s/take' % (str(ticket_id)), post_data=post_data)
+        return self.__get_status_code(msg) == 200
+
+    def steal(self, ticket_id):
+        """ Steal ticket
+
+        :param ticket_id: ID of ticket to be merged
+        :returns: ``True``
+                      Operation was successful
+                  ``False``
+                      Either the ticket does not exist or user does not 
+                      have StealTicket permission.
+        """
+        post_data = {'content': "Ticket: %s\nAction: steal" % (str(ticket_id))}
+        msg = self.__request('ticket/%s/take' % (str(ticket_id)), post_data=post_data)
+        return self.__get_status_code(msg) == 200
+
+    def untake(self, ticket_id):
+        """ Untake ticket
+
+        :param ticket_id: ID of ticket to be merged
+        :returns: ``True``
+                      Operation was successful
+                  ``False``
+                      Either the ticket does not exist or user does not 
+                      own the ticket.
+        """
+        post_data = {'content': "Ticket: %s\nAction: untake" % (str(ticket_id))}
+        msg = self.__request('ticket/%s/take' % (str(ticket_id)), post_data=post_data)
+        return self.__get_status_code(msg) == 200
 

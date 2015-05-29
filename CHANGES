@@ -1,3 +1,6 @@
+v1.0.9, 2015-05-29
+- added ability to steal, untake, and explicitly take tickets
+
 v1.0.8, 2014-05-29
 - added ability to search all queues
 - added RtError super class
