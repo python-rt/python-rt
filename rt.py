@@ -50,6 +50,7 @@ __authors__ = [
 import re
 import os
 import requests
+import warnings
 from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 
 from six import iteritems
@@ -150,6 +151,7 @@ class Rt:
         'bad_request_pattern': re.compile('.* 400 Bad Request$'),
         'user_pattern': re.compile('^# User ([0-9]*) (?:updated|created)\.$'),
         'queue_pattern': re.compile('^# Queue (\w*) (?:updated|created)\.$'),
+        'ticket_created_pattern': re.compile('^# Ticket ([0-9]+) created\.$'),
         'does_not_exist_pattern': re.compile('^# (?:Queue|User|Ticket) \w* does not exist\.$'),
         'does_not_exist_pattern_bytes': re.compile(b'^# (?:Queue|User|Ticket) \w* does not exist\.$'),
         'not_related_pattern': re.compile('^# Transaction \d+ is not related to Ticket \d+'),
@@ -600,12 +602,12 @@ class Rt:
             else:
                 post_data += "CF.{%s}: %s\n"%(key[3:], kwargs[key])
         msg = self.__request('ticket/new', post_data={'content':post_data})
-        state = msg.split('\n')[2]
-        res = re.search(' [0-9]+ ',state)
-        if res is not None:
-            return int(state[res.start():res.end()])
-        else:
-            return -1
+        for line in msg.split('\n')[2:-1]:
+            res = self.RE_PATTERNS['ticket_created_pattern'].match(line)
+            if res is not None:
+                return int(res.group(1))
+            warnings.warn(line[2:])
+        return -1
 
     def edit_ticket(self, ticket_id, **kwargs):
         """ Edit ticket values.

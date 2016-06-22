@@ -1,5 +1,6 @@
-v1.0.9, 2015-05-29
+v1.0.9, 2016-06-22
 - added ability to steal, untake, and explicitly take tickets
+- fixed create_ticket return value when provided an invalid custom field
 
 v1.0.8, 2014-05-29
 - added ability to search all queues
