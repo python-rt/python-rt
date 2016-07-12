@@ -32,8 +32,8 @@ import rt
 class RtTestCase(unittest.TestCase):
 
     RT_VALID_CREDENTIALS = {
-        'RT3.8 stable': {
-            'url': 'http://rt.easter-eggs.org/demos/3.8/REST/1.0',
+        'RT4.2 stable': {
+            'url': 'http://rt.easter-eggs.org/demos/4.2/REST/1.0',
             'admin': {
                 'default_login': 'admin',
                 'default_password': 'admin',
@@ -43,8 +43,8 @@ class RtTestCase(unittest.TestCase):
                 'default_password': 'john.foo',
             }
         },
-        'RT4.0 stable': {
-            'url': 'http://rt.easter-eggs.org/demos/4.0/REST/1.0',
+        'RT4.4 dev': {
+            'url': 'http://rt.easter-eggs.org/demos/4.4/REST/1.0',
             'admin': {
                 'default_login': 'admin',
                 'default_password': 'admin',
@@ -57,16 +57,16 @@ class RtTestCase(unittest.TestCase):
     }
 
     RT_INVALID_CREDENTIALS = {
-        'RT3.8 stable (bad credentials)': {
-            'url': 'http://rt.easter-eggs.org/demos/3.8/REST/1.0',
+        'RT4.2 stable (bad credentials)': {
+            'url': 'http://rt.easter-eggs.org/demos/4.2/REST/1.0',
             'default_login': 'idontexist',
             'default_password': 'idonthavepassword',
         },
     }
 
     RT_MISSING_CREDENTIALS = {
-        'RT4.0 stable (missing credentials)': {
-            'url': 'http://rt.easter-eggs.org/demos/4.0/REST/1.0',
+        'RT4.2 stable (missing credentials)': {
+            'url': 'http://rt.easter-eggs.org/demos/4.2/REST/1.0',
         },
     }
 
@@ -105,7 +105,7 @@ class RtTestCase(unittest.TestCase):
     def test_ticket_operations(self):
         ticket_subject = 'Testing issue ' + "".join([random.choice(string.ascii_letters) for i in range(15)])
         ticket_text = 'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'
-        for name in ('RT4.0 stable', 'RT3.8 stable'):
+        for name in ('RT4.2 stable', 'RT4.4 dev'):
             self.check_or_create_queue(name)
 
             url = self.RT_VALID_CREDENTIALS[name]['url']
