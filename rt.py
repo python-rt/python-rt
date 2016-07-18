@@ -160,7 +160,7 @@ class Rt:
 
     def __init__(self, url, default_login=None, default_password=None, proxy=None,
                  default_queue=DEFAULT_QUEUE, basic_auth=None, digest_auth=None,
-                 skip_login=False):
+                 skip_login=False, verify_cert=True):
         """ API initialization.
         
         :keyword url: Base URL for Request Tracker API.
@@ -183,6 +183,7 @@ class Rt:
         self.default_queue = default_queue
         self.login_result = None
         self.session = requests.session()
+        self.session.verify = verify_cert
         if proxy is not None:
             if url.lower().startswith("https://"):
                 proxy = {"https": proxy}
