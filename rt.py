@@ -302,7 +302,7 @@ class Rt:
         if self.RE_PATTERNS['syntax_error_pattern'].match(msg[0]):
             raise APISyntaxError(msg[2][2:] if len(msg) > 2 else 'Syntax error.')
         if self.RE_PATTERNS['bad_request_pattern'].match(msg[0]):
-            raise BadRequest(msg[2][2:] if len(msg) > 2 else 'Bad request.')
+            raise BadRequest(msg[3] if len(msg) > 2 else 'Bad request.')
 
     def __normalize_list(self, msg):
         """Split message to list by commas and trim whitespace."""
