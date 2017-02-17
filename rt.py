@@ -609,10 +609,12 @@ class Rt:
 
         post_data = 'id: ticket/new\nQueue: {}\n'.format(Queue or self.default_queue,)
         for key in kwargs:
-            if key[:3] != 'CF_':
-                post_data += "{}: {}\n".format(key, kwargs[key])
-            else:
+            if key[:4] == 'Text':
+                post_data += "{}: {}\n".format(key, re.sub(r'\n', r'\n      ', kwargs[key]))
+            elif key[:3] == 'CF_':
                 post_data += "CF.{{{}}}: {}\n".format(key[3:], kwargs[key])
+            else:
+                post_data += "{}: {}\n".format(key, kwargs[key])
         msg = self.__request('ticket/new', post_data={'content': post_data})
         for line in msg.split('\n')[2:-1]:
             res = self.RE_PATTERNS['ticket_created_pattern'].match(line)
