@@ -465,7 +465,7 @@ class Rt:
                 if key[:3] != 'CF_':
                     query.append("{}{}\'{}\'".format(key, op, value))
                 else:
-                    query.append("CF.{{{}}}{}\'{}\'".format(key[3:], op, value))
+                    query.append("'CF.{{{}}}'{}\'{}\'".format(key[3:], op, value))
         else:
             query.append(raw_query)
         get_params['query'] = ' AND '.join('(' + part + ')' for part in query)
