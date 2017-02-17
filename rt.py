@@ -505,6 +505,12 @@ class Rt:
                     pairs[header.strip()] = content.strip()
             if pairs:
                 items.append(pairs)
+
+            if 'Cc' in pairs:
+                pairs['Cc'] = self.__normalize_list(pairs['Cc'])
+            if 'AdminCc' in pairs:
+                pairs['AdminCc'] = self.__normalize_list(pairs['AdminCc'])
+
         return items
 
     def get_ticket(self, ticket_id):
@@ -563,6 +569,12 @@ class Rt:
                 if ': ' in msg[i]:
                     header, content = msg[i].split(': ', 1)
                     pairs[header.strip()] = content.strip()
+
+            if 'Cc' in pairs:
+                pairs['Cc'] = self.__normalize_list(pairs['Cc'])
+            if 'AdminCc' in pairs:
+                pairs['AdminCc'] = self.__normalize_list(pairs['AdminCc'])
+
             return pairs
         else:
             raise UnexpectedMessageFormat('Received status code is {:d} instead of 200.'.format(status_code))
