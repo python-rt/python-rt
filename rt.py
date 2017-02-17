@@ -245,12 +245,12 @@ class Rt:
             else:
                 files_data = {}
                 for i, file_pair in enumerate(files):
-                    files_data['attachment_%d' % (i + 1)] = file_pair
+                    files_data['attachment_{:d}'.format(i + 1)] = file_pair
                 response = self.session.post(url, data=post_data, files=files_data)
             if response.status_code == 401:
                 raise AuthorizationError('Server could not verify that you are authorized to access the requested document.')
             if response.status_code != 200:
-                raise UnexpectedResponse('Received status code %d instead of 200.' % response.status_code)
+                raise UnexpectedResponse('Received status code {:d} instead of 200.'.format(response.status_code))
             try:
                 if response.encoding:
                     result = response.content.decode(response.encoding.lower())
@@ -258,7 +258,7 @@ class Rt:
                     # try utf-8 if encoding is not filled
                     result = response.content.decode('utf-8')
             except LookupError:
-                raise UnexpectedResponse('Unknown response encoding: %s.' % response.encoding)
+                raise UnexpectedResponse('Unknown response encoding: {}.'.format(response.encoding))
             except UnicodeError:
                 if text_response:
                     raise UnexpectedResponse('Unknown response encoding (UTF-8 does not work).')
@@ -445,7 +445,7 @@ class Rt:
         query = []
         url = 'search/ticket'
         if Queue is not ALL_QUEUES:
-            query.append("Queue=\'%s\'" % (Queue or self.default_queue))
+            query.append("Queue=\'{}\'".format(Queue or self.default_queue))
         if not raw_query:
             operators_map = {
                 'gt': '>',
@@ -463,9 +463,9 @@ class Rt:
                     key = '__'.join(key_parts[:-1])
                     op = operators_map.get(key_parts[-1], '=')
                 if key[:3] != 'CF_':
-                    query.append("%s%s\'%s\'" % (key, op, value))
+                    query.append("{}{}\'{}\'".format(key, op, value))
                 else:
-                    query.append("CF.{%s}%s\'%s\'" % (key[3:], op, value))
+                    query.append("CF.{{{}}}{}\'{}\'".format(key[3:], op, value))
         else:
             query.append(raw_query)
         get_params['query'] = ' AND '.join('(' + part + ')' for part in query)
@@ -538,7 +538,7 @@ class Rt:
                       * TimeLeft
         :raises UnexpectedMessageFormat: Unexpected format of returned message.
         """
-        msg = self.__request('ticket/%s/show' % (str(ticket_id),))
+        msg = self.__request('ticket/{}/show'.format(str(ticket_id),))
         status_code = self.__get_status_code(msg)
         if status_code == 200:
             pairs = {}
@@ -565,7 +565,7 @@ class Rt:
                     pairs[header.strip()] = content.strip()
             return pairs
         else:
-            raise UnexpectedMessageFormat('Received status code is %d instead of 200.' % status_code)
+            raise UnexpectedMessageFormat('Received status code is {:d} instead of 200.'.format(status_code))
 
     def create_ticket(self, Queue=None, **kwargs):
         """ Create new ticket and set given parameters.
@@ -607,12 +607,12 @@ class Rt:
         :returns: ID of new ticket or ``-1``, if creating failed
         """
 
-        post_data = 'id: ticket/new\nQueue: %s\n' % (Queue or self.default_queue,)
+        post_data = 'id: ticket/new\nQueue: {}\n'.format(Queue or self.default_queue,)
         for key in kwargs:
             if key[:3] != 'CF_':
-                post_data += "%s: %s\n" % (key, kwargs[key])
+                post_data += "{}: {}\n".format(key, kwargs[key])
             else:
-                post_data += "CF.{%s}: %s\n" % (key[3:], kwargs[key])
+                post_data += "CF.{{{}}}: {}\n".format(key[3:], kwargs[key])
         msg = self.__request('ticket/new', post_data={'content': post_data})
         for line in msg.split('\n')[2:-1]:
             res = self.RE_PATTERNS['ticket_created_pattern'].match(line)
@@ -645,9 +645,9 @@ class Rt:
             if isinstance(value, (list, tuple)):
                 value = ", ".join(value)
             if key[:3] != 'CF_':
-                post_data += "%s: %s\n" % (key, value)
+                post_data += "{}: {}\n".format(key, value)
             else:
-                post_data += "CF.{%s}: %s\n" % (key[3:], value)
+                post_data += "CF.{{{}}}: {}\n".format(key[3:], value)
         msg = self.__request('ticket/%s/edit' % (str(ticket_id)), post_data={'content': post_data})
         state = msg.split('\n')[2]
         return self.RE_PATTERNS['update_pattern'].match(state) is not None
@@ -675,9 +675,9 @@ class Rt:
         if transaction_id is None:
             # We are using "long" format to get all history items at once.
             # Each history item is then separated by double dash.
-            msgs = self.__request('ticket/%s/history?format=l' % (str(ticket_id),))
+            msgs = self.__request('ticket/{}/history?format=l'.format(str(ticket_id),))
         else:
-            msgs = self.__request('ticket/%s/history/id/%s' % (str(ticket_id), str(transaction_id)))
+            msgs = self.__request('ticket/%s/history/id/{}'.format(str(ticket_id), str(transaction_id)))
         lines = msgs.split('\n')
         if (len(lines) > 2) and (self.RE_PATTERNS['does_not_exist_pattern'].match(lines[2]) or self.RE_PATTERNS['not_related_pattern'].match(lines[2])):
             return None
@@ -728,7 +728,7 @@ class Rt:
                   Each history item is a tuple containing (id, Description).
                   Returns None if ticket does not exist.
         """
-        msg = self.__request('ticket/%s/history' % (str(ticket_id),))
+        msg = self.__request('ticket/{}/history'.format(str(ticket_id),))
         items = []
         lines = msg.split('\n')
         multiline_buffer = ""
@@ -783,14 +783,14 @@ class Rt:
                       Sending failed (status code != 200)
         :raises BadRequest: When ticket does not exist
         """
-        post_data = {'content': """id: %s
+        post_data = {'content': """id: {}
 Action: correspond
-Text: %s
-Cc: %s
-Bcc: %s""" % (str(ticket_id), re.sub(r'\n', r'\n      ', text), cc, bcc)}
+Text: {}
+Cc: {}
+Bcc: {}""".format(str(ticket_id), re.sub(r'\n', r'\n      ', text), cc, bcc)}
         for file_info in files:
-            post_data['content'] += "\nAttachment: %s" % (file_info[0],)
-        msg = self.__request('ticket/%s/comment' % (str(ticket_id),),
+            post_data['content'] += "\nAttachment: {}".format(file_info[0],)
+        msg = self.__request('ticket/{}/comment'.format(str(ticket_id),),
                              post_data=post_data, files=files)
         return self.__get_status_code(msg) == 200
 
@@ -826,12 +826,12 @@ Bcc: %s""" % (str(ticket_id), re.sub(r'\n', r'\n      ', text), cc, bcc)}
                       Sending failed (status code != 200)
         :raises BadRequest: When ticket does not exist
         """
-        post_data = {'content': """id: %s
+        post_data = {'content': """id: {}
 Action: comment
-Text: %s""" % (str(ticket_id), re.sub(r'\n', r'\n      ', text))}
+Text: {}""".format(str(ticket_id), re.sub(r'\n', r'\n      ', text))}
         for file_info in files:
-            post_data['content'] += "\nAttachment: %s" % (file_info[0],)
-        msg = self.__request('ticket/%s/comment' % (str(ticket_id),),
+            post_data['content'] += "\nAttachment: {}".format(file_info[0],)
+        msg = self.__request('ticket/{}/comment'.format(str(ticket_id),),
                              post_data=post_data, files=files)
         return self.__get_status_code(msg) == 200
 
@@ -843,7 +843,7 @@ Text: %s""" % (str(ticket_id), re.sub(r'\n', r'\n      ', text))}
                   Tuple format: (id, name, content_type, size)
                   Returns None if ticket does not exist.
         """
-        msg = self.__request('ticket/%s/attachments' % (str(ticket_id),))
+        msg = self.__request('ticket/{}/attachments'.format(str(ticket_id),))
         lines = msg.split('\n')
         if (len(lines) > 2) and self.RE_PATTERNS['does_not_exist_pattern'].match(lines[2]):
             return None
@@ -920,7 +920,7 @@ Text: %s""" % (str(ticket_id), re.sub(r'\n', r'\n      ', text))}
                   Returns None if ticket or attachment does not exist.
         :raises UnexpectedMessageFormat: Unexpected format of returned message.
         """
-        msg = self.__request('ticket/%s/attachments/%s' % (str(ticket_id), str(attachment_id)),
+        msg = self.__request('ticket/%s/attachments/{}'.format(str(ticket_id), str(attachment_id)),
                              text_response=False)
         msg = msg.split(b'\n')
         if (len(msg) > 2) and (self.RE_PATTERNS['invalid_attachment_pattern_bytes'].match(msg[2]) or self.RE_PATTERNS['does_not_exist_pattern_bytes'].match(msg[2])):
@@ -973,7 +973,7 @@ Text: %s""" % (str(ticket_id), re.sub(r'\n', r'\n      ', text))}
                  attachment does not exist.
         """
 
-        msg = self.__request('ticket/%s/attachments/%s/content' %
+        msg = self.__request('ticket/{}/attachments/{}/content'.format
                              (str(ticket_id), str(attachment_id)),
                              text_response=False)
         lines = msg.split(b'\n', 3)
@@ -1012,7 +1012,7 @@ Text: %s""" % (str(ticket_id), re.sub(r'\n', r'\n      ', text))}
                   None is returned if user does not exist.
         :raises UnexpectedMessageFormat: In case that returned status code is not 200
         """
-        msg = self.__request('user/%s' % (str(user_id),))
+        msg = self.__request('user/{}'.format(str(user_id),))
         status_code = self.__get_status_code(msg)
         if(status_code == 200):
             pairs = {}
@@ -1025,7 +1025,7 @@ Text: %s""" % (str(ticket_id), re.sub(r'\n', r'\n      ', text))}
                     pairs[header.strip()] = content.strip()
             return pairs
         else:
-            raise UnexpectedMessageFormat('Received status code is %d instead of 200.' % status_code)
+            raise UnexpectedMessageFormat('Received status code is {:d} instead of 200.'.format(status_code))
 
     def create_user(self, Name, EmailAddress, **kwargs):
         """ Create user (undocumented API feature).
@@ -1093,10 +1093,10 @@ Text: %s""" % (str(ticket_id), re.sub(r'\n', r'\n      ', text))}
 
         if not used_fields <= valid_fields:
             invalid_fields = ", ".join(list(used_fields - valid_fields))
-            raise InvalidUse("Unsupported names of fields: %s." % invalid_fields)
-        post_data = 'id: user/%s\n' % str(user_id)
+            raise InvalidUse("Unsupported names of fields: {}.".format(invalid_fields))
+        post_data = 'id: user/{}\n'.format(str(user_id))
         for key, val in iteritems(kwargs):
-            post_data += '%s: %s\n' % (key, val)
+            post_data += '{}: {}\n'.format(key, val)
         msg = self.__request('edit', post_data={'content': post_data})
         msgs = msg.split('\n')
         if (self.__get_status_code(msg) == 200) and (len(msgs) > 2):
@@ -1124,7 +1124,7 @@ Text: %s""" % (str(ticket_id), re.sub(r'\n', r'\n      ', text))}
 
         :raises UnexpectedMessageFormat: In case that returned status code is not 200
         """
-        msg = self.__request('queue/%s' % str(queue_id))
+        msg = self.__request('queue/{}'.format(str(queue_id)))
         status_code = self.__get_status_code(msg)
         if(status_code == 200):
             pairs = {}
@@ -1137,7 +1137,7 @@ Text: %s""" % (str(ticket_id), re.sub(r'\n', r'\n      ', text))}
                     pairs[header.strip()] = content.strip()
             return pairs
         else:
-            raise UnexpectedMessageFormat('Received status code is %d instead of 200.' % status_code)
+            raise UnexpectedMessageFormat('Received status code is {:d} instead of 200.'.format(status_code))
 
     def edit_queue(self, queue_id, **kwargs):
         """ Edit queue (undocumented API feature).
@@ -1163,10 +1163,10 @@ Text: %s""" % (str(ticket_id), re.sub(r'\n', r'\n      ', text))}
 
         if not used_fields <= valid_fields:
             invalid_fields = ", ".join(list(used_fields - valid_fields))
-            raise InvalidUse("Unsupported names of fields: %s." % invalid_fields)
-        post_data = 'id: queue/%s\n' % str(queue_id)
+            raise InvalidUse("Unsupported names of fields: {}.".format(invalid_fields))
+        post_data = 'id: queue/{}\n'.format(str(queue_id))
         for key, val in iteritems(kwargs):
-            post_data += '%s: %s\n' % (key, val)
+            post_data += '{}: {}\n'.format(key, val)
         msg = self.__request('edit', post_data={'content': post_data})
         msgs = msg.split('\n')
         if (self.__get_status_code(msg) == 200) and (len(msgs) > 2):
@@ -1205,7 +1205,7 @@ Text: %s""" % (str(ticket_id), re.sub(r'\n', r'\n      ', text))}
                   None is returned if ticket does not exist.
         :raises UnexpectedMessageFormat: In case that returned status code is not 200
         """
-        msg = self.__request('ticket/%s/links/show' % (str(ticket_id),))
+        msg = self.__request('ticket/{}/links/show'.format(str(ticket_id),))
 
         status_code = self.__get_status_code(msg)
         if(status_code == 200):
@@ -1230,7 +1230,7 @@ Text: %s""" % (str(ticket_id), re.sub(r'\n', r'\n      ', text))}
                 i += 1
             return pairs
         else:
-            raise UnexpectedMessageFormat('Received status code is %d instead of 200.' % status_code)
+            raise UnexpectedMessageFormat('Received status code is {:d} instead of 200.'.format(status_code))
 
     def edit_ticket_links(self, ticket_id, **kwargs):
         """ Edit ticket links.
@@ -1254,8 +1254,8 @@ Text: %s""" % (str(ticket_id), re.sub(r'\n', r'\n      ', text))}
         """
         post_data = ''
         for key in kwargs:
-            post_data += "%s: %s\n" % (key, str(kwargs[key]))
-        msg = self.__request('ticket/%s/links' % (str(ticket_id),),
+            post_data += "{}: {}\n".format(key, str(kwargs[key]))
+        msg = self.__request('ticket/{}/links'.format(str(ticket_id),),
                              post_data={'content': post_data})
         state = msg.split('\n')[2]
         return self.RE_PATTERNS['links_updated_pattern'].match(state) is not None
@@ -1303,7 +1303,7 @@ Text: %s""" % (str(ticket_id), re.sub(r'\n', r'\n      ', text))}
                       Either origin or destination ticket does not
                       exist or user does not have ModifyTicket permission.
         """
-        msg = self.__request('ticket/%s/merge/%s' % (str(ticket_id),
+        msg = self.__request('ticket/{}/merge/{}'.format(str(ticket_id),
                                                      str(into_id)))
         state = msg.split('\n')[2]
         return self.RE_PATTERNS['merge_successful_pattern'].match(state) is not None
@@ -1318,8 +1318,8 @@ Text: %s""" % (str(ticket_id), re.sub(r'\n', r'\n      ', text))}
                       Either the ticket does not exist or user does not
                       have TakeTicket permission.
         """
-        post_data = {'content': "Ticket: %s\nAction: take" % (str(ticket_id))}
-        msg = self.__request('ticket/%s/take' % (str(ticket_id)), post_data=post_data)
+        post_data = {'content': "Ticket: {}\nAction: take".format(str(ticket_id))}
+        msg = self.__request('ticket/{}/take'.format(str(ticket_id)), post_data=post_data)
         return self.__get_status_code(msg) == 200
 
     def steal(self, ticket_id):
@@ -1332,8 +1332,8 @@ Text: %s""" % (str(ticket_id), re.sub(r'\n', r'\n      ', text))}
                       Either the ticket does not exist or user does not
                       have StealTicket permission.
         """
-        post_data = {'content': "Ticket: %s\nAction: steal" % (str(ticket_id))}
-        msg = self.__request('ticket/%s/take' % (str(ticket_id)), post_data=post_data)
+        post_data = {'content': "Ticket: {}\nAction: steal".format(str(ticket_id))}
+        msg = self.__request('ticket/{}/take'.format(str(ticket_id)), post_data=post_data)
         return self.__get_status_code(msg) == 200
 
     def untake(self, ticket_id):
@@ -1346,6 +1346,6 @@ Text: %s""" % (str(ticket_id), re.sub(r'\n', r'\n      ', text))}
                       Either the ticket does not exist or user does not
                       own the ticket.
         """
-        post_data = {'content': "Ticket: %s\nAction: untake" % (str(ticket_id))}
-        msg = self.__request('ticket/%s/take' % (str(ticket_id)), post_data=post_data)
+        post_data = {'content': "Ticket: {}\nAction: untake".format(str(ticket_id))}
+        msg = self.__request('ticket/{}/take'.format(str(ticket_id)), post_data=post_data)
         return self.__get_status_code(msg) == 200
