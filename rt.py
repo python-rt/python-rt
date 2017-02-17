@@ -648,7 +648,7 @@ class Rt:
                 post_data += "{}: {}\n".format(key, value)
             else:
                 post_data += "CF.{{{}}}: {}\n".format(key[3:], value)
-        msg = self.__request('ticket/%s/edit' % (str(ticket_id)), post_data={'content': post_data})
+        msg = self.__request('ticket/{}/edit'.format(str(ticket_id)), post_data={'content': post_data})
         state = msg.split('\n')[2]
         return self.RE_PATTERNS['update_pattern'].match(state) is not None
 
