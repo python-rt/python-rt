@@ -3,7 +3,7 @@
 ==============================================
 
 Python implementation of REST API described here:
-http://requesttracker.wikia.com/wiki/REST
+http://requesttracker.wikia.com/wiki/REST (not working now)
 
 REQUIREMENTS
 ============
