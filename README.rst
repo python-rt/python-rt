@@ -2,8 +2,7 @@
  Rt - Python interface to Request Tracker API 
 ==============================================
 
-Python implementation of REST API described here:
-http://requesttracker.wikia.com/wiki/REST (not working now :( )
+Python implementation of REST API described here: https://rt-wiki.bestpractical.com/wiki/REST
 
 REQUIREMENTS
 ============
@@ -55,8 +54,7 @@ OFFICIAL SITE
 =============
 
 Project site and issue tracking:
-    https://gitlab.labs.nic.cz/labs/python-rt
+    https://github.com/CZ-NIC/python-rt
 
 Git repository:
-    git://git.nic.cz/python-rt.git
-
+    git://github.com/CZ-NIC/python-rt.git    
