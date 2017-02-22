@@ -1,3 +1,16 @@
+v1.0.10, 2017-02-22
+- PEP8 fixes
+- update .travis.yml to update python interpreter list and some other small changes
+- prefer format over % (PEP 3101)
+- Add patch from https://gitlab.labs.nic.cz/labs/python-rt/issues/9
+  "Support CF search where special chars or spaces in CF names"
+- Implement a fix for the issue suggested in
+  https://gitlab.labs.nic.cz/labs/python-rt/issues/10 (can't create ticket
+  with multi-line message)
+- Implement fix for https://gitlab.labs.nic.cz/labs/python-rt/issues/7
+  "returned types inconsistent in get_ticket"
+  Add splitting for Cc and AdminCc
+
 v1.0.9, 2016-06-22
 - added ability to steal, untake, and explicitly take tickets
 - fixed create_ticket return value when provided an invalid custom field
