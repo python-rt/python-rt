@@ -10,13 +10,13 @@ here = os.path.abspath(os.path.dirname(__file__))
 README = open(os.path.join(here, 'README.rst')).read()
 
 setup(name='rt',
-    version='1.0.9',
+    version='1.0.10',
     description='Python interface to Request Tracker API',
     long_description=README,
     license='GNU General Public License (GPL)',
     author='Jiri Machalek',
     author_email='jiri.machalek@nic.cz',
-    url='https://gitlab.labs.nic.cz/labs/python-rt',
+    url='https://github.com/CZ-NIC/python-rt',
     install_requires=['requests', 'six'],
     py_modules=['rt'],
     classifiers=[
