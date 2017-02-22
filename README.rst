@@ -1,5 +1,6 @@
-.. image:: https://travis-ci.org/GOVCERT-LU/python-rt.svg?branch=master
-    :target: https://travis-ci.org/GOVCERT-LU/python-rt
+           
+.. image:: https://travis-ci.org/CZ-NIC/python-rt.svg?branch=master
+    :target: https://travis-ci.org/CZ-NIC/python-rt
 
 ==============================================
  Rt - Python interface to Request Tracker API 
