@@ -691,7 +691,7 @@ class Rt:
             # Each history item is then separated by double dash.
             msgs = self.__request('ticket/{}/history?format=l'.format(str(ticket_id),))
         else:
-            msgs = self.__request('ticket/%s/history/id/{}'.format(str(ticket_id), str(transaction_id)))
+            msgs = self.__request('ticket/{}/history/id/{}'.format(str(ticket_id), str(transaction_id)))
         lines = msgs.split('\n')
         if (len(lines) > 2) and (self.RE_PATTERNS['does_not_exist_pattern'].match(lines[2]) or self.RE_PATTERNS['not_related_pattern'].match(lines[2])):
             return None
@@ -934,7 +934,7 @@ Text: {}""".format(str(ticket_id), re.sub(r'\n', r'\n      ', text))}
                   Returns None if ticket or attachment does not exist.
         :raises UnexpectedMessageFormat: Unexpected format of returned message.
         """
-        msg = self.__request('ticket/%s/attachments/{}'.format(str(ticket_id), str(attachment_id)),
+        msg = self.__request('ticket/{}/attachments/{}'.format(str(ticket_id), str(attachment_id)),
                              text_response=False)
         msg = msg.split(b'\n')
         if (len(msg) > 2) and (self.RE_PATTERNS['invalid_attachment_pattern_bytes'].match(msg[2]) or self.RE_PATTERNS['does_not_exist_pattern_bytes'].match(msg[2])):
