@@ -216,7 +216,7 @@ class Rt:
         """ General request for :term:`API`.
 
         :keyword selector: End part of URL which completes self.url parameter
-                           set during class inicialization.
+                           set during class initialization.
                            E.g.: ``ticket/123456/show``
         :keyword post_data: Dictionary with POST method fields
         :keyword files: List of pairs (filename, file-like object) describing
@@ -770,7 +770,36 @@ class Rt:
                         items.append((int(hist_id), desc))
         return items
 
-    def reply(self, ticket_id, text='', cc='', bcc='', files=[]):
+    def __correspond(self, ticket_id, text='', action='correspond', cc='', bcc='', content_type='text/plain', files=[]):
+        """ Sends out the correspondence
+
+        :param ticket_id: ID of ticket to which message belongs
+        :keyword text: Content of email message
+        :keyword action: correspond or comment
+        :keyword content_type: Content type of email message, default to text/plain
+        :keyword cc: Carbon copy just for this reply
+        :keyword bcc: Blind carbon copy just for this reply
+        :keyword files: Files to attach as multipart/form-data
+                        List of 2/3 tuples: (filename, file-like object, [content type])
+        :returns: ``True``
+                      Operation was successful
+                  ``False``
+                      Sending failed (status code != 200)
+        :raises BadRequest: When ticket does not exist
+        """
+        post_data = {'content': """id: {}
+Action: {}
+Text: {}
+Cc: {}
+Bcc: {}
+Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', text), cc, bcc, content_type)}
+        for file_info in files:
+            post_data['content'] += "\nAttachment: {}".format(file_info[0],)
+        msg = self.__request('ticket/{}/comment'.format(str(ticket_id),),
+                             post_data=post_data, files=files)
+        return self.__get_status_code(msg) == 200
+
+    def reply(self, ticket_id, text='', cc='', bcc='', content_type='text/plain', files=[]):
         """ Sends email message to the contacts in ``Requestors`` field of
         given ticket with subject as is set in ``Subject`` field.
 
@@ -787,6 +816,7 @@ class Rt:
 
         :param ticket_id: ID of ticket to which message belongs
         :keyword text: Content of email message
+        :keyword content_type: Content type of email message, default to text/plain
         :keyword cc: Carbon copy just for this reply
         :keyword bcc: Blind carbon copy just for this reply
         :keyword files: Files to attach as multipart/form-data
@@ -797,18 +827,9 @@ class Rt:
                       Sending failed (status code != 200)
         :raises BadRequest: When ticket does not exist
         """
-        post_data = {'content': """id: {}
-Action: correspond
-Text: {}
-Cc: {}
-Bcc: {}""".format(str(ticket_id), re.sub(r'\n', r'\n      ', text), cc, bcc)}
-        for file_info in files:
-            post_data['content'] += "\nAttachment: {}".format(file_info[0],)
-        msg = self.__request('ticket/{}/comment'.format(str(ticket_id),),
-                             post_data=post_data, files=files)
-        return self.__get_status_code(msg) == 200
+        return self.__correspond(ticket_id, text, 'correspond', cc, bcc, content_type, files)
 
-    def comment(self, ticket_id, text='', cc='', bcc='', files=[]):
+    def comment(self, ticket_id, text='', cc='', bcc='', content_type='text/plain', files=[]):
         """ Adds comment to the given ticket.
 
         Form of message according to documentation::
@@ -832,6 +853,7 @@ Bcc: {}""".format(str(ticket_id), re.sub(r'\n', r'\n      ', text), cc, bcc)}
 
         :param ticket_id: ID of ticket to which comment belongs
         :keyword text: Content of comment
+        :keyword content_type: Content type of comment, default to text/plain
         :keyword files: Files to attach as multipart/form-data
                         List of 2/3 tuples: (filename, file-like object, [content type])
         :returns: ``True``
@@ -840,14 +862,7 @@ Bcc: {}""".format(str(ticket_id), re.sub(r'\n', r'\n      ', text), cc, bcc)}
                       Sending failed (status code != 200)
         :raises BadRequest: When ticket does not exist
         """
-        post_data = {'content': """id: {}
-Action: comment
-Text: {}""".format(str(ticket_id), re.sub(r'\n', r'\n      ', text))}
-        for file_info in files:
-            post_data['content'] += "\nAttachment: {}".format(file_info[0],)
-        msg = self.__request('ticket/{}/comment'.format(str(ticket_id),),
-                             post_data=post_data, files=files)
-        return self.__get_status_code(msg) == 200
+        return self.__correspond(ticket_id, text, 'comment', cc, bcc, content_type, files)
 
     def get_attachments(self, ticket_id):
         """ Get attachment list for a given ticket
