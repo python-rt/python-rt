@@ -579,7 +579,7 @@ class Rt:
         else:
             raise UnexpectedMessageFormat('Received status code is {:d} instead of 200.'.format(status_code))
 
-    def create_ticket(self, Queue=None, **kwargs):
+    def create_ticket(self, Queue=None, files=[], **kwargs):
         """ Create new ticket and set given parameters.
 
         Example of message sended to ``http://tracker.example.com/REST/1.0/ticket/new``::
@@ -607,6 +607,8 @@ class Rt:
         + list of some key, value pairs, probably default values.
 
         :keyword Queue: Queue where to create ticket
+        :keyword files: Files to attach as multipart/form-data
+                        List of 2/3 tuples: (filename, file-like object, [content type])
         :keyword kwargs: Other arguments possible to set:
 
                          Requestors, Subject, Cc, AdminCc, Owner, Status,
@@ -627,7 +629,9 @@ class Rt:
                 post_data += "CF.{{{}}}: {}\n".format(key[3:], kwargs[key])
             else:
                 post_data += "{}: {}\n".format(key, kwargs[key])
-        msg = self.__request('ticket/new', post_data={'content': post_data})
+        for file_info in files:
+            post_data += "\nAttachment: {}".format(file_info[0], )
+        msg = self.__request('ticket/new', post_data={'content': post_data}, files=files)
         for line in msg.split('\n')[2:-1]:
             res = self.RE_PATTERNS['ticket_created_pattern'].match(line)
             if res is not None:
