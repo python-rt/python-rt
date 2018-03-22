@@ -32,18 +32,7 @@ import rt
 class RtTestCase(unittest.TestCase):
 
     RT_VALID_CREDENTIALS = {
-        'RT4.2 stable': {
-            'url': 'http://rt.easter-eggs.org/demos/4.2/REST/1.0',
-            'admin': {
-                'default_login': 'admin',
-                'default_password': 'admin',
-            },
-            'john.foo': {
-                'default_login': 'john.foo',
-                'default_password': 'john.foo',
-            }
-        },
-        'RT4.4 dev': {
+        'RT4.4 stable': {
             'url': 'http://rt.easter-eggs.org/demos/4.4/REST/1.0',
             'admin': {
                 'default_login': 'admin',
@@ -54,19 +43,30 @@ class RtTestCase(unittest.TestCase):
                 'default_password': 'john.foo',
             }
         },
+        # 'RT4.6 dev': {
+        #     'url': 'http://rt.easter-eggs.org/demos/4.6/REST/1.0',
+        #     'admin': {
+        #         'default_login': 'administrateur',
+        #         'default_password': 'administrateur',
+        #     },
+        #     'john.foo': {
+        #         'default_login': 'support',
+        #         'default_password': 'support',
+        #     }
+        # },
     }
 
     RT_INVALID_CREDENTIALS = {
-        'RT4.2 stable (bad credentials)': {
-            'url': 'http://rt.easter-eggs.org/demos/4.2/REST/1.0',
+        'RT4.4 stable (bad credentials)': {
+            'url': 'http://rt.easter-eggs.org/demos/4.4/REST/1.0',
             'default_login': 'idontexist',
             'default_password': 'idonthavepassword',
         },
     }
 
     RT_MISSING_CREDENTIALS = {
-        'RT4.2 stable (missing credentials)': {
-            'url': 'http://rt.easter-eggs.org/demos/4.2/REST/1.0',
+        'RT4.4 stable (missing credentials)': {
+            'url': 'http://rt.easter-eggs.org/demos/4.4/REST/1.0',
         },
     }
 
@@ -105,7 +105,7 @@ class RtTestCase(unittest.TestCase):
     def test_ticket_operations(self):
         ticket_subject = 'Testing issue ' + "".join([random.choice(string.ascii_letters) for i in range(15)])
         ticket_text = 'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'
-        for name in ('RT4.2 stable', 'RT4.4 dev'):
+        for name in ('RT4.4 stable', ):
             self.check_or_create_queue(name)
 
             url = self.RT_VALID_CREDENTIALS[name]['url']
