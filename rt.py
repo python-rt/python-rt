@@ -521,14 +521,14 @@ class Rt:
             msgs = msg.splitlines()[2:]
             for msg in msgs:
                 ticket_id, subject = msg.split(': ', 1)
-                items.append({ 'id': 'ticket/' + ticket_id, 'Subject': subject })    
+                items.append({ 'id': 'ticket/' + ticket_id, 'Subject': subject })
             return items
         elif Format == 'i':
             items = []
             msgs = msg.splitlines()[2:]
             for msg in msgs:
                 _, ticket_id = msg.split('/', 1)
-                items.append({ 'id': 'ticket/' + ticket_id })    
+                items.append({ 'id': 'ticket/' + ticket_id })
             return items
 
 
