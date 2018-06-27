@@ -353,8 +353,11 @@ class Rt:
                                       without_login=True,
                                       return_full_response=True)
             status_code = self.__get_status_code(response.content)
-            if status_code and status_code != 200:
-                self.login_result = False
+            if status_code:
+                if status_code == 200:
+                    self.login_result = True
+                else:
+                    self.login_result = False
             elif response.ok:  # RT 4.4 does return a HTML page after successful login
                 self.login_result = True
         except AuthorizationError:
@@ -374,7 +377,15 @@ class Rt:
         """
         ret = False
         if self.login_result is True:
-            ret = self.__get_status_code(self.__request('logout')) == 200
+            response = self.__request('logout', return_full_response=True)
+            status_code = self.__get_status_code(response.content)
+            if status_code:
+                if status_code == 200:
+                    ret = True
+                else:
+                    ret = False
+            elif response.ok:  # RT 4.4 does return a HTML page after successful logout
+                ret = True
             self.login_result = None
         return ret
 
