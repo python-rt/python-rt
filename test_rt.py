@@ -33,14 +33,14 @@ class RtTestCase(unittest.TestCase):
 
     RT_VALID_CREDENTIALS = {
         'RT4.4 stable': {
-            'url': 'http://rt.easter-eggs.org/demos/4.4/REST/1.0',
+            'url': 'http://demo.request-tracker.fr/REST/1.0',
             'admin': {
-                'default_login': 'admin',
-                'default_password': 'admin',
+                'default_login': 'administrateur',
+                'default_password': 'administrateur',
             },
             'john.foo': {
-                'default_login': 'john.foo',
-                'default_password': 'john.foo',
+                'default_login': 'client',
+                'default_password': 'client',
             }
         },
         # 'RT4.6 dev': {
@@ -58,7 +58,7 @@ class RtTestCase(unittest.TestCase):
 
     RT_INVALID_CREDENTIALS = {
         'RT4.4 stable (bad credentials)': {
-            'url': 'http://rt.easter-eggs.org/demos/4.4/REST/1.0',
+            'url': 'http://demo.request-tracker.fr/REST/1.0',
             'default_login': 'idontexist',
             'default_password': 'idonthavepassword',
         },
@@ -66,7 +66,7 @@ class RtTestCase(unittest.TestCase):
 
     RT_MISSING_CREDENTIALS = {
         'RT4.4 stable (missing credentials)': {
-            'url': 'http://rt.easter-eggs.org/demos/4.4/REST/1.0',
+            'url': 'http://demo.request-tracker.fr/REST/1.0',
         },
     }
 
