@@ -38,11 +38,12 @@ class RtTestCase(unittest.TestCase):
                 'default_login': 'administrateur',
                 'default_password': 'administrateur',
             },
-            'john.foo': {
-                'default_login': 'client',
-                'default_password': 'client',
+            'support': {
+                'default_login': 'support',
+                'default_password': 'support',
             }
         },
+        # HTTP timeout
         # 'RT4.6 dev': {
         #     'url': 'http://rt.easter-eggs.org/demos/4.6/REST/1.0',
         #     'admin': {
@@ -80,7 +81,7 @@ class RtTestCase(unittest.TestCase):
 
     def test_login_and_logout(self):
         for name in self.RT_VALID_CREDENTIALS:
-            tracker = rt.Rt(self.RT_VALID_CREDENTIALS[name]['url'], **self.RT_VALID_CREDENTIALS[name]['john.foo'])
+            tracker = rt.Rt(self.RT_VALID_CREDENTIALS[name]['url'], **self.RT_VALID_CREDENTIALS[name]['support'])
             self.assertTrue(tracker.login(), 'Invalid login to RT demo site ' + name)
             self.assertTrue(tracker.logout(), 'Invalid logout from RT demo site ' + name)
         for name, params in iteritems(self.RT_INVALID_CREDENTIALS):
@@ -109,8 +110,8 @@ class RtTestCase(unittest.TestCase):
             self.check_or_create_queue(name)
 
             url = self.RT_VALID_CREDENTIALS[name]['url']
-            default_login = self.RT_VALID_CREDENTIALS[name]['john.foo']['default_login']
-            default_password = self.RT_VALID_CREDENTIALS[name]['john.foo']['default_password']
+            default_login = self.RT_VALID_CREDENTIALS[name]['support']['default_login']
+            default_password = self.RT_VALID_CREDENTIALS[name]['support']['default_password']
             tracker = rt.Rt(url, default_login=default_login, default_password=default_password)
             self.assertTrue(tracker.login(), 'Invalid login to RT demo site ' + name)
             # empty search result
@@ -152,7 +153,7 @@ class RtTestCase(unittest.TestCase):
             # get_short_history
             short_hist = tracker.get_short_history(ticket_id)
             self.assertTrue(len(short_hist) > 0, 'Empty ticket short history.')
-            self.assertEqual(short_hist[0][1], 'Ticket created by john.foo')
+            self.assertEqual(short_hist[0][1], 'Ticket created by support')
             # create 2nd ticket
             ticket2_subject = 'Testing issue ' + "".join([random.choice(string.ascii_letters) for i in range(15)])
             ticket2_id = tracker.create_ticket(Subject=ticket2_subject)
