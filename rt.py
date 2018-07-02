@@ -363,15 +363,7 @@ class Rt:
         """
         ret = False
         if self.login_result is True:
-            response = self.__request('logout', return_full_response=True)
-            status_code = self.__get_status_code(response.content)
-            if status_code:
-                if status_code == 200:
-                    ret = True
-                else:
-                    ret = False
-            elif response.ok:  # RT 4.4 does return a HTML page after successful logout
-                ret = True
+            ret = self.__get_status_code(self.__request('logout')) == 200
             self.login_result = None
         return ret
 
