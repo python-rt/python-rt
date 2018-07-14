@@ -212,7 +212,7 @@ class Rt:
             self.login_result = True
 
     def __request(self, selector, get_params={}, post_data={}, files=[], without_login=False,
-                  text_response=True, return_full_response=False):
+                  text_response=True):
         """ General request for :term:`API`.
 
         :keyword selector: End part of URL which completes self.url parameter
@@ -226,8 +226,6 @@ class Rt:
                                 (usually needed just for login itself)
         :keyword text_response: If set to false the received message will be
                                 returned without decoding (useful for attachments)
-        :keyword return_full_response: The full requests.Reponse object will be returned instead
-                                       if just the content in case of success.
         :returns: Requested messsage including state line in form
                   ``RT/3.8.7 200 Ok\\n``
         :rtype: string or bytes if text_response is False
@@ -270,10 +268,7 @@ class Rt:
             self.__check_response(result)
             if not text_response:
                 return response.content
-            elif return_full_response:
-                return response
-            else:
-                return result
+            return result
         except requests.exceptions.ConnectionError as e:
             raise ConnectionError("Connection error", e)
 
@@ -348,18 +343,9 @@ class Rt:
         else:
             raise AuthorizationError('Credentials required, fill login and password.')
         try:
-            response = self.__request('',
-                                      post_data=login_data,
-                                      without_login=True,
-                                      return_full_response=True)
-            status_code = self.__get_status_code(response.content)
-            if status_code:
-                if status_code == 200:
-                    self.login_result = True
-                else:
-                    self.login_result = False
-            elif response.ok:  # RT 4.4 does return a HTML page after successful login
-                self.login_result = True
+            self.login_result = self.__get_status_code(self.__request('',
+                                                                      post_data=login_data,
+                                                                      without_login=True)) == 200
         except AuthorizationError:
             # This happens when HTTP Basic or Digest authentication fails, but
             # we will not raise the error but just return False to indicate
@@ -377,15 +363,7 @@ class Rt:
         """
         ret = False
         if self.login_result is True:
-            response = self.__request('logout', return_full_response=True)
-            status_code = self.__get_status_code(response.content)
-            if status_code:
-                if status_code == 200:
-                    ret = True
-                else:
-                    ret = False
-            elif response.ok:  # RT 4.4 does return a HTML page after successful logout
-                ret = True
+            ret = self.__get_status_code(self.__request('logout')) == 200
             self.login_result = None
         return ret
 
