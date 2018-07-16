@@ -25,12 +25,12 @@ Provided functionality:
 * untake tickets
 """
 
-import re
 import os
-import requests
+import re
 import warnings
-from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 
+import requests
+from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 from six import iteritems
 from six.moves import range
 
@@ -521,16 +521,15 @@ class Rt:
             msgs = msg.splitlines()[2:]
             for msg in msgs:
                 ticket_id, subject = msg.split(': ', 1)
-                items.append({ 'id': 'ticket/' + ticket_id, 'Subject': subject })
+                items.append({'id': 'ticket/' + ticket_id, 'Subject': subject})
             return items
         elif Format == 'i':
             items = []
             msgs = msg.splitlines()[2:]
             for msg in msgs:
                 _, ticket_id = msg.split('/', 1)
-                items.append({ 'id': 'ticket/' + ticket_id })
+                items.append({'id': 'ticket/' + ticket_id})
             return items
-
 
     def get_ticket(self, ticket_id):
         """ Fetch ticket by its ID.
@@ -563,7 +562,7 @@ class Rt:
                       * TimeLeft
         :raises UnexpectedMessageFormat: Unexpected format of returned message.
         """
-        msg = self.__request('ticket/{}/show'.format(str(ticket_id),))
+        msg = self.__request('ticket/{}/show'.format(str(ticket_id), ))
         status_code = self.__get_status_code(msg)
         if status_code == 200:
             pairs = {}
@@ -640,7 +639,7 @@ class Rt:
         :returns: ID of new ticket or ``-1``, if creating failed
         """
 
-        post_data = 'id: ticket/new\nQueue: {}\n'.format(Queue or self.default_queue,)
+        post_data = 'id: ticket/new\nQueue: {}\n'.format(Queue or self.default_queue, )
         for key in kwargs:
             if key[:4] == 'Text':
                 post_data += "{}: {}\n".format(key, re.sub(r'\n', r'\n      ', kwargs[key]))
@@ -712,11 +711,13 @@ class Rt:
         if transaction_id is None:
             # We are using "long" format to get all history items at once.
             # Each history item is then separated by double dash.
-            msgs = self.__request('ticket/{}/history?format=l'.format(str(ticket_id),))
+            msgs = self.__request('ticket/{}/history?format=l'.format(str(ticket_id), ))
         else:
             msgs = self.__request('ticket/{}/history/id/{}'.format(str(ticket_id), str(transaction_id)))
         lines = msgs.split('\n')
-        if (len(lines) > 2) and (self.RE_PATTERNS['does_not_exist_pattern'].match(lines[2]) or self.RE_PATTERNS['not_related_pattern'].match(lines[2])):
+        if (len(lines) > 2) and (
+                self.RE_PATTERNS['does_not_exist_pattern'].match(lines[2]) or self.RE_PATTERNS['not_related_pattern'].match(
+                lines[2])):
             return None
         msgs = msgs.split('\n--\n')
         items = []
@@ -765,7 +766,7 @@ class Rt:
                   Each history item is a tuple containing (id, Description).
                   Returns None if ticket does not exist.
         """
-        msg = self.__request('ticket/{}/history'.format(str(ticket_id),))
+        msg = self.__request('ticket/{}/history'.format(str(ticket_id), ))
         items = []
         lines = msg.split('\n')
         multiline_buffer = ""
@@ -817,8 +818,8 @@ Cc: {}
 Bcc: {}
 Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', text), cc, bcc, content_type)}
         for file_info in files:
-            post_data['content'] += "\nAttachment: {}".format(file_info[0],)
-        msg = self.__request('ticket/{}/comment'.format(str(ticket_id),),
+            post_data['content'] += "\nAttachment: {}".format(file_info[0], )
+        msg = self.__request('ticket/{}/comment'.format(str(ticket_id), ),
                              post_data=post_data, files=files)
         return self.__get_status_code(msg) == 200
 
@@ -895,7 +896,7 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
                   Tuple format: (id, name, content_type, size)
                   Returns None if ticket does not exist.
         """
-        msg = self.__request('ticket/{}/attachments'.format(str(ticket_id),))
+        msg = self.__request('ticket/{}/attachments'.format(str(ticket_id), ))
         lines = msg.split('\n')
         if (len(lines) > 2) and self.RE_PATTERNS['does_not_exist_pattern'].match(lines[2]):
             return None
@@ -975,7 +976,8 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
         msg = self.__request('ticket/{}/attachments/{}'.format(str(ticket_id), str(attachment_id)),
                              text_response=False)
         msg = msg.split(b'\n')
-        if (len(msg) > 2) and (self.RE_PATTERNS['invalid_attachment_pattern_bytes'].match(msg[2]) or self.RE_PATTERNS['does_not_exist_pattern_bytes'].match(msg[2])):
+        if (len(msg) > 2) and (self.RE_PATTERNS['invalid_attachment_pattern_bytes'].match(msg[2]) or self.RE_PATTERNS[
+            'does_not_exist_pattern_bytes'].match(msg[2])):
             return None
         msg = msg[2:]
         head_matching = [i for i, m in enumerate(msg) if self.RE_PATTERNS['headers_pattern_bytes'].match(m)]
@@ -1029,7 +1031,8 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
                              (str(ticket_id), str(attachment_id)),
                              text_response=False)
         lines = msg.split(b'\n', 3)
-        if (len(lines) == 4) and (self.RE_PATTERNS['invalid_attachment_pattern_bytes'].match(lines[2]) or self.RE_PATTERNS['does_not_exist_pattern_bytes'].match(lines[2])):
+        if (len(lines) == 4) and (self.RE_PATTERNS['invalid_attachment_pattern_bytes'].match(lines[2]) or self.RE_PATTERNS[
+            'does_not_exist_pattern_bytes'].match(lines[2])):
             return None
         return msg[msg.find(b'\n') + 2:-3]
 
@@ -1064,9 +1067,9 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
                   None is returned if user does not exist.
         :raises UnexpectedMessageFormat: In case that returned status code is not 200
         """
-        msg = self.__request('user/{}'.format(str(user_id),))
+        msg = self.__request('user/{}'.format(str(user_id), ))
         status_code = self.__get_status_code(msg)
-        if(status_code == 200):
+        if (status_code == 200):
             pairs = {}
             lines = msg.split('\n')
             if (len(lines) > 2) and self.RE_PATTERNS['does_not_exist_pattern'].match(lines[2]):
@@ -1178,7 +1181,7 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
         """
         msg = self.__request('queue/{}'.format(str(queue_id)))
         status_code = self.__get_status_code(msg)
-        if(status_code == 200):
+        if (status_code == 200):
             pairs = {}
             lines = msg.split('\n')
             if (len(lines) > 2) and self.RE_PATTERNS['does_not_exist_pattern'].match(lines[2]):
@@ -1210,7 +1213,8 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
         :raises InvalidUse: When invalid fields are set
         """
 
-        valid_fields = set(('name', 'description', 'correspondaddress', 'commentaddress', 'initialpriority', 'finalpriority', 'defaultduein'))
+        valid_fields = set(
+            ('name', 'description', 'correspondaddress', 'commentaddress', 'initialpriority', 'finalpriority', 'defaultduein'))
         used_fields = set(map(lambda x: x.lower(), kwargs.keys()))
 
         if not used_fields <= valid_fields:
@@ -1257,10 +1261,10 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
                   None is returned if ticket does not exist.
         :raises UnexpectedMessageFormat: In case that returned status code is not 200
         """
-        msg = self.__request('ticket/{}/links/show'.format(str(ticket_id),))
+        msg = self.__request('ticket/{}/links/show'.format(str(ticket_id), ))
 
         status_code = self.__get_status_code(msg)
-        if(status_code == 200):
+        if (status_code == 200):
             pairs = {}
             msg = msg.split('\n')
             if (len(msg) > 2) and self.RE_PATTERNS['does_not_exist_pattern'].match(msg[2]):
@@ -1307,7 +1311,7 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
         post_data = ''
         for key in kwargs:
             post_data += "{}: {}\n".format(key, str(kwargs[key]))
-        msg = self.__request('ticket/{}/links'.format(str(ticket_id),),
+        msg = self.__request('ticket/{}/links'.format(str(ticket_id), ),
                              post_data={'content': post_data})
         state = msg.split('\n')[2]
         return self.RE_PATTERNS['links_updated_pattern'].match(state) is not None
@@ -1356,7 +1360,7 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
                       exist or user does not have ModifyTicket permission.
         """
         msg = self.__request('ticket/{}/merge/{}'.format(str(ticket_id),
-                                                     str(into_id)))
+                                                         str(into_id)))
         state = msg.split('\n')[2]
         return self.RE_PATTERNS['merge_successful_pattern'].match(state) is not None
 

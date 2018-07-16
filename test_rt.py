@@ -17,20 +17,20 @@ __license__ = """ Copyright (C) 2013 CZ.NIC, z.s.p.o.
 """
 __docformat__ = "reStructuredText en"
 __authors__ = [
-  '"Jiri Machalek" <jiri.machalek@nic.cz>'
+    '"Jiri Machalek" <jiri.machalek@nic.cz>'
 ]
 
-import unittest
 import random
 import string
+import unittest
 
 from six import iteritems
 from six.moves import range
 
 import rt
 
-class RtTestCase(unittest.TestCase):
 
+class RtTestCase(unittest.TestCase):
     RT_VALID_CREDENTIALS = {
         'RT4.4 stable': {
             'url': 'http://demo.request-tracker.fr/REST/1.0',
@@ -106,7 +106,7 @@ class RtTestCase(unittest.TestCase):
     def test_ticket_operations(self):
         ticket_subject = 'Testing issue ' + "".join([random.choice(string.ascii_letters) for i in range(15)])
         ticket_text = 'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'
-        for name in ('RT4.4 stable', ):
+        for name in ('RT4.4 stable',):
             self.check_or_create_queue(name)
 
             url = self.RT_VALID_CREDENTIALS[name]['url']
@@ -166,13 +166,15 @@ class RtTestCase(unittest.TestCase):
             self.assertTrue(links1['DependsOn'][0].endswith('ticket/' + str(ticket2_id)), 'Unexpected value of link DependsOn.')
             links2 = tracker.get_links(ticket2_id)
             self.assertTrue('DependedOnBy' in links2, 'Missing just created link DependedOnBy.')
-            self.assertTrue(links2['DependedOnBy'][0].endswith('ticket/' + str(ticket_id)), 'Unexpected value of link DependedOnBy.')
+            self.assertTrue(links2['DependedOnBy'][0].endswith('ticket/' + str(ticket_id)),
+                            'Unexpected value of link DependedOnBy.')
             # reply with attachment
             attachment_content = b'Content of attachment.'
             attachment_name = 'attachment-name.txt'
             reply_text = 'Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.'
             # should provide a content type as RT 4.0 type guessing is broken (missing use statement for guess_media_type in REST.pm)
-            self.assertTrue(tracker.reply(ticket_id, text=reply_text, files=[(attachment_name, attachment_content, 'text/plain')]), 'Reply to ticket returned False indicating error.')
+            self.assertTrue(tracker.reply(ticket_id, text=reply_text, files=[(attachment_name, attachment_content, 'text/plain')]),
+                            'Reply to ticket returned False indicating error.')
             at_ids = tracker.get_attachments_ids(ticket_id)
             self.assertTrue(at_ids, 'Emply list with attachment ids, something went wrong.')
             at_content = tracker.get_attachment_content(ticket_id, at_ids[-1])
@@ -186,8 +188,9 @@ class RtTestCase(unittest.TestCase):
             # delete ticket
             self.assertTrue(tracker.edit_ticket(ticket_id, Status='deleted'), 'Ticket delete failed.')
             # get user
-            self.assertEqual(tracker.get_user(default_login)['EmailAddress'], default_login + '@no.mail', 'Bad user email received.')
+            self.assertEqual(tracker.get_user(default_login)['EmailAddress'], default_login + '@no.mail',
+                             'Bad user email received.')
+
 
 if __name__ == '__main__':
     unittest.main()
-
