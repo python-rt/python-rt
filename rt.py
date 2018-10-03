@@ -515,6 +515,12 @@ class Rt:
                     pairs['Cc'] = self.__normalize_list(pairs['Cc'])
                 if 'AdminCc' in pairs:
                     pairs['AdminCc'] = self.__normalize_list(pairs['AdminCc'])
+
+                if 'id' not in pairs and not pairs['id'].startswitch('ticket/'):
+                    raise UnexpectedMessageFormat('Response from RT didn\'t contain a valid ticket_id')
+                else:
+                    pairs['numerical_id'] = pairs['id'].split('ticket/')[1]
+
             return items
         elif Format == 's':
             items = []
