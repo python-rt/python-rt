@@ -27,12 +27,19 @@ Provided functionality:
 
 import os
 import re
+import sys
+
 import warnings
 
 import requests
 from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 from six import iteritems
 from six.moves import range
+
+if sys.version_info.major == 2:
+    from urlparse import urljoin 
+else:
+    from urllib.parse import urljoin
 
 __license__ = """ Copyright (C) 2012 CZ.NIC, z.s.p.o.
     Copyright (c) 2015 Genome Research Ltd.
@@ -188,6 +195,9 @@ class Rt:
                              need to call login, because it is managed by
                              requests library instantly.
         """
+        # ensure trailing slash
+        if not url.endswith("/"):
+            url = url + "/"
         self.url = url
         self.default_login = default_login
         self.default_password = default_password
@@ -236,7 +246,7 @@ class Rt:
         try:
             if (not self.login_result) and (not without_login):
                 raise AuthorizationError('First login by calling method `login`.')
-            url = str(os.path.join(self.url, selector))
+            url = str(urljoin(self.url, selector))
             if not files:
                 if post_data:
                     response = self.session.post(url, data=post_data)
