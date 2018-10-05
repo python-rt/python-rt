@@ -515,20 +515,26 @@ class Rt:
                     pairs['Cc'] = self.__normalize_list(pairs['Cc'])
                 if 'AdminCc' in pairs:
                     pairs['AdminCc'] = self.__normalize_list(pairs['AdminCc'])
+
+                if 'id' not in pairs and not pairs['id'].startswitch('ticket/'):
+                    raise UnexpectedMessageFormat('Response from RT didn\'t contain a valid ticket_id')
+                else:
+                    pairs['numerical_id'] = pairs['id'].split('ticket/')[1]
+
             return items
         elif Format == 's':
             items = []
             msgs = msg.splitlines()[2:]
             for msg in msgs:
-                ticket_id, subject = msg.split(': ', 1)
-                items.append({'id': 'ticket/' + ticket_id, 'Subject': subject})
+                ticket_id, subject = msg.split(': ', 1)                
+                items.append({'id': 'ticket/' + ticket_id, 'numerical_id': ticket_id, 'Subject': subject})
             return items
         elif Format == 'i':
             items = []
             msgs = msg.splitlines()[2:]
             for msg in msgs:
                 _, ticket_id = msg.split('/', 1)
-                items.append({'id': 'ticket/' + ticket_id})
+                items.append({'id': 'ticket/' + ticket_id, 'numerical_id': ticket_id})
             return items
 
     def get_ticket(self, ticket_id):
@@ -540,6 +546,7 @@ class Rt:
                   *ticket_id* or None if ticket does not exist. List of keys:
 
                       * id
+                      * numerical_id
                       * Queue
                       * Owner
                       * Creator
@@ -592,7 +599,12 @@ class Rt:
                 pairs['Cc'] = self.__normalize_list(pairs['Cc'])
             if 'AdminCc' in pairs:
                 pairs['AdminCc'] = self.__normalize_list(pairs['AdminCc'])
-
+            
+            if 'id' not in pairs and not pairs['id'].startswitch('ticket/'):
+                raise UnexpectedMessageFormat('Response from RT didn\'t contain a valid ticket_id')
+            else:
+                pairs['numerical_id'] = pairs['id'].split('ticket/')[1]
+            
             return pairs
         else:
             raise UnexpectedMessageFormat('Received status code is {:d} instead of 200.'.format(status_code))
