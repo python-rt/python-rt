@@ -268,6 +268,7 @@ class Rt:
                 print("### {0}".format(datetime.datetime.now().isoformat()))
                 print("Request URL: {0}".format(url))
                 print("Request method: {0}".format(method))
+                print("Respone status code: {0}".format(response.status_code))
                 print("Response content:")
                 print(response.content.decode())
                 
