@@ -30,6 +30,7 @@ import re
 import sys
 
 import warnings
+import datetime
 
 import requests
 from requests.auth import HTTPBasicAuth, HTTPDigestAuth
@@ -68,6 +69,8 @@ DEFAULT_QUEUE = 'General'
 
 ALL_QUEUES = object()
 
+DEBUG_MODE = False
+""" Flag to enable debug mode for all Rt instances """
 
 class RtError(Exception):
     """ Super class of all Rt Errors """
@@ -178,7 +181,7 @@ class Rt:
 
     def __init__(self, url, default_login=None, default_password=None, proxy=None,
                  default_queue=DEFAULT_QUEUE, basic_auth=None, digest_auth=None,
-                 skip_login=False, verify_cert=True):
+                 skip_login=False, verify_cert=True, debug_mode=False):
         """ API initialization.
 
         :keyword url: Base URL for Request Tracker API.
@@ -199,6 +202,7 @@ class Rt:
         if not url.endswith("/"):
             url = url + "/"
         self.url = url
+        self.debug_mode = debug_mode
         self.default_login = default_login
         self.default_password = default_password
         self.default_queue = default_queue
@@ -248,7 +252,7 @@ class Rt:
                 raise AuthorizationError('First login by calling method `login`.')
             url = str(urljoin(self.url, selector))
             if not files:
-                if post_data:
+                if post_data:                    
                     response = self.session.post(url, data=post_data)
                 else:
                     response = self.session.get(url, params=get_params)
@@ -257,6 +261,16 @@ class Rt:
                 for i, file_pair in enumerate(files):
                     files_data['attachment_{:d}'.format(i + 1)] = file_pair
                 response = self.session.post(url, data=post_data, files=files_data)
+            if self.debug_mode or DEBUG_MODE:
+                method = "GET"
+                if post_data or files:
+                    method = "POST"
+                print("### {0}".format(datetime.datetime.now().isoformat()))
+                print("Request URL: {0}".format(url))
+                print("Request method: {0}".format(method))
+                print("Response content:")
+                print(response.content.decode())
+                
             if response.status_code == 401:
                 raise AuthorizationError('Server could not verify that you are authorized to access the requested document.')
             if response.status_code != 200:

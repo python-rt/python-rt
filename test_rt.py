@@ -31,6 +31,7 @@ import rt
 
 
 class RtTestCase(unittest.TestCase):
+    rt.DEBUG_MODE = True
     RT_VALID_CREDENTIALS = {
         'RT4.4 stable': {
             'url': 'http://demo.request-tracker.fr/REST/1.0',
