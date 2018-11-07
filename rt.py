@@ -549,15 +549,19 @@ class Rt:
             return items
         elif Format == 's':
             items = []
-            msgs = msg.splitlines()[2:]
+            msgs = lines[2:]
             for msg in msgs:
+                if "" == msg: # Ignore blank line at the end
+                    continue
                 ticket_id, subject = msg.split(': ', 1)                
                 items.append({'id': 'ticket/' + ticket_id, 'numerical_id': ticket_id, 'Subject': subject})
             return items
         elif Format == 'i':
             items = []
-            msgs = msg.splitlines()[2:]
+            msgs = lines[2:]
             for msg in msgs:
+                if "" == msg: # Ignore blank line at the end
+                    continue
                 _, ticket_id = msg.split('/', 1)
                 items.append({'id': 'ticket/' + ticket_id, 'numerical_id': ticket_id})
             return items
