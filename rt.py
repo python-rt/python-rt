@@ -38,7 +38,7 @@ from six import iteritems
 from six.moves import range
 
 if sys.version_info.major == 2:
-    from urlparse import urljoin 
+    from urlparse import urljoin
 else:
     from urllib.parse import urljoin
 
@@ -71,6 +71,7 @@ ALL_QUEUES = object()
 
 DEBUG_MODE = False
 """ Flag to enable debug mode for all Rt instances """
+
 
 class RtError(Exception):
     """ Super class of all Rt Errors """
@@ -164,19 +165,19 @@ class Rt:
         'content_pattern_bytes': re.compile(b'Content:'),
         'attachments_pattern': re.compile('Attachments:'),
         'attachments_list_pattern': re.compile(r'[^0-9]*(\d+): (.+) \((.+) / (.+)\),?$'),
-        'headers_pattern_bytes': re.compile(b'Headers:'),
+        'headers_pattern_bytes': re.compile('Headers:'),
         'links_updated_pattern': re.compile('^# Links for ticket [0-9]+ updated.$'),
         'created_link_pattern': re.compile('.* Created link '),
         'deleted_link_pattern': re.compile('.* Deleted link '),
         'merge_successful_pattern': re.compile('^# Merge completed.|^Merge Successful$'),
         'bad_request_pattern': re.compile('.* 400 Bad Request$'),
-        'user_pattern': re.compile('^# User ([0-9]*) (?:updated|created)\.$'),
-        'queue_pattern': re.compile('^# Queue (\w*) (?:updated|created)\.$'),
-        'ticket_created_pattern': re.compile('^# Ticket ([0-9]+) created\.$'),
-        'does_not_exist_pattern': re.compile('^# (?:Queue|User|Ticket) \w* does not exist\.$'),
-        'does_not_exist_pattern_bytes': re.compile(b'^# (?:Queue|User|Ticket) \w* does not exist\.$'),
-        'not_related_pattern': re.compile('^# Transaction \d+ is not related to Ticket \d+'),
-        'invalid_attachment_pattern_bytes': re.compile(b'^# Invalid attachment id: \d+$'),
+        'user_pattern': re.compile(r'^# User ([0-9]*) (?:updated|created)\.$'),
+        'queue_pattern': re.compile(r'^# Queue (\w*) (?:updated|created)\.$'),
+        'ticket_created_pattern': re.compile(r'^# Ticket ([0-9]+) created\.$'),
+        'does_not_exist_pattern': re.compile(r'^# (?:Queue|User|Ticket) \w* does not exist\.$'),
+        'does_not_exist_pattern_bytes': re.compile(r'^# (?:Queue|User|Ticket) \w* does not exist\.$'),
+        'not_related_pattern': re.compile(r'^# Transaction \d+ is not related to Ticket \d+'),
+        'invalid_attachment_pattern_bytes': re.compile(r'^# Invalid attachment id: \d+$'),
     }
 
     def __init__(self, url, default_login=None, default_password=None, proxy=None,
@@ -252,7 +253,7 @@ class Rt:
                 raise AuthorizationError('First login by calling method `login`.')
             url = str(urljoin(self.url, selector))
             if not files:
-                if post_data:                    
+                if post_data:
                     response = self.session.post(url, data=post_data)
                 else:
                     response = self.session.get(url, params=get_params)
@@ -271,7 +272,7 @@ class Rt:
                 print("Respone status code: {0}".format(response.status_code))
                 print("Response content:")
                 print(response.content.decode())
-                
+
             if response.status_code == 401:
                 raise AuthorizationError('Server could not verify that you are authorized to access the requested document.')
             if response.status_code != 200:
@@ -306,7 +307,7 @@ class Rt:
         """
         try:
             return int(msg.split('\n')[0].split(' ')[1])
-        except:
+        except Exception:
             return None
 
     def __check_response(self, msg):
@@ -551,16 +552,16 @@ class Rt:
             items = []
             msgs = lines[2:]
             for msg in msgs:
-                if "" == msg: # Ignore blank line at the end
+                if "" == msg:  # Ignore blank line at the end
                     continue
-                ticket_id, subject = msg.split(': ', 1)                
+                ticket_id, subject = msg.split(': ', 1)
                 items.append({'id': 'ticket/' + ticket_id, 'numerical_id': ticket_id, 'Subject': subject})
             return items
         elif Format == 'i':
             items = []
             msgs = lines[2:]
             for msg in msgs:
-                if "" == msg: # Ignore blank line at the end
+                if "" == msg:  # Ignore blank line at the end
                     continue
                 _, ticket_id = msg.split('/', 1)
                 items.append({'id': 'ticket/' + ticket_id, 'numerical_id': ticket_id})
@@ -628,12 +629,12 @@ class Rt:
                 pairs['Cc'] = self.__normalize_list(pairs['Cc'])
             if 'AdminCc' in pairs:
                 pairs['AdminCc'] = self.__normalize_list(pairs['AdminCc'])
-            
+
             if 'id' not in pairs and not pairs['id'].startswitch('ticket/'):
                 raise UnexpectedMessageFormat('Response from RT didn\'t contain a valid ticket_id')
             else:
                 pairs['numerical_id'] = pairs['id'].split('ticket/')[1]
-            
+
             return pairs
         else:
             raise UnexpectedMessageFormat('Received status code is {:d} instead of 200.'.format(status_code))
@@ -1017,8 +1018,7 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
         msg = self.__request('ticket/{}/attachments/{}'.format(str(ticket_id), str(attachment_id)),
                              text_response=False)
         msg = msg.split(b'\n')
-        if (len(msg) > 2) and (self.RE_PATTERNS['invalid_attachment_pattern_bytes'].match(msg[2]) or self.RE_PATTERNS[
-            'does_not_exist_pattern_bytes'].match(msg[2])):
+        if (len(msg) > 2) and (self.RE_PATTERNS['invalid_attachment_pattern_bytes'].match(msg[2]) or self.RE_PATTERNS['does_not_exist_pattern_bytes'].match(msg[2])):
             return None
         msg = msg[2:]
         head_matching = [i for i, m in enumerate(msg) if self.RE_PATTERNS['headers_pattern_bytes'].match(m)]
@@ -1072,8 +1072,7 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
                              (str(ticket_id), str(attachment_id)),
                              text_response=False)
         lines = msg.split(b'\n', 3)
-        if (len(lines) == 4) and (self.RE_PATTERNS['invalid_attachment_pattern_bytes'].match(lines[2]) or self.RE_PATTERNS[
-            'does_not_exist_pattern_bytes'].match(lines[2])):
+        if (len(lines) == 4) and (self.RE_PATTERNS['invalid_attachment_pattern_bytes'].match(lines[2]) or self.RE_PATTERNS['does_not_exist_pattern_bytes'].match(lines[2])):
             return None
         return msg[msg.find(b'\n') + 2:-3]
 
