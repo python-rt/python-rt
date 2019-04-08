@@ -3,6 +3,7 @@ v1.0.11, unreleased
 - Added parameter Format to search() (#17).
 - Tests: Update to new demo instance, fixing tests.
 - Tests: Disable tests in Travis, the existing test instance closed the REST interface (#28).
+- Fix support for custom field names containing colons (#37).
 
 v1.0.10, 2017-02-22
 - PEP8 fixes
