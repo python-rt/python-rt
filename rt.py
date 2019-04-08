@@ -522,7 +522,7 @@ class Rt:
                     raise UnexpectedMessageFormat('Missing line starting with `Requestors:`.')
                 for i in range(req_id):
                     if ': ' in msg[i]:
-                        header, content = msg[i].split(': ', 1)
+                        header, content = self.split_header(msg[i])
                         pairs[header.strip()] = content.strip()
                 requestors = [msg[req_id][12:]]
                 req_id += 1
@@ -532,7 +532,7 @@ class Rt:
                 pairs['Requestors'] = self.__normalize_list(requestors)
                 for i in range(req_id, len(msg)):
                     if ': ' in msg[i]:
-                        header, content = msg[i].split(': ', 1)
+                        header, content = self.split_header(msg[i])
                         pairs[header.strip()] = content.strip()
                 if pairs:
                     items.append(pairs)
@@ -554,7 +554,7 @@ class Rt:
             for msg in msgs:
                 if "" == msg:  # Ignore blank line at the end
                     continue
-                ticket_id, subject = msg.split(': ', 1)
+                ticket_id, subject = self.split_header(msg)
                 items.append({'id': 'ticket/' + ticket_id, 'numerical_id': ticket_id, 'Subject': subject})
             return items
         elif Format == 'i':
@@ -612,7 +612,7 @@ class Rt:
                 raise UnexpectedMessageFormat('Missing line starting with `Requestors:`.')
             for i in range(req_id):
                 if ': ' in msg[i]:
-                    header, content = msg[i].split(': ', 1)
+                    header, content = self.split_header(msg[i])
                     pairs[header.strip()] = content.strip()
             requestors = [msg[req_id][12:]]
             req_id += 1
@@ -622,7 +622,7 @@ class Rt:
             pairs['Requestors'] = self.__normalize_list(requestors)
             for i in range(req_id, len(msg)):
                 if ': ' in msg[i]:
-                    header, content = msg[i].split(': ', 1)
+                    header, content = self.split_header(msg[i])
                     pairs[header.strip()] = content.strip()
 
             if 'Cc' in pairs:
@@ -778,7 +778,7 @@ class Rt:
                                                Missing line starting with `Attachements:`.')
             for i in range(cont_id):
                 if ': ' in msg[i]:
-                    header, content = msg[i].split(': ', 1)
+                    header, content = self.split_header(msg[i])
                     pairs[header.strip()] = content.strip()
             content = msg[cont_id][9:]
             cont_id += 1
@@ -788,12 +788,12 @@ class Rt:
             pairs['Content'] = content
             for i in range(cont_id, atta_id):
                 if ': ' in msg[i]:
-                    header, content = msg[i].split(': ', 1)
+                    header, content = self.split_header(msg[i])
                     pairs[header.strip()] = content.strip()
             attachments = []
             for i in range(atta_id + 1, len(msg)):
                 if ': ' in msg[i]:
-                    header, content = msg[i].split(': ', 1)
+                    header, content = self.split_header(msg[i])
                     attachments.append((int(header),
                                         content.strip()))
             pairs['Attachments'] = attachments
@@ -1312,7 +1312,7 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
             i = 2
             while i < len(msg):
                 if ': ' in msg[i]:
-                    key, link = msg[i].split(': ', 1)
+                    key, link = self.split_header(msg[i])
                     links = [link.strip()]
                     j = i + 1
                     pad = len(key) + 2
@@ -1445,3 +1445,19 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
         post_data = {'content': "Ticket: {}\nAction: untake".format(str(ticket_id))}
         msg = self.__request('ticket/{}/take'.format(str(ticket_id)), post_data=post_data)
         return self.__get_status_code(msg) == 200
+
+    @staticmethod
+    def split_header(line):
+        """ Split a header line into field name and field value.
+
+        Note that custom fields may contain colons inside the curly braces,
+        so we need a special test for them.
+
+        :param line: A message line to be split.
+
+        :returns: (Field name, field value) tuple.
+        """
+        match = re.match(r'^(CF\.\{.*?}): (.*)$', line)
+        if match:
+            return (match.group(1), match.group(2))
+        return line.split(': ', 1)
