@@ -639,6 +639,27 @@ class Rt:
         else:
             raise UnexpectedMessageFormat('Received status code is {:d} instead of 200.'.format(status_code))
 
+    def __ticket_post_data(self, data_source):
+        """Convert a dictionary of RT ticket data into a REST POST data string.
+
+        :param data_source: Dictionary with ticket fields and values.
+
+        :returns: Equivalent string to POST to the RT REST interface.
+        """
+        post_data = []
+        for key in data_source:
+            if key.startswith('CF_'):
+                rt_key = 'CF.{{{}}}'.format(key[3:])
+            else:
+                rt_key = key
+            value = data_source[key]
+            if isinstance(value, (list, tuple)):
+                value = ', '.join(value)
+            value_lines = iter(value.splitlines())
+            post_data.append('{}: {}'.format(rt_key, next(value_lines, '')))
+            post_data.extend(' ' + line for line in value_lines)
+        return '\n'.join(post_data)
+
     def create_ticket(self, Queue=None, files=[], **kwargs):
         """ Create new ticket and set given parameters.
 
@@ -681,14 +702,9 @@ class Rt:
         :returns: ID of new ticket or ``-1``, if creating failed
         """
 
-        post_data = 'id: ticket/new\nQueue: {}\n'.format(Queue or self.default_queue, )
-        for key in kwargs:
-            if key[:4] == 'Text':
-                post_data += "{}: {}\n".format(key, re.sub(r'\n', r'\n      ', kwargs[key]))
-            elif key[:3] == 'CF_':
-                post_data += "CF.{{{}}}: {}\n".format(key[3:], kwargs[key])
-            else:
-                post_data += "{}: {}\n".format(key, kwargs[key])
+        kwargs['id'] = 'ticket/new'
+        kwargs['Queue'] = Queue or self.default_queue
+        post_data = self.__ticket_post_data(kwargs)
         for file_info in files:
             post_data += "\nAttachment: {}".format(file_info[0], )
         msg = self.__request('ticket/new', post_data={'content': post_data}, files=files)
@@ -718,14 +734,7 @@ class Rt:
                       Ticket with given ID does not exist or unknown parameter
                       was set (in this case all other valid fields are changed)
         """
-        post_data = ''
-        for key, value in iteritems(kwargs):
-            if isinstance(value, (list, tuple)):
-                value = ", ".join(value)
-            if key[:3] != 'CF_':
-                post_data += "{}: {}\n".format(key, value)
-            else:
-                post_data += "CF.{{{}}}: {}\n".format(key[3:], value)
+        post_data = self.__ticket_post_data(kwargs)
         msg = self.__request('ticket/{}/edit'.format(str(ticket_id)), post_data={'content': post_data})
         state = msg.split('\n')[2]
         return self.RE_PATTERNS['update_pattern'].match(state) is not None
