@@ -4,6 +4,7 @@ v1.0.11, unreleased
 - Tests: Update to new demo instance, fixing tests.
 - Tests: Disable tests in Travis, the existing test instance closed the REST interface (#28).
 - Fix support for custom field names containing colons (#37).
+- Fix support for custom field values containing newlines (#11).
 
 v1.0.10, 2017-02-22
 - PEP8 fixes
