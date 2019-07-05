@@ -34,7 +34,7 @@ class RtTestCase(unittest.TestCase):
     rt.DEBUG_MODE = True
     RT_VALID_CREDENTIALS = {
         'RT4.4 stable': {
-            'url': 'http://demo.request-tracker.fr/REST/1.0',
+            'url': None,
             'admin': {
                 'default_login': 'administrateur',
                 'default_password': 'administrateur',
@@ -60,7 +60,7 @@ class RtTestCase(unittest.TestCase):
 
     RT_INVALID_CREDENTIALS = {
         'RT4.4 stable (bad credentials)': {
-            'url': 'http://demo.request-tracker.fr/REST/1.0',
+            'url': None,
             'default_login': 'idontexist',
             'default_password': 'idonthavepassword',
         },
@@ -68,7 +68,7 @@ class RtTestCase(unittest.TestCase):
 
     RT_MISSING_CREDENTIALS = {
         'RT4.4 stable (missing credentials)': {
-            'url': 'http://demo.request-tracker.fr/REST/1.0',
+            'url': None,
         },
     }
 
@@ -80,6 +80,14 @@ class RtTestCase(unittest.TestCase):
         },
     }
 
+    def _have_creds(*creds_seq):
+        return all(creds[name].get('url') for creds in creds_seq for name in creds)
+
+    @unittest.skipUnless(_have_creds(RT_VALID_CREDENTIALS,
+                                     RT_INVALID_CREDENTIALS,
+                                     RT_MISSING_CREDENTIALS,
+                                     RT_BAD_URL),
+                         "missing credentials required to run test")
     def test_login_and_logout(self):
         for name in self.RT_VALID_CREDENTIALS:
             tracker = rt.Rt(self.RT_VALID_CREDENTIALS[name]['url'], **self.RT_VALID_CREDENTIALS[name]['support'])
@@ -104,6 +112,8 @@ class RtTestCase(unittest.TestCase):
             queue_id = tracker.create_queue('General')
         tracker.logout()
 
+    @unittest.skipUnless(_have_creds(RT_VALID_CREDENTIALS),
+                         "missing credentials required to run test")
     def test_ticket_operations(self):
         ticket_subject = 'Testing issue ' + "".join([random.choice(string.ascii_letters) for i in range(15)])
         ticket_text = 'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'
