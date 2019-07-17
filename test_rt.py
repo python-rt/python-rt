@@ -104,22 +104,12 @@ class RtTestCase(unittest.TestCase):
             tracker = rt.Rt(**params)
             self.assertRaises(rt.UnexpectedResponse, lambda: tracker.login())
 
-    def check_or_create_queue(self, name):
-        tracker = rt.Rt(self.RT_VALID_CREDENTIALS[name]['url'], **self.RT_VALID_CREDENTIALS[name]['admin'])
-        tracker.login()
-        queue = tracker.get_queue('General')
-        if 'Name' not in queue:
-            queue_id = tracker.create_queue('General')
-        tracker.logout()
-
     @unittest.skipUnless(_have_creds(RT_VALID_CREDENTIALS),
                          "missing credentials required to run test")
     def test_ticket_operations(self):
         ticket_subject = 'Testing issue ' + "".join([random.choice(string.ascii_letters) for i in range(15)])
         ticket_text = 'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'
         for name in ('RT4.4 stable',):
-            self.check_or_create_queue(name)
-
             url = self.RT_VALID_CREDENTIALS[name]['url']
             default_login = self.RT_VALID_CREDENTIALS[name]['support']['default_login']
             default_password = self.RT_VALID_CREDENTIALS[name]['support']['default_password']
@@ -164,7 +154,7 @@ class RtTestCase(unittest.TestCase):
             # get_short_history
             short_hist = tracker.get_short_history(ticket_id)
             self.assertTrue(len(short_hist) > 0, 'Empty ticket short history.')
-            self.assertEqual(short_hist[0][1], 'Ticket created by support')
+            self.assertEqual(short_hist[0][1], 'Ticket created by %s' % default_login)
             # create 2nd ticket
             ticket2_subject = 'Testing issue ' + "".join([random.choice(string.ascii_letters) for i in range(15)])
             ticket2_id = tracker.create_ticket(Subject=ticket2_subject)
@@ -186,21 +176,22 @@ class RtTestCase(unittest.TestCase):
             # should provide a content type as RT 4.0 type guessing is broken (missing use statement for guess_media_type in REST.pm)
             self.assertTrue(tracker.reply(ticket_id, text=reply_text, files=[(attachment_name, attachment_content, 'text/plain')]),
                             'Reply to ticket returned False indicating error.')
-            at_ids = tracker.get_attachments_ids(ticket_id)
-            self.assertTrue(at_ids, 'Emply list with attachment ids, something went wrong.')
-            at_content = tracker.get_attachment_content(ticket_id, at_ids[-1])
-            self.assertEqual(at_content, attachment_content, 'Recorded attachment is not equal to the original file.')
             # attachments list
             at_list = tracker.get_attachments(ticket_id)
+            self.assertTrue(at_list, 'Empty list with attachment ids, something went wrong.')
             at_names = [at[1] for at in at_list]
             self.assertTrue(attachment_name in at_names, 'Attachment name is not in the list of attachments.')
+            # get the attachment and compare it's content
+            at_id = at_list[at_names.index(attachment_name)][0]
+            at_content = tracker.get_attachment_content(ticket_id,
+                                                        at_id)
+            self.assertEqual(at_content, attachment_content, 'Recorded attachment is not equal to the original file.')
             # merge tickets
             self.assertTrue(tracker.merge_ticket(ticket2_id, ticket_id), 'Merging tickets failed.')
             # delete ticket
             self.assertTrue(tracker.edit_ticket(ticket_id, Status='deleted'), 'Ticket delete failed.')
             # get user
-            self.assertEqual(tracker.get_user(default_login)['EmailAddress'], default_login + '@no.mail',
-                             'Bad user email received.')
+            self.assertIn('@', tracker.get_user(default_login)['EmailAddress'])
 
 
 if __name__ == '__main__':

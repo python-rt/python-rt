@@ -165,7 +165,7 @@ class Rt:
         'content_pattern_bytes': re.compile(b'Content:'),
         'attachments_pattern': re.compile('Attachments:'),
         'attachments_list_pattern': re.compile(r'[^0-9]*(\d+): (.+) \((.+) / (.+)\),?$'),
-        'headers_pattern_bytes': re.compile('Headers:'),
+        'headers_pattern_bytes': re.compile(b'Headers:'),
         'links_updated_pattern': re.compile('^# Links for ticket [0-9]+ updated.$'),
         'created_link_pattern': re.compile('.* Created link '),
         'deleted_link_pattern': re.compile('.* Deleted link '),
@@ -175,9 +175,9 @@ class Rt:
         'queue_pattern': re.compile(r'^# Queue (\w*) (?:updated|created)\.$'),
         'ticket_created_pattern': re.compile(r'^# Ticket ([0-9]+) created\.$'),
         'does_not_exist_pattern': re.compile(r'^# (?:Queue|User|Ticket) \w* does not exist\.$'),
-        'does_not_exist_pattern_bytes': re.compile(r'^# (?:Queue|User|Ticket) \w* does not exist\.$'),
+        'does_not_exist_pattern_bytes': re.compile(br'^# (?:Queue|User|Ticket) \w* does not exist\.$'),
         'not_related_pattern': re.compile(r'^# Transaction \d+ is not related to Ticket \d+'),
-        'invalid_attachment_pattern_bytes': re.compile(r'^# Invalid attachment id: \d+$'),
+        'invalid_attachment_pattern_bytes': re.compile(br'^# Invalid attachment id: \d+$'),
     }
 
     def __init__(self, url, default_login=None, default_password=None, proxy=None,
