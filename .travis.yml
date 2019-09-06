@@ -32,6 +32,7 @@ install:
 
 script:
   - if [[ ! -v mode ]]; then python setup.py install; fi
+  - nosetests --with-coverage
   - if [[ $mode == codestyle ]]; then pycodestyle rt.py; fi
 
 after_success:
