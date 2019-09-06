@@ -34,15 +34,11 @@ class RtTestCase(unittest.TestCase):
     rt.DEBUG_MODE = True
     RT_VALID_CREDENTIALS = {
         'RT4.4 stable': {
-            'url': None,
-            'admin': {
-                'default_login': 'administrateur',
-                'default_password': 'administrateur',
-            },
+            'url': "http://localhost:8080",
             'support': {
-                'default_login': 'support',
-                'default_password': 'support',
-            }
+                'default_login': 'root',
+                'default_password': 'password',
+            },
         },
         # HTTP timeout
         # 'RT4.6 dev': {
