@@ -36,4 +36,4 @@ script:
   - if [[ $mode == codestyle ]]; then pycodestyle rt.py; fi
 
 after_success:
-  - if [[ ! -v mode ]]; then codecov; fi
+  - codecov
