@@ -34,15 +34,11 @@ class RtTestCase(unittest.TestCase):
     rt.DEBUG_MODE = True
     RT_VALID_CREDENTIALS = {
         'RT4.4 stable': {
-            'url': None,
-            'admin': {
-                'default_login': 'administrateur',
-                'default_password': 'administrateur',
-            },
+            'url': "http://localhost:8080/REST/1.0/",
             'support': {
-                'default_login': 'support',
-                'default_password': 'support',
-            }
+                'default_login': 'root',
+                'default_password': 'password',
+            },
         },
         # HTTP timeout
         # 'RT4.6 dev': {
@@ -60,7 +56,7 @@ class RtTestCase(unittest.TestCase):
 
     RT_INVALID_CREDENTIALS = {
         'RT4.4 stable (bad credentials)': {
-            'url': None,
+            'url': "http://localhost:8080/REST/1.0/",
             'default_login': 'idontexist',
             'default_password': 'idonthavepassword',
         },
@@ -68,7 +64,7 @@ class RtTestCase(unittest.TestCase):
 
     RT_MISSING_CREDENTIALS = {
         'RT4.4 stable (missing credentials)': {
-            'url': None,
+            'url': "http://localhost:8080/REST/1.0/",
         },
     }
 
