@@ -1,4 +1,14 @@
-v1.0.11, unreleased
+v1.0.12, 2019-10-25
+- Travis CI Docker tests
+- RT 4.4 fixes
+- Support multiline CF values in create_ticket and edit_ticket.
+- Fix support for custom field names containing colons
+- In search(), replace splitlines() with lines array split on \n.
+- Add debug_mode flag for response logging
+- Add platform independent url joining / Allow testing on Windows
+- Add numerical_id to get_ticket result
+
+v1.0.11, 2018-07-16
 - Added parameter to set the content type in reply() and comment() (#12).
 - Added parameter Format to search() (#17).
 - Tests: Update to new demo instance, fixing tests.
