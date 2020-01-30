@@ -33,7 +33,7 @@ install:
 script:
   - python setup.py install
   - nosetests --with-coverage
-  - if [[ $mode == codestyle ]]; then pycodestyle rt.py; fi
+  - if [[ $mode == codestyle ]]; then pycodestyle rt/rt.py; fi
 
 after_success:
   - codecov
