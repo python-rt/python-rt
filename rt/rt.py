@@ -153,7 +153,7 @@ class Rt:
         'does_not_exist_pattern_bytes': re.compile(br'^# (?:Queue|User|Ticket) \w* does not exist\.$'),
         'not_related_pattern': re.compile(r'^# Transaction \d+ is not related to Ticket \d+'),
         'invalid_attachment_pattern_bytes': re.compile(br'^# Invalid attachment id: \d+$'),
-    }
+    }  # type: typing.Dict[str, re.Pattern]
 
     def __init__(self, url: str, default_login: typing.Optional[str] = None,
                  default_password: typing.Optional[str] = None, proxy: typing.Optional[str] = None,
@@ -192,10 +192,9 @@ class Rt:
         self.session.verify = verify_cert
         if proxy is not None:
             if url.lower().startswith("https://"):
-                proxy = {"https": proxy}
+                self.session.proxies = {"https": proxy}
             else:
-                proxy = {"http": proxy}
-        self.session.proxies = proxy
+                self.session.proxies = {"http": proxy}
         if basic_auth:
             warnings.warn('The parameter "basic_auth" will de deprecated in the next major release of this library. Please use http_auth instead.',
                           DeprecationWarning)
@@ -347,7 +346,7 @@ class Rt:
         """
 
         if (login is not None) and (password is not None):
-            login_data = {'user': login, 'pass': password}
+            login_data = {'user': login, 'pass': password}  # type: typing.Optional[typing.Dict[str, str]]
         elif (self.default_login is not None) and (self.default_password is not None):
             login_data = {'user': self.default_login, 'pass': self.default_password}
         elif self.session.auth:
@@ -363,7 +362,8 @@ class Rt:
             # we will not raise the error but just return False to indicate
             # invalid credentials
             return False
-        return self.login_result
+        else:
+            return bool(self.login_result)
 
     def logout(self) -> bool:
         """ Logout of user.
@@ -379,7 +379,7 @@ class Rt:
             self.login_result = None
         return ret
 
-    def new_correspondence(self, queue: typing.Optional[typing.Union[str, ALL_QUEUES]] = None) -> typing.List[dict]:
+    def new_correspondence(self, queue: typing.Optional[typing.Union[str, object]] = None) -> typing.List[dict]:
         """ Obtains tickets changed by other users than the system one.
 
         :keyword queue: Queue where to search
@@ -391,7 +391,7 @@ class Rt:
         """
         return self.search(Queue=queue, order='-LastUpdated', LastUpdatedBy__notexact=self.default_login)
 
-    def last_updated(self, since: str, queue: typing.Optional[typing.Union[str, ALL_QUEUES]] = None) -> typing.List[
+    def last_updated(self, since: str, queue: typing.Optional[typing.Union[str, object]] = None) -> typing.List[
         dict]:
         """ Obtains tickets changed after given date.
 
@@ -405,7 +405,7 @@ class Rt:
         """
         return self.search(Queue=queue, order='-LastUpdated', LastUpdatedBy__notexact=self.default_login, LastUpdated__gt=since)
 
-    def search(self, Queue: typing.Optional[typing.Union[str, ALL_QUEUES]] = None, order: typing.Optional[str] = None,
+    def search(self, Queue: typing.Optional[typing.Union[str, object]] = None, order: typing.Optional[str] = None,
                raw_query: typing.Optional[str] = None, Format: str = 'l', **kwargs: typing.Any) -> typing.List[dict]:
         """ Search arbitrary needles in given fields and queue.
 
@@ -462,7 +462,7 @@ class Rt:
         get_params = {}
         query = []
         url = 'search/ticket'
-        if Queue is not ALL_QUEUES:
+        if Queue is not object:
             query.append("Queue=\'{}\'".format(Queue or self.default_queue))
         if not raw_query:
             operators_map = {
@@ -530,13 +530,13 @@ class Rt:
                 if 'AdminCc' in pairs:
                     pairs['AdminCc'] = self.__normalize_list(pairs['AdminCc'])
 
-                if 'id' not in pairs and not pairs['id'].startswitch('ticket/'):
+                if 'id' not in pairs and not pairs['id'].startswith('ticket/'):
                     raise UnexpectedMessageFormat('Response from RT didn\'t contain a valid ticket_id')
-                else:
-                    pairs['numerical_id'] = pairs['id'].split('ticket/')[1]
+
+                pairs['numerical_id'] = pairs['id'].split('ticket/')[1]
 
             return items
-        elif Format == 's':
+        if Format == 's':
             items = []
             msgs = lines[2:]
             for msg in msgs:
@@ -545,7 +545,7 @@ class Rt:
                 ticket_id, subject = self.split_header(msg)
                 items.append({'id': 'ticket/' + ticket_id, 'numerical_id': ticket_id, 'Subject': subject})
             return items
-        elif Format == 'i':
+        if Format == 'i':
             items = []
             msgs = lines[2:]
             for msg in msgs:
@@ -554,6 +554,8 @@ class Rt:
                 _, ticket_id = msg.split('/', 1)
                 items.append({'id': 'ticket/' + ticket_id, 'numerical_id': ticket_id})
             return items
+
+        return []
 
     def get_ticket(self, ticket_id: typing.Union[str, int]) -> typing.Optional[dict]:
         """ Fetch ticket by its ID.
@@ -618,7 +620,7 @@ class Rt:
             if 'AdminCc' in pairs:
                 pairs['AdminCc'] = self.__normalize_list(pairs['AdminCc'])
 
-            if 'id' not in pairs and not pairs['id'].startswitch('ticket/'):
+            if 'id' not in pairs and not pairs['id'].startswith('ticket/'):
                 raise UnexpectedMessageFormat('Response from RT didn\'t contain a valid ticket_id')
 
             pairs['numerical_id'] = pairs['id'].split('ticket/')[1]
@@ -648,7 +650,7 @@ class Rt:
             post_data.extend(' ' + line for line in value_lines)
         return '\n'.join(post_data)
 
-    def create_ticket(self, Queue: typing.Optional[typing.Union[str, ALL_QUEUES]] = None,
+    def create_ticket(self, Queue: typing.Optional[typing.Union[str, object]] = None,
                       files: typing.Optional[typing.List[typing.Tuple[str, typing.IO, typing.Optional[str]]]] = [],
                       **kwargs: typing.Any) -> int:
         """ Create new ticket and set given parameters.
@@ -768,7 +770,7 @@ class Rt:
         msgs = msgs.split('\n--\n')
         items = []
         for msg in msgs:
-            pairs = {}
+            pairs = {}  # type: dict
             msg = msg.split('\n')
             cont_matching = [i for i, m in enumerate(msg) if self.RE_PATTERNS['content_pattern'].match(m)]
             cont_id = cont_matching[0] if cont_matching else None
@@ -961,7 +963,7 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
                 info = self.RE_PATTERNS['attachments_list_pattern'].match(line)
                 if info:
                     attachment_infos.append(info.groups())
-        return attachment_infos
+        return attachment_infos  # type: ignore # type returned by the regex, if it matches, is as defined above
 
     def get_attachments_ids(self, ticket_id: typing.Union[str, int]) -> typing.Optional[typing.List[int]]:
         """ Get IDs of attachments for given ticket.
@@ -971,7 +973,7 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
                   ticket. Returns None if ticket does not exist.
         """
         attachments = self.get_attachments(ticket_id)
-        return [int(at[0]) for at in attachments] if attachments else attachments
+        return [int(at[0]) for at in attachments] if attachments is not None else None
 
     def get_attachment(self, ticket_id: typing.Union[str, int], attachment_id: typing.Union[str, int]) -> \
             typing.Optional[dict]:
@@ -1042,10 +1044,10 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
                                            Missing line starting with `Headers:`.')
         msg[head_id] = re.sub(b'^Headers: (.*)$', r'\1', msg[head_id])
         cont_matching = [i for i, m in enumerate(msg) if self.RE_PATTERNS['content_pattern_bytes'].match(m)]
-        cont_id = cont_matching[0] if cont_matching else None
         if not cont_matching:
             raise UnexpectedMessageFormat('Unexpected content part of attachment entry. \
                                            Missing line starting with `Content:`.')
+        cont_id = cont_matching[0]
         pairs = {}
         for i in range(head_id):
             if b': ' in msg[i]:
@@ -1403,8 +1405,8 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
         state = msg.split('\n')[2]
         if delete:
             return self.RE_PATTERNS['deleted_link_pattern'].match(state) is not None
-        else:
-            return self.RE_PATTERNS['created_link_pattern'].match(state) is not None
+
+        return self.RE_PATTERNS['created_link_pattern'].match(state) is not None
 
     def merge_ticket(self, ticket_id: typing.Union[str, int], into_id: typing.Union[str, int]) -> bool:
         """ Merge ticket into another (undocumented API feature).
