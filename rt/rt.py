@@ -391,8 +391,7 @@ class Rt:
         """
         return self.search(Queue=queue, order='-LastUpdated', LastUpdatedBy__notexact=self.default_login)
 
-    def last_updated(self, since: str, queue: typing.Optional[typing.Union[str, object]] = None) -> typing.List[
-        dict]:
+    def last_updated(self, since: str, queue: typing.Optional[typing.Union[str, object]] = None) -> typing.List[dict]:
         """ Obtains tickets changed after given date.
 
         :param since: Date as string in form '2011-02-24'
@@ -735,8 +734,7 @@ class Rt:
         return self.RE_PATTERNS['update_pattern'].match(state) is not None
 
     def get_history(self, ticket_id: typing.Union[str, int],
-                    transaction_id: typing.Optional[typing.Union[str, int]] = None) -> typing.Optional[
-        typing.List[dict]]:
+                    transaction_id: typing.Optional[typing.Union[str, int]] = None) -> typing.Optional[typing.List[dict]]:
         """ Get set of history items.
 
         :param ticket_id: ID of ticket
@@ -806,8 +804,7 @@ class Rt:
             items.append(pairs)
         return items
 
-    def get_short_history(self, ticket_id: typing.Union[str, int]) -> typing.Optional[
-        typing.List[typing.Tuple[int, str]]]:
+    def get_short_history(self, ticket_id: typing.Union[str, int]) -> typing.Optional[typing.List[typing.Tuple[int, str]]]:
         """ Get set of short history items
 
         :param ticket_id: ID of ticket
@@ -944,8 +941,7 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
         """
         return self.__correspond(ticket_id, text, 'comment', cc, bcc, content_type, files)
 
-    def get_attachments(self, ticket_id: typing.Union[str, int]) -> typing.Optional[
-        typing.List[typing.Tuple[str, str, str, str]]]:
+    def get_attachments(self, ticket_id: typing.Union[str, int]) -> typing.Optional[typing.List[typing.Tuple[str, str, str, str]]]:
         """ Get attachment list for a given ticket
 
         :param ticket_id: ID of ticket
