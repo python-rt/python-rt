@@ -1,20 +1,15 @@
 language: python
 services: docker
-cache:
-  - pip: true
-  - docker: true
+cache: pip
 
-python:
-  - 3.5
-  - 3.6
 
 matrix:
   include:
   - python: "3.5"
-  - python: 3.6
-    env: mode=codestyle
   - python: "3.6"
   - python: "3.7"
+  - python: "3.7"
+    env: mode=codestyle
   - python: "3.8"
 
 
