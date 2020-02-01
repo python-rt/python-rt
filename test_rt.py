@@ -24,9 +24,6 @@ import random
 import string
 import unittest
 
-from six import iteritems
-from six.moves import range
-
 import rt
 
 
@@ -89,14 +86,14 @@ class RtTestCase(unittest.TestCase):
             tracker = rt.Rt(self.RT_VALID_CREDENTIALS[name]['url'], **self.RT_VALID_CREDENTIALS[name]['support'])
             self.assertTrue(tracker.login(), 'Invalid login to RT demo site ' + name)
             self.assertTrue(tracker.logout(), 'Invalid logout from RT demo site ' + name)
-        for name, params in iteritems(self.RT_INVALID_CREDENTIALS):
+        for name, params in self.RT_INVALID_CREDENTIALS.items():
             tracker = rt.Rt(**params)
             self.assertFalse(tracker.login(), 'Login to RT demo site ' + name + ' should fail but did not')
             self.assertRaises(rt.AuthorizationError, lambda: tracker.search())
-        for name, params in iteritems(self.RT_MISSING_CREDENTIALS):
+        for name, params in self.RT_MISSING_CREDENTIALS.items():
             tracker = rt.Rt(**params)
             self.assertRaises(rt.AuthorizationError, lambda: tracker.login())
-        for name, params in iteritems(self.RT_BAD_URL):
+        for name, params in self.RT_BAD_URL.items():
             tracker = rt.Rt(**params)
             self.assertRaises(rt.UnexpectedResponse, lambda: tracker.login())
 
