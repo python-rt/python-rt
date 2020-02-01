@@ -462,7 +462,7 @@ class Rt:
         get_params = {}
         query = []
         url = 'search/ticket'
-        if Queue is not object:
+        if Queue is not ALL_QUEUES:
             query.append("Queue=\'{}\'".format(Queue or self.default_queue))
         if not raw_query:
             operators_map = {
