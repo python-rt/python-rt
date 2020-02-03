@@ -26,6 +26,7 @@ Provided functionality:
 """
 
 import datetime
+import logging
 import re
 import typing
 import warnings
@@ -61,9 +62,6 @@ DEFAULT_QUEUE = 'General'
 """ Default queue used. """
 
 ALL_QUEUES = object()
-
-DEBUG_MODE = False
-""" Flag to enable debug mode for all Rt instances """
 
 
 class RtError(Exception):
@@ -160,7 +158,7 @@ class Rt:
                  default_queue: str = DEFAULT_QUEUE, basic_auth: typing.Optional[typing.Tuple[str, str]] = None,
                  digest_auth: typing.Optional[typing.Tuple[str, str]] = None,
                  skip_login: bool = False, verify_cert: typing.Optional[typing.Union[str, bool]] = True,
-                 debug_mode: bool = False, http_auth: requests.auth.AuthBase = None) -> None:
+                 http_auth: requests.auth.AuthBase = None) -> None:
         """ API initialization.
 
         :keyword url: Base URL for Request Tracker API.
@@ -179,11 +177,12 @@ class Rt:
         :keyword http_auth: Specify a http authentication instance, e.g. HTTPBasicAuth(), HTTPDigestAuth(),
                             etc. to be used for authenticating to RT
         """
+        self.logger = logging.getLogger(__name__)
+
         # ensure trailing slash
         if not url.endswith("/"):
             url = url + "/"
         self.url = url
-        self.debug_mode = debug_mode
         self.default_login = default_login
         self.default_password = default_password
         self.default_queue = default_queue
@@ -247,16 +246,16 @@ class Rt:
                 for i, file_pair in enumerate(files):
                     files_data['attachment_{:d}'.format(i + 1)] = file_pair
                 response = self.session.post(url, data=post_data, files=files_data)
-            if self.debug_mode or DEBUG_MODE:
-                method = "GET"
-                if post_data or files:
-                    method = "POST"
-                print("### {0}".format(datetime.datetime.now().isoformat()))
-                print("Request URL: {0}".format(url))
-                print("Request method: {0}".format(method))
-                print("Respone status code: {0}".format(response.status_code))
-                print("Response content:")
-                print(response.content.decode())
+
+            method = "GET"
+            if post_data or files:
+                method = "POST"
+            self.logger.debug("### %s", datetime.datetime.now().isoformat())
+            self.logger.debug("Request URL: %s", url)
+            self.logger.debug("Request method: %s", method)
+            self.logger.debug("Respone status code: %s", str(response.status_code))
+            self.logger.debug("Response content:")
+            self.logger.debug(response.content.decode())
 
             if response.status_code == 401:
                 raise AuthorizationError('Server could not verify that you are authorized to access the requested document.')
