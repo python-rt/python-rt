@@ -182,7 +182,7 @@ class Rt:
 
     def __init__(self, url, default_login=None, default_password=None, proxy=None,
                  default_queue=DEFAULT_QUEUE, basic_auth=None, digest_auth=None,
-                 skip_login=False, verify_cert=True, debug_mode=False):
+                 skip_login=False, verify_cert=True, debug_mode=False, http_auth=None):
         """ API initialization.
 
         :keyword url: Base URL for Request Tracker API.
@@ -198,6 +198,8 @@ class Rt:
                              credentials for RT are in .netrc file. You do not
                              need to call login, because it is managed by
                              requests library instantly.
+        :keyword http_auth: Specify a http authentication instance, e.g. HTTPBasicAuth(), HTTPDigestAuth(),
+                            etc. to be used for authenticating to RT
         """
         # ensure trailing slash
         if not url.endswith("/"):
@@ -217,16 +219,20 @@ class Rt:
                 proxy = {"http": proxy}
         self.session.proxies = proxy
         if basic_auth:
+            warnings.warn('The parameter "basic_auth" will de deprecated in the next major release of this library. Please use http_auth instead.', DeprecationWarning)
             self.session.auth = HTTPBasicAuth(*basic_auth)
         if digest_auth:
+            warnings.warn('The parameter "digest_auth" will de deprecated in the next major release of this library. Please use http_auth instead.', DeprecationWarning)
             self.session.auth = HTTPDigestAuth(*digest_auth)
-        if basic_auth or digest_auth or skip_login:
+        if http_auth:
+            self.session.auth = http_auth
+        if basic_auth or digest_auth or skip_login or http_auth:
             # Assume valid credentials, because we do not need to call login()
             # explicitly with basic or digest authentication (or if this is
             # assured, that we are login in instantly)
             self.login_result = True
 
-    def __request(self, selector, get_params={}, post_data={}, files=[], without_login=False,
+    def __request(self, selector, get_params=None, post_data=None, files=None, without_login=False,
                   text_response=True):
         """ General request for :term:`API`.
 
@@ -660,7 +666,7 @@ class Rt:
             post_data.extend(' ' + line for line in value_lines)
         return '\n'.join(post_data)
 
-    def create_ticket(self, Queue=None, files=[], **kwargs):
+    def create_ticket(self, Queue=None, files=None, **kwargs):
         """ Create new ticket and set given parameters.
 
         Example of message sended to ``http://tracker.example.com/REST/1.0/ticket/new``::
@@ -845,7 +851,7 @@ class Rt:
                         items.append((int(hist_id), desc))
         return items
 
-    def __correspond(self, ticket_id, text='', action='correspond', cc='', bcc='', content_type='text/plain', files=[]):
+    def __correspond(self, ticket_id, text='', action='correspond', cc='', bcc='', content_type='text/plain', files=None):
         """ Sends out the correspondence
 
         :param ticket_id: ID of ticket to which message belongs
@@ -874,7 +880,7 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
                              post_data=post_data, files=files)
         return self.__get_status_code(msg) == 200
 
-    def reply(self, ticket_id, text='', cc='', bcc='', content_type='text/plain', files=[]):
+    def reply(self, ticket_id, text='', cc='', bcc='', content_type='text/plain', files=None):
         """ Sends email message to the contacts in ``Requestors`` field of
         given ticket with subject as is set in ``Subject`` field.
 
@@ -904,7 +910,7 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
         """
         return self.__correspond(ticket_id, text, 'correspond', cc, bcc, content_type, files)
 
-    def comment(self, ticket_id, text='', cc='', bcc='', content_type='text/plain', files=[]):
+    def comment(self, ticket_id, text='', cc='', bcc='', content_type='text/plain', files=None):
         """ Adds comment to the given ticket.
 
         Form of message according to documentation::

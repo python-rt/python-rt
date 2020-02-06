@@ -1,3 +1,8 @@
+v1.0.13, 2020-02-06
+- Add deprecation warning for in the next major release unsupported parameters (basic_auth, digest_auth).
+  They are now replaced with http_auth.
+- Fix problematic default method parameters ("{}" and "[]").
+
 v1.0.12, 2019-10-25
 - Travis CI Docker tests
 - RT 4.4 fixes
