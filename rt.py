@@ -711,8 +711,11 @@ class Rt:
         kwargs['id'] = 'ticket/new'
         kwargs['Queue'] = Queue or self.default_queue
         post_data = self.__ticket_post_data(kwargs)
-        for file_info in files:
-            post_data += "\nAttachment: {}".format(file_info[0], )
+
+        if files:
+            for file_info in files:
+                post_data += "\nAttachment: {}".format(file_info[0], )
+
         msg = self.__request('ticket/new', post_data={'content': post_data}, files=files)
         for line in msg.split('\n')[2:-1]:
             res = self.RE_PATTERNS['ticket_created_pattern'].match(line)
@@ -874,8 +877,10 @@ Text: {}
 Cc: {}
 Bcc: {}
 Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', text), cc, bcc, content_type)}
-        for file_info in files:
-            post_data['content'] += "\nAttachment: {}".format(file_info[0], )
+
+        if files:
+            for file_info in files:
+                post_data['content'] += "\nAttachment: {}".format(file_info[0], )
         msg = self.__request('ticket/{}/comment'.format(str(ticket_id), ),
                              post_data=post_data, files=files)
         return self.__get_status_code(msg) == 200
