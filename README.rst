@@ -8,18 +8,28 @@
 
 Python implementation of REST API described here: https://rt-wiki.bestpractical.com/wiki/REST
 
+**Note:** Please note that starting with the major release of v2.0.0, this library requires a Python version >= 3.5.
+In case you still require a Python 2 version or one compatible with Python < 3.5, please use a version < 2.0.0 of this library.
+
+
 REQUIREMENTS
 ============
 
 This module uses following Python modules:
 
 - requests (http://docs.python-requests.org/)
+
+Unit-tests are implemented using:
 - nose (http://nose.readthedocs.org)
-- six (http://pythonhosted.org/six/)
 
-Requirements can be installed running::
 
-    pip install -r requirements.txt
+INSTALLATION
+============
+
+Install the python-rt package using::
+
+  pip install rt
+
 
 LICENCE
 =======
