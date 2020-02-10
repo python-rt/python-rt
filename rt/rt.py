@@ -1062,7 +1062,7 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
         """
         msg = self.__request('user/{}'.format(str(user_id), ))
         status_code = self.__get_status_code(msg)
-        if status_code == 200:
+        if status_code is not None and status_code == 200:
             pairs = {}
             lines = msg.split('\n')
             if (len(lines) > 2) and self.RE_PATTERNS['does_not_exist_pattern'].match(lines[2]):
@@ -1073,7 +1073,7 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
                     pairs[header.strip()] = content.strip()
             return pairs
 
-        raise UnexpectedMessageFormat('Received status code is {:d} instead of 200.'.format(status_code))
+        raise UnexpectedMessageFormat('Received status code is {} instead of 200.'.format(status_code))
 
     def create_user(self, Name: str, EmailAddress: str, **kwargs: typing.Any) -> typing.Union[int, bool]:
         """ Create user (undocumented API feature).
@@ -1174,7 +1174,7 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
         """
         msg = self.__request('queue/{}'.format(str(queue_id)))
         status_code = self.__get_status_code(msg)
-        if status_code == 200:
+        if status_code is not None and status_code == 200:
             pairs = {}
             lines = msg.split('\n')
             if (len(lines) > 2) and self.RE_PATTERNS['does_not_exist_pattern'].match(lines[2]):
@@ -1185,7 +1185,7 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
                     pairs[header.strip()] = content.strip()
             return pairs
 
-        raise UnexpectedMessageFormat('Received status code is {:d} instead of 200.'.format(status_code))
+        raise UnexpectedMessageFormat('Received status code is {} instead of 200.'.format(status_code))
 
     def edit_queue(self, queue_id: typing.Union[str, int], **kwargs: typing.Any) -> typing.Union[str, bool]:
         """ Edit queue (undocumented API feature).
@@ -1258,7 +1258,7 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
         msg = self.__request('ticket/{}/links/show'.format(str(ticket_id), ))
 
         status_code = self.__get_status_code(msg)
-        if status_code == 200:
+        if status_code is not None and status_code == 200:
             pairs = {}
             msg = msg.split('\n')
             if (len(msg) > 2) and self.RE_PATTERNS['does_not_exist_pattern'].match(msg[2]):
@@ -1280,7 +1280,7 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
                 i += 1
             return pairs
 
-        raise UnexpectedMessageFormat('Received status code is {:d} instead of 200.'.format(status_code))
+        raise UnexpectedMessageFormat('Received status code is {} instead of 200.'.format(status_code))
 
     def edit_ticket_links(self, ticket_id: typing.Union[str, int], **kwargs: typing.Any) -> bool:
         """ Edit ticket links.
