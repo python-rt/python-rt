@@ -34,7 +34,8 @@ from urllib.parse import urljoin
 
 import requests
 import requests.auth
-from requests.auth import HTTPBasicAuth, HTTPDigestAuth
+
+from .exceptions import *
 
 __license__ = """ Copyright (C) 2012 CZ.NIC, z.s.p.o.
     Copyright (c) 2015 Genome Research Ltd.
@@ -62,59 +63,6 @@ DEFAULT_QUEUE = 'General'
 """ Default queue used. """
 
 ALL_QUEUES = object()
-
-
-class RtError(Exception):
-    """ Super class of all Rt Errors """
-
-
-class AuthorizationError(RtError):
-    """ Exception raised when module cannot access :term:`API` due to invalid
-    or missing credentials. """
-
-
-class NotAllowed(RtError):
-    """ Exception raised when request cannot be finished due to
-    insufficient privileges. """
-
-
-class UnexpectedResponse(RtError):
-    """ Exception raised when unexpected HTTP code is received. """
-
-
-class UnexpectedMessageFormat(RtError):
-    """ Exception raised when response has bad status code (not the HTTP code,
-    but code in the first line of the body as 200 in `RT/4.0.7 200 Ok`)
-    or message parsing fails because of unexpected format. """
-
-
-class APISyntaxError(RtError):
-    """ Exception raised when syntax error is received. """
-
-
-class InvalidUse(RtError):
-    """ Exception raised when API method is not used correctly. """
-
-
-class BadRequest(RtError):
-    """ Exception raised when HTTP code 400 (Bad Request) is received. """
-
-
-class ConnectionError(RtError):
-    """ Encapsulation of various exceptions indicating network problems. """
-
-    def __init__(self, message: str, cause: Exception) -> None:
-        """ Initialization of exception extented by cause parameter.
-
-        :keyword message: Exception details
-        :keyword cause: Cause exception
-        """
-        super().__init__(message + ' (Caused by ' + repr(cause) + ")")
-        self.cause = cause
-
-
-class InvalidQueryError(RtError):
-    """ Exception raised when attempting to search RT with an invalid raw query. """
 
 
 class Rt:
@@ -155,9 +103,7 @@ class Rt:
 
     def __init__(self, url: str, default_login: typing.Optional[str] = None,
                  default_password: typing.Optional[str] = None, proxy: typing.Optional[str] = None,
-                 default_queue: str = DEFAULT_QUEUE, basic_auth: typing.Optional[typing.Tuple[str, str]] = None,
-                 digest_auth: typing.Optional[typing.Tuple[str, str]] = None,
-                 skip_login: bool = False, verify_cert: typing.Optional[typing.Union[str, bool]] = True,
+                 default_queue: str = DEFAULT_QUEUE, skip_login: bool = False, verify_cert: typing.Optional[typing.Union[str, bool]] = True,
                  http_auth: requests.auth.AuthBase = None) -> None:
         """ API initialization.
 
@@ -168,8 +114,6 @@ class Rt:
         :keyword default_password: Default RT password
         :keyword proxy: Proxy server (string with http://user:password@host/ syntax)
         :keyword default_queue: Default RT queue
-        :keyword basic_auth: HTTP Basic authentication credentials, tuple (UN, PW)
-        :keyword digest_auth: HTTP Digest authentication credentials, tuple (UN, PW)
         :keyword skip_login: Set this option True when HTTP Basic authentication
                              credentials for RT are in .netrc file. You do not
                              need to call login, because it is managed by
@@ -194,17 +138,9 @@ class Rt:
                 self.session.proxies = {"https": proxy}
             else:
                 self.session.proxies = {"http": proxy}
-        if basic_auth:
-            warnings.warn('The parameter "basic_auth" will de deprecated in the next major release of this library. Please use http_auth instead.',
-                          DeprecationWarning)
-            self.session.auth = HTTPBasicAuth(*basic_auth)
-        if digest_auth:
-            warnings.warn('The parameter "digest_auth" will de deprecated in the next major release of this library. Please use http_auth instead.',
-                          DeprecationWarning)
-            self.session.auth = HTTPDigestAuth(*digest_auth)
         if http_auth:
             self.session.auth = http_auth
-        if basic_auth or digest_auth or skip_login or http_auth:
+        if skip_login or http_auth:
             # Assume valid credentials, because we do not need to call login()
             # explicitly with basic or digest authentication (or if this is
             # assured, that we are login in instantly)
@@ -1032,7 +968,8 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
         msg = self.__request('ticket/{}/attachments/{}'.format(str(ticket_id), str(attachment_id)),
                              text_response=False)
         msg = msg.split(b'\n')
-        if (len(msg) > 2) and (self.RE_PATTERNS['invalid_attachment_pattern_bytes'].match(msg[2]) or self.RE_PATTERNS['does_not_exist_pattern_bytes'].match(msg[2])):
+        if (len(msg) > 2) and (
+                self.RE_PATTERNS['invalid_attachment_pattern_bytes'].match(msg[2]) or self.RE_PATTERNS['does_not_exist_pattern_bytes'].match(msg[2])):
             return None
         msg = msg[2:]
         head_matching = [i for i, m in enumerate(msg) if self.RE_PATTERNS['headers_pattern_bytes'].match(m)]
