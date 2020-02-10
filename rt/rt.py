@@ -527,7 +527,7 @@ class Rt:
         """
         msg = self.__request('ticket/{}/show'.format(str(ticket_id), ))
         status_code = self.__get_status_code(msg)
-        if status_code == 200:
+        if status_code is not None and status_code == 200:
             pairs = {}
             msg = msg.split('\n')
             if (len(msg) > 2) and self.RE_PATTERNS['does_not_exist_pattern'].match(msg[2]):
@@ -563,7 +563,7 @@ class Rt:
 
             return pairs
 
-        raise UnexpectedMessageFormat('Received status code is {:d} instead of 200.'.format(status_code))
+        raise UnexpectedMessageFormat('Received status code is {} instead of 200.'.format(status_code))
 
     @staticmethod
     def __ticket_post_data(data_source: dict) -> str:
