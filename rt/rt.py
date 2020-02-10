@@ -101,9 +101,13 @@ class Rt:
         'invalid_attachment_pattern_bytes': re.compile(br'^# Invalid attachment id: \d+$'),
     }  # type: typing.Dict[str, re.Pattern]
 
-    def __init__(self, url: str, default_login: typing.Optional[str] = None,
-                 default_password: typing.Optional[str] = None, proxy: typing.Optional[str] = None,
-                 default_queue: str = DEFAULT_QUEUE, skip_login: bool = False, verify_cert: typing.Optional[typing.Union[str, bool]] = True,
+    def __init__(self, url: str,
+                 default_login: typing.Optional[str] = None,
+                 default_password: typing.Optional[str] = None,
+                 proxy: typing.Optional[str] = None,
+                 default_queue: str = DEFAULT_QUEUE,
+                 skip_login: bool = False,
+                 verify_cert: typing.Optional[typing.Union[str, bool]] = True,
                  http_auth: requests.auth.AuthBase = None) -> None:
         """ API initialization.
 
@@ -231,7 +235,7 @@ class Rt:
         except Exception:
             return None
 
-    def __check_response(self, msg):
+    def __check_response(self, msg: typing.Union[str, list]) -> None:
         """ Search general errors in server response and raise exceptions when found.
 
         :keyword msg: Result message
@@ -778,8 +782,8 @@ class Rt:
                         items.append((int(hist_id), desc))
         return items
 
-    def __correspond(self, ticket_id: typing.Union[str, int], text='', action='correspond', cc='', bcc='',
-                     content_type='text/plain', files=None):
+    def __correspond(self, ticket_id: typing.Union[str, int], text: str = '', action: str = 'correspond', cc: str = '', bcc: str = '',
+                     content_type: str = 'text/plain', files: typing.Optional[typing.List[typing.Tuple[str, typing.IO, typing.Optional[str]]]] = None):
         """ Sends out the correspondence
 
         :param ticket_id: ID of ticket to which message belongs
