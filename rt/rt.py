@@ -282,7 +282,8 @@ class Rt:
         except requests.exceptions.ConnectionError as e:
             raise ConnectionError("Connection error", e)
 
-    def __get_status_code(self, msg):
+    @staticmethod
+    def __get_status_code(msg: str) -> typing.Optional[int]:
         """ Select status code given message.
 
         :keyword msg: Result message
@@ -314,7 +315,8 @@ class Rt:
         if self.RE_PATTERNS['bad_request_pattern'].match(msg[0]):
             raise BadRequest(msg[3] if len(msg) > 2 else 'Bad request.')
 
-    def __normalize_list(self, msg):
+    @staticmethod
+    def __normalize_list(msg):
         """Split message to list by commas and trim whitespace."""
         if isinstance(msg, list):
             msg = "".join(msg)
@@ -627,7 +629,8 @@ class Rt:
 
         raise UnexpectedMessageFormat('Received status code is {:d} instead of 200.'.format(status_code))
 
-    def __ticket_post_data(self, data_source):
+    @staticmethod
+    def __ticket_post_data(data_source: dict) -> str:
         """Convert a dictionary of RT ticket data into a REST POST data string.
 
         :param data_source: Dictionary with ticket fields and values.
@@ -649,7 +652,7 @@ class Rt:
         return '\n'.join(post_data)
 
     def create_ticket(self, Queue: typing.Optional[typing.Union[str, object]] = None,
-                      files: typing.Optional[typing.List[typing.Tuple[str, typing.IO, typing.Optional[str]]]] = [],
+                      files: typing.Optional[typing.List[typing.Tuple[str, typing.IO, typing.Optional[str]]]] = None,
                       **kwargs: typing.Any) -> int:
         """ Create new ticket and set given parameters.
 
@@ -873,7 +876,7 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
 
     def reply(self, ticket_id: typing.Union[str, int], text: str = '', cc: str = '', bcc: str = '',
               content_type: str = 'text/plain',
-              files: typing.Optional[typing.List[typing.Tuple[str, typing.IO, typing.Optional[str]]]] = []) -> bool:
+              files: typing.Optional[typing.List[typing.Tuple[str, typing.IO, typing.Optional[str]]]] = None) -> bool:
         """ Sends email message to the contacts in ``Requestors`` field of
         given ticket with subject as is set in ``Subject`` field.
 
@@ -905,7 +908,7 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
 
     def comment(self, ticket_id: typing.Union[str, int], text: str = '', cc: str = '', bcc: str = '',
                 content_type: str = 'text/plain',
-                files: typing.Optional[typing.List[typing.Tuple[str, typing.IO, typing.Optional[str]]]] = []) -> bool:
+                files: typing.Optional[typing.List[typing.Tuple[str, typing.IO, typing.Optional[str]]]] = None) -> bool:
         """ Adds comment to the given ticket.
 
         Form of message according to documentation::
