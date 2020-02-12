@@ -1,22 +1,16 @@
 language: python
 services: docker
-cache:
-  - pip: true
-  - docker: true
+cache: pip
 
-python:
-  - 2.7
-  - 3.4
-  - 3.5
-  - 3.6
 
 matrix:
   include:
-  - python: 3.6
-    env: mode=codestyle
+  - python: "3.5"
+  - python: "3.6"
   - python: "3.7"
-    dist: xenial
-    sudo: false
+  - python: "3.7"
+    env: mode=codestyle
+  - python: "3.8"
 
 
 before_install:
@@ -26,14 +20,13 @@ install:
   - docker pull $image
   - docker run -d --name rt -p 8080:80 -e RT_WEB_PORT=8080 $image
   - docker ps
-  - pip install -r requirements.txt
-  - pip install coveralls codecov
+  - pip install coveralls codecov nose
   - if [[ $mode == codestyle ]]; then pip install pycodestyle; fi
 
 script:
   - python setup.py install
   - nosetests --with-coverage
-  - if [[ $mode == codestyle ]]; then pycodestyle rt.py; fi
+  - if [[ $mode == codestyle ]]; then pycodestyle rt/rt.py; fi
 
 after_success:
   - codecov

@@ -13,7 +13,10 @@ Contents:
 
    glossary
 
-.. automodule:: rt
+.. automodule:: rt.rt
+   :members:
+
+.. automodule:: rt.exceptions
    :members:
 
 Get rt module
@@ -25,7 +28,7 @@ Using pip::
 
 Using project git repository::
     
-    $ git clone git://git.nic.cz/python-rt.git
+    $ git clone https://github.com/CZ-NIC/python-rt
 
 Indices and tables
 ==================
