@@ -672,7 +672,10 @@ class Rt:
         """
         post_data = self.__ticket_post_data(kwargs)
         msg = self.__request('ticket/{}/edit'.format(str(ticket_id)), post_data={'content': post_data})
-        state = msg.split('\n')[2]
+        if msg.count('\n') > 1:
+            state = msg.split('\n')[2]
+        else:
+            state = msg
         return self.RE_PATTERNS['update_pattern'].match(state) is not None
 
     def get_history(self, ticket_id: typing.Union[str, int],
