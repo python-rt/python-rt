@@ -672,6 +672,8 @@ class Rt:
         """
         post_data = self.__ticket_post_data(kwargs)
         msg = self.__request('ticket/{}/edit'.format(str(ticket_id)), post_data={'content': post_data})
+        if "" == msg:  # Ticket not modified
+            return True
         state = msg.split('\n')[2]
         return self.RE_PATTERNS['update_pattern'].match(state) is not None
 
