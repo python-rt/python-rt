@@ -9,7 +9,15 @@
  Rt - Python interface to Request Tracker API 
 ==============================================
 
-Python implementation of REST API described here: https://rt-wiki.bestpractical.com/wiki/REST
+Python interface to Request Tracker's REST API. With this library, you can
+automate most actions with Request Tracker that you would be able to make
+with the web interface.
+
+ * Version 2.0 of the API must be installed as an extension, but is more
+   robust and modern. You can find information about it here:
+   https://metacpan.org/release/RT-Extension-REST2
+ * Version 1.0 of the API comes built-in to RT and is described here:
+   https://rt-wiki.bestpractical.com/wiki/REST
 
 **Note:** Please note that starting with the major release of v2.0.0, this library requires a Python version >= 3.5.
 In case you still require a Python 2 version or one compatible with Python < 3.5, please use a version < 2.0.0 of this library.
