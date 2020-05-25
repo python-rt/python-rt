@@ -63,6 +63,23 @@ An example is worth a thousand words::
     >>> tracker.logout()
     True
 
+Get the last important updates from a specific queue that have been updated recently::
+
+    >>> import rt
+    >>> tracker = rt.Rt('http://localhost/rt/REST/1.0/', http_auth=HTTPBasicAuth(os.environ['rtuser'], os.environ['rtpasswd']))
+    >>> tracker.default_queue = "my-queue"
+    >>> fifteen_minutes_ago = str(datetime.datetime.now() - datetime.timedelta(minutes=15))
+    >>> tickets = tracker.last_updated(since=fifteen_minutes_ago)
+    >>> for ticket in tickets:
+    >>>     id = ticket['id'][7:]
+    >>>     history = tracker.get_short_history(id)
+    >>>     last_update = list(reversed([h for h in history if h[1].startswith('Correspondence added') or h[1].startswith('Comments added')]))
+    >>>     hid = tracker.get_history(id, last_update[0][0] if last_update else history[0][0])[0]
+    >>>     print("http://localhost/rt/Ticket/Display.html?id=%s" % id)
+    >>>     print(hid['Content'])
+    >>>     print("\n")
+		
+		
 Please use docstrings to see how to use different functions. They are written
 in ReStructuredText. You can also generate HTML documentation by running
 ``make html`` in doc directory (Sphinx required).
