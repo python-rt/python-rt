@@ -195,7 +195,7 @@ class Rt:
             self.logger.debug("Request method: %s", method)
             self.logger.debug("Respone status code: %s", str(response.status_code))
             self.logger.debug("Response content:")
-            self.logger.debug(response.content.decode())
+            self.logger.debug(response.content.decode(errors='ignore'))
 
             if response.status_code == 401:
                 raise AuthorizationError('Server could not verify that you are authorized to access the requested document.')
