@@ -1,3 +1,9 @@
+v2.0.1, 2020-08-07
+- Fix UnicodeDecodeError in logging code for non-text attachments (#50, #51)
+- Documentation: Add a search example (#49)
+- edit_ticket: Handle possible empty responses: When a ticket is not modified, at least with RT 4.x, an empty
+  response could be returned. Gracefully handle that as success. (#47, #48)
+
 v2.0.0, 2020-02-11
 - Drop Python2 support
 - Adjust Travis tests for Python3-only, and add v3.8
