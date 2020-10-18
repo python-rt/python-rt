@@ -31,14 +31,27 @@ __license__ = """ Copyright (C) 2020 Gabriel Filion
 __docformat__ = "reStructuredText en"
 
 
+import requests
+
+
 class Rest2:
     """Client to Request Tracker 4's REST API v2.0."""
 
-    def __init__(self, url: str):
+    def __init__(self, url: str) -> None:
         """Initialize the API client.
 
         :param url: Base URL for Request Tracker API.
                     E.g.: http://tracker.example.com/rt/REST/2.0/
 
+        v2 of the API defines two login methods that libraries should use:
+            * HTTP Basic auth
+            * Token (given that the RT::Authen::Token plugin is used)
         """
-        pass
+        self.url = url
+        self.session = requests.Session()
+        # All HTTP requests sent to the API should be using JSON to
+        # communicate data to the API.
+        self.session.headers.update({
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'Accept-Charset': 'utf-8'})
