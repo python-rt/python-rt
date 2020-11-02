@@ -39,23 +39,15 @@ class TestFunctionalRTAuthentication:
     """  # noqa: E501
 
     def test_http_basic_auth(self, instance_info):
-        """Use HTTP Basic Authentication to make an authenticated request.
-
-        Contrary to what the REST2 API documents, the HTTP Basic
-        Authentication does not seem to work against the REST2 API on either
-        an RT 4.x or a 5.x instance.
-        """
-        API_URL = urljoin(instance_info["url"], "REST/2.0")
-        basic_auth = (
+        """Use HTTP Basic Authentication to make an authenticated request."""
+        API_URL = urljoin(instance_info["url"], "REST/2.0/rt")
+        basic_auth = requests.auth.HTTPBasicAuth(
             instance_info["user"],
             instance_info["pass"]
         )
 
-        # If this test ever fails consistently, it might mean that HTTP Basic
-        # Auth is suddenly working!
-        with pytest.raises(requests.exceptions.HTTPError):
-            r = requests.get(API_URL, auth=basic_auth)
-            r.raise_for_status()
+        r = requests.get(API_URL, auth=basic_auth)
+        r.raise_for_status()
 
     def test_token_auth(self, instance_info):
         """Use a token to run an authenticated request to the API."""
