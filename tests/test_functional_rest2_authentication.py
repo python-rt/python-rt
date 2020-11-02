@@ -26,6 +26,8 @@ def instance_info(scope="session"):
         "url": "http://localhost:8080/",
         "user": "root",
         "pass": "password",
+        # XXX the docker instance does not provide a default token, so it
+        # needs to be manually inserted into the database.
         "token": "1-14-85d105ea058f445f6b4cc5811e0079cb",
     }
 
