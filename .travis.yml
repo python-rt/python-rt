@@ -25,7 +25,7 @@ install:
 
 script:
   - python setup.py install
-  - nosetests --with-coverage
+  - pytest --cov-report term-missing --cov rt
   - if [[ $mode == codestyle ]]; then pycodestyle rt/rt.py; fi
 
 after_success:
