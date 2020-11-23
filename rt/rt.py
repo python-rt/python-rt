@@ -390,6 +390,8 @@ class Rt:
                              __lt       for operator <
                              __like     for operator LIKE
                              __notlike  for operator NOT LIKE
+                             __is       for operator IS
+                             __isnot    for operator IS NOT
 
                              Setting values to keywords constrain search
                              result to the tickets satisfying all of them.
@@ -411,7 +413,9 @@ class Rt:
                 'exact': '=',
                 'notexact': '!=',
                 'like': ' LIKE ',
-                'notlike': ' NOT LIKE '
+                'notlike': ' NOT LIKE ',
+                'is': ' IS ',
+                'isnot': ' IS NOT '
             }
 
             for key, value in kwargs.items():
