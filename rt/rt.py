@@ -104,6 +104,7 @@ class Rt:
     def __init__(self, url: str,
                  default_login: typing.Optional[str] = None,
                  default_password: typing.Optional[str] = None,
+                 cookies: typing.Optional[dict] = None,
                  proxy: typing.Optional[str] = None,
                  default_queue: str = DEFAULT_QUEUE,
                  skip_login: bool = False,
@@ -136,6 +137,11 @@ class Rt:
         self.default_queue = default_queue
         self.login_result = None
         self.session = requests.session()
+        if cookies:
+            self.session.headers.update({'referer': url})
+            self.session.cookies.update(cookies)
+            self.login_result = True
+
         self.session.verify = verify_cert
         if proxy is not None:
             if url.lower().startswith("https://"):
