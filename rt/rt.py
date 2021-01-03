@@ -462,10 +462,22 @@ class Rt:
                     requestors.append(msg[req_id][12:])
                     req_id += 1
                 pairs['Requestors'] = self.__normalize_list(requestors)
+                lastheader = ''
                 for i in range(req_id, len(msg)):
                     if ': ' in msg[i]:
                         header, content = self.split_header(msg[i])
                         pairs[header.strip()] = content.strip()
+                        lastheader = header
+                    elif len(msg[i]) == 0:
+                        # print("Empty Line")
+                        pass
+                    elif msg[i] == "Cc:" or msg[i] == "AdminCc:":
+                        # print("Ignore")
+                        pass
+                    else:
+                        # print("CANNOT PAIR with -" + msg[i] + "- using last header " + lastheader)
+                        if lastheader:
+                            pairs[lastheader] += "\n" + msg[i].strip()
                 if pairs:
                     items.append(pairs)
 
@@ -554,16 +566,27 @@ class Rt:
                 requestors.append(msg[req_id][12:])
                 req_id += 1
             pairs['Requestors'] = self.__normalize_list(requestors)
+            lastheader = ''
             for i in range(req_id, len(msg)):
                 if ': ' in msg[i]:
                     header, content = self.split_header(msg[i])
                     pairs[header.strip()] = content.strip()
+                    lastheader = header
+                elif len(msg[i]) == 0:
+                    # print("Empty Line")
+                    pass
+                elif msg[i] == "Cc:" or msg[i] == "AdminCc:":
+                    # print("Ignore")
+                    pass
+                else:
+                    # print("CANNOT PAIR with -" + msg[i] + "- using last header " + lastheader)
+                    if lastheader:
+                        pairs[lastheader] += "\n" + msg[i].strip()
 
             if 'Cc' in pairs:
                 pairs['Cc'] = self.__normalize_list(pairs['Cc'])
             if 'AdminCc' in pairs:
                 pairs['AdminCc'] = self.__normalize_list(pairs['AdminCc'])
-
             if 'id' not in pairs and not pairs['id'].startswith('ticket/'):
                 raise UnexpectedMessageFormat('Response from RT didn\'t contain a valid ticket_id')
 
