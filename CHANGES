@@ -1,4 +1,4 @@
-v2.1.0, 2020-01-15
+v2.1.0, 2020-02-25
 - Add the possibility to provide cookies as dict to authenticate
 - Add 'Referer' header for CSRF check
 
