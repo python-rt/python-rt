@@ -96,6 +96,7 @@ class Rt:
         'queue_pattern': re.compile(r'^# Queue (\w*) (?:updated|created)\.$'),
         'ticket_created_pattern': re.compile(r'^# Ticket ([0-9]+) created\.$'),
         'does_not_exist_pattern': re.compile(r'^# (?:Queue|User|Ticket) \w* does not exist\.$'),
+        'status_pattern': re.compile(r'^\S+ (\d{3}) '),
         'does_not_exist_pattern_bytes': re.compile(br'^# (?:Queue|User|Ticket) \w* does not exist\.$'),
         'not_related_pattern': re.compile(r'^# Transaction \d+ is not related to Ticket \d+'),
         'invalid_attachment_pattern_bytes': re.compile(br'^# Invalid attachment id: \d+$'),
@@ -267,6 +268,90 @@ class Rt:
         if isinstance(msg, list):
             msg = "".join(msg)
         return list(map(lambda x: x.strip(), msg.split(",")))
+
+    @classmethod
+    def __parse_response_dict(cls,
+                              msg: typing.Iterable[str],
+                              expect_keys: typing.Iterable[str]=(),
+    ) -> typing.Dict[str, str]:
+        """Parse an RT API response body into a Python dictionary
+
+        This method knows the general format for key-value RT API responses,
+        and parses them into a Python dictionary as plain string values.
+
+        :keyword msg: A multiline string, or an iterable of string lines, with
+          the RT API response body.
+        :keyword expect_keys: An iterable of strings. If any of these strings
+          do not appear in the response, raise an error.
+        :raises UnexpectedMessageFormat: The body did not follow the expected format,
+          or an expected key was missing
+        :returns: Dictionary mapping field names to value strings
+        :rtype: Dictionary with string keys and string values
+        """
+        if isinstance(msg, str):
+            msg = msg.split('\n')
+        fields = {}  # type: typing.Dict[str, typing.List[str]]
+        key = '<no key>'
+        for line in msg:
+            if (not line
+                or line.startswith('#')
+                or (not fields and cls.RE_PATTERNS['status_pattern'].match(line))
+            ):
+                key = '<no key>'
+            elif line[0].isspace():
+                try:
+                    fields[key].append(line.lstrip())
+                except KeyError:
+                    raise UnexpectedMessageFormat(
+                        "Response has a continuation line with no field to continue",
+                    ) from None
+            else:
+                if line.startswith('CF.{'):
+                    sep = '}: '
+                else:
+                    sep = ': '
+                key, sep, value = line.partition(sep)
+                if sep:
+                    key += sep[:-2]
+                    fields[key] = [value]
+                elif line.endswith(':'):
+                    key = line[:-1]
+                    fields[key] = []
+                else:
+                    raise UnexpectedMessageFormat(
+                        "Response has a line without a field name: {!r}".format(line),
+                    )
+        for key in expect_keys:
+            if key not in fields:
+                raise UnexpectedMessageFormat(
+                    "Missing line starting with `{}:`.".format(key),
+                )
+        return {key: '\n'.join(lines) for key, lines in fields.items() if lines}
+
+    @classmethod
+    def __parse_response_ticket(cls, msg: typing.Iterable[str]) -> typing.Dict[str, typing.Sequence[str]]:
+        """Parse an RT API ticket response into a Python dictionary
+
+        :keyword msg: A multiline string, or an iterable of string lines, with
+          the RT API response body.
+        :raises UnexpectedMessageFormat: The body did not follow the expected format
+        :returns: Dictionary mapping field names to value strings, or lists of
+          strings for the People fields Requestors, Cc, and AdminCc
+        :rtype: Dictionary with string keys and values that are strings or lists
+          of strings
+        """
+        pairs = cls.__parse_response_dict(msg, ['Requestors'])
+        if not pairs.get('id', '').startswith('ticket/'):
+            raise UnexpectedMessageFormat('Response from RT didn\'t contain a valid ticket_id')
+        _, _, numerical_id = pairs['id'].partition('/')
+        ticket = typing.cast(typing.Dict[str, typing.Sequence[str]], pairs)
+        ticket['numerical_id'] = numerical_id
+        for key in ['Requestors', 'Cc', 'AdminCc']:
+            try:
+                ticket[key] = cls.__normalize_list(ticket[key])
+            except KeyError:
+                pass
+        return ticket
 
     def login(self, login: typing.Optional[str] = None, password: typing.Optional[str] = None) -> bool:
         """ Login with default or supplied credetials.
@@ -450,42 +535,10 @@ class Rt:
                 return []
 
         if Format == 'l':
-            msgs = map(lambda x: x.split('\n'), msg.split('\n--\n'))
-            items = []
-            for msg in msgs:
-                pairs = {}
-                req_matching = [i for i, m in enumerate(msg) if self.RE_PATTERNS['requestors_pattern'].match(m)]
-                req_id = req_matching[0] if req_matching else None
-                if not req_id:
-                    raise UnexpectedMessageFormat('Missing line starting with `Requestors:`.')
-                for i in range(req_id):
-                    if ': ' in msg[i]:
-                        header, content = self.split_header(msg[i])
-                        pairs[header.strip()] = content.strip()
-                requestors = [msg[req_id][12:]]
-                req_id += 1
-                while (req_id < len(msg)) and (msg[req_id][:12] == ' ' * 12):
-                    requestors.append(msg[req_id][12:])
-                    req_id += 1
-                pairs['Requestors'] = self.__normalize_list(requestors)
-                for i in range(req_id, len(msg)):
-                    if ': ' in msg[i]:
-                        header, content = self.split_header(msg[i])
-                        pairs[header.strip()] = content.strip()
-                if pairs:
-                    items.append(pairs)
-
-                if 'Cc' in pairs:
-                    pairs['Cc'] = self.__normalize_list(pairs['Cc'])
-                if 'AdminCc' in pairs:
-                    pairs['AdminCc'] = self.__normalize_list(pairs['AdminCc'])
-
-                if 'id' not in pairs and not pairs['id'].startswith('ticket/'):
-                    raise UnexpectedMessageFormat('Response from RT didn\'t contain a valid ticket_id')
-
-                pairs['numerical_id'] = pairs['id'].split('ticket/')[1]
-
-            return items
+            return [
+                self.__parse_response_ticket(ticket_msg)
+                for ticket_msg in msg.split('\n--\n')
+            ]
         if Format == 's':
             items = []
             msgs = lines[2:]
@@ -542,40 +595,15 @@ class Rt:
         msg = self.__request('ticket/{}/show'.format(str(ticket_id), ))
         status_code = self.__get_status_code(msg)
         if status_code is not None and status_code == 200:
-            pairs = {}
             msg = msg.split('\n')
-            if (len(msg) > 2) and self.RE_PATTERNS['does_not_exist_pattern'].match(msg[2]):
+            try:
+                not_found = self.RE_PATTERNS['does_not_exist_pattern'].match(msg[2])
+            except IndexError:
+                not_found = None
+            if not_found:
                 return None
-            req_matching = [i for i, m in enumerate(msg) if self.RE_PATTERNS['requestors_pattern'].match(m)]
-            req_id = req_matching[0] if req_matching else None
-            if not req_id:
-                raise UnexpectedMessageFormat('Missing line starting with `Requestors:`.')
-            for i in range(req_id):
-                if ': ' in msg[i]:
-                    header, content = self.split_header(msg[i])
-                    pairs[header.strip()] = content.strip()
-            requestors = [msg[req_id][12:]]
-            req_id += 1
-            while (req_id < len(msg)) and (msg[req_id][:12] == ' ' * 12):
-                requestors.append(msg[req_id][12:])
-                req_id += 1
-            pairs['Requestors'] = self.__normalize_list(requestors)
-            for i in range(req_id, len(msg)):
-                if ': ' in msg[i]:
-                    header, content = self.split_header(msg[i])
-                    pairs[header.strip()] = content.strip()
-
-            if 'Cc' in pairs:
-                pairs['Cc'] = self.__normalize_list(pairs['Cc'])
-            if 'AdminCc' in pairs:
-                pairs['AdminCc'] = self.__normalize_list(pairs['AdminCc'])
-
-            if 'id' not in pairs and not pairs['id'].startswith('ticket/'):
-                raise UnexpectedMessageFormat('Response from RT didn\'t contain a valid ticket_id')
-
-            pairs['numerical_id'] = pairs['id'].split('ticket/')[1]
-
-            return pairs
+            else:
+                return self.__parse_response_ticket(msg)
 
         raise UnexpectedMessageFormat('Received status code is {} instead of 200.'.format(status_code))
 
