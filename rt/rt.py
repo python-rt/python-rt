@@ -329,6 +329,26 @@ class Rt:
         return {key: '\n'.join(lines) for key, lines in fields.items() if lines}
 
     @classmethod
+    def __parse_response_numlist(cls, msg: typing.Iterable[str],
+    ) -> typing.List[typing.Tuple[int, str]]:
+        """Parse an RT API response body into a numbered list
+
+        The RT API for transactions and attachments returns a numbered list of
+        items. This method returns 2-tuples to represent them, where the first
+        item is an integer id and the second items is a string description.
+
+        :keyword msg: A multiline string, or an iterable of string lines, with
+          the RT API response body.
+        :raises UnexpectedMessageFormat: The body did not follow the expected format
+        :returns: List of 2-tuples with ids and descriptions
+        :rtype: List of 2-tuples (int, str)
+        """
+        return sorted(
+            (int(key), value)
+            for key, value in cls.__parse_response_dict(msg).items()
+        )
+
+    @classmethod
     def __parse_response_ticket(cls, msg: typing.Iterable[str]) -> typing.Dict[str, typing.Sequence[str]]:
         """Parse an RT API ticket response into a Python dictionary
 
@@ -743,43 +763,14 @@ class Rt:
                 self.RE_PATTERNS['does_not_exist_pattern'].match(lines[2]) or self.RE_PATTERNS['not_related_pattern'].match(
                 lines[2])):
             return None
-        msgs = msgs.split('\n--\n')
-        items = []
-        for msg in msgs:
-            pairs = {}  # type: dict
-            msg = msg.split('\n')
-            cont_matching = [i for i, m in enumerate(msg) if self.RE_PATTERNS['content_pattern'].match(m)]
-            cont_id = cont_matching[0] if cont_matching else None
-            if not cont_id:
-                raise UnexpectedMessageFormat('Unexpected history entry. \
-                                               Missing line starting with `Content:`.')
-            atta_matching = [i for i, m in enumerate(msg) if self.RE_PATTERNS['attachments_pattern'].match(m)]
-            atta_id = atta_matching[0] if atta_matching else None
-            if not atta_id:
-                raise UnexpectedMessageFormat('Unexpected attachment part of history entry. \
-                                               Missing line starting with `Attachements:`.')
-            for i in range(cont_id):
-                if ': ' in msg[i]:
-                    header, content = self.split_header(msg[i])
-                    pairs[header.strip()] = content.strip()
-            content = msg[cont_id][9:]
-            cont_id += 1
-            while (cont_id < len(msg)) and (msg[cont_id][:9] == ' ' * 9):
-                content += '\n' + msg[cont_id][9:]
-                cont_id += 1
-            pairs['Content'] = content
-            for i in range(cont_id, atta_id):
-                if ': ' in msg[i]:
-                    header, content = self.split_header(msg[i])
-                    pairs[header.strip()] = content.strip()
-            attachments = []
-            for i in range(atta_id + 1, len(msg)):
-                if ': ' in msg[i]:
-                    header, content = self.split_header(msg[i])
-                    attachments.append((int(header),
-                                        content.strip()))
-            pairs['Attachments'] = attachments
-            items.append(pairs)
+        items = typing.cast(
+            typing.List[typing.Dict[str, typing.Union[str, typing.List[typing.Tuple[int, str]]]]],
+            [self.__parse_response_dict(msg, ['Content', 'Attachments'])
+             for msg in msgs.split('\n--\n')],
+        )
+        for body in items:
+            attachments = typing.cast(str, body.get('Attachments', ''))
+            body['Attachments'] = self.__parse_response_numlist(attachments)
         return items
 
     def get_short_history(self, ticket_id: typing.Union[str, int]) -> typing.Optional[typing.List[typing.Tuple[int, str]]]:
@@ -791,32 +782,12 @@ class Rt:
                   Returns None if ticket does not exist.
         """
         msg = self.__request('ticket/{}/history'.format(str(ticket_id), ))
-        items = []
         lines = msg.split('\n')
-        multiline_buffer = ""
-        in_multiline = False
         if self.__get_status_code(lines[0]) == 200:
             if (len(lines) > 2) and self.RE_PATTERNS['does_not_exist_pattern'].match(lines[2]):
                 return None
-            if len(lines) >= 4:
-                for line in lines[4:]:
-                    if line == "":
-                        if not in_multiline:
-                            # start of multiline block
-                            in_multiline = True
-                        else:
-                            # end of multiline block
-                            line = multiline_buffer
-                            multiline_buffer = ""
-                            in_multiline = False
-                    else:
-                        if in_multiline:
-                            multiline_buffer += line
-                            line = ""
-                    if ': ' in line:
-                        hist_id, desc = line.split(': ', 1)
-                        items.append((int(hist_id), desc))
-        return items
+            return self.__parse_response_numlist(lines)
+        return []
 
     def __correspond(self, ticket_id: typing.Union[str, int], text: str = '', action: str = 'correspond', cc: str = '', bcc: str = '',
                      content_type: str = 'text/plain', files: typing.Optional[typing.List[typing.Tuple[str, typing.IO, typing.Optional[str]]]] = None):
