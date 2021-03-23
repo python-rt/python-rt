@@ -540,14 +540,10 @@ class Rt:
                 for ticket_msg in msg.split('\n--\n')
             ]
         if Format == 's':
-            items = []
-            msgs = lines[2:]
-            for msg in msgs:
-                if msg == '':  # Ignore blank line at the end
-                    continue
-                ticket_id, subject = self.split_header(msg)
-                items.append({'id': 'ticket/' + ticket_id, 'numerical_id': ticket_id, 'Subject': subject})
-            return items
+            return [
+                {'id': 'ticket/' + key, 'numerical_id': key, 'Subject': value}
+                for key, value in self.__parse_response_dict(msg).items()
+            ]
         if Format == 'i':
             items = []
             msgs = lines[2:]
@@ -1105,17 +1101,12 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
         :raises UnexpectedMessageFormat: In case that returned status code is not 200
         """
         msg = self.__request('user/{}'.format(str(user_id), ))
-        status_code = self.__get_status_code(msg)
+        lines = msg.split('\n')
+        status_code = self.__get_status_code(lines[0])
         if status_code is not None and status_code == 200:
-            pairs = {}
-            lines = msg.split('\n')
             if (len(lines) > 2) and self.RE_PATTERNS['does_not_exist_pattern'].match(lines[2]):
                 return None
-            for line in lines[2:]:
-                if ': ' in line:
-                    header, content = line.split(': ', 1)
-                    pairs[header.strip()] = content.strip()
-            return pairs
+            return self.__parse_response_dict(lines)
 
         raise UnexpectedMessageFormat('Received status code is {} instead of 200.'.format(status_code))
 
@@ -1217,17 +1208,12 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
         :raises UnexpectedMessageFormat: In case that returned status code is not 200
         """
         msg = self.__request('queue/{}'.format(str(queue_id)))
-        status_code = self.__get_status_code(msg)
+        lines = msg.split('\n')
+        status_code = self.__get_status_code(lines[0])
         if status_code is not None and status_code == 200:
-            pairs = {}
-            lines = msg.split('\n')
             if (len(lines) > 2) and self.RE_PATTERNS['does_not_exist_pattern'].match(lines[2]):
                 return None
-            for line in lines[2:]:
-                if ': ' in line:
-                    header, content = line.split(': ', 1)
-                    pairs[header.strip()] = content.strip()
-            return pairs
+            return self.__parse_response_dict(lines)
 
         raise UnexpectedMessageFormat('Received status code is {} instead of 200.'.format(status_code))
 
@@ -1300,29 +1286,14 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
         :raises UnexpectedMessageFormat: In case that returned status code is not 200
         """
         msg = self.__request('ticket/{}/links/show'.format(str(ticket_id), ))
-
-        status_code = self.__get_status_code(msg)
+        lines = msg.split('\n')
+        status_code = self.__get_status_code(lines[0])
         if status_code is not None and status_code == 200:
-            pairs = {}
-            msg = msg.split('\n')
-            if (len(msg) > 2) and self.RE_PATTERNS['does_not_exist_pattern'].match(msg[2]):
+            if (len(msg) > 2) and self.RE_PATTERNS['does_not_exist_pattern'].match(lines[2]):
                 return None
-            i = 2
-            while i < len(msg):
-                if ': ' in msg[i]:
-                    key, link = self.split_header(msg[i])
-                    links = [link.strip()]
-                    j = i + 1
-                    pad = len(key) + 2
-                    # loop over next lines for the same key
-                    while (j < len(msg)) and msg[j].startswith(' ' * pad):
-                        links[-1] = links[-1][:-1]  # remove trailing comma from previous item
-                        links.append(msg[j][pad:].strip())
-                        j += 1
-                    pairs[key] = links
-                    i = j - 1
-                i += 1
-            return pairs
+            pairs = self.__parse_response_dict(lines)
+            return {key: [link.rstrip(',') for link in links.split()]
+                    for key, links in pairs.items()}
 
         raise UnexpectedMessageFormat('Received status code is {} instead of 200.'.format(status_code))
 
