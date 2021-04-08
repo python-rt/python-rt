@@ -1,6 +1,6 @@
 v2.1.1, 2021-03-23
 - Fix support for custom field values containing newlines in API responses (#10, #11)
-  (the previous change in v1.0.11 fixed API requests)
+  (the previous change in v1.0.11 fixed API requests) (#64)
 
 v2.1.0, 2021-02-25
 - Add the possibility to provide cookies as dict to authenticate (#60)
