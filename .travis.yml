@@ -18,7 +18,7 @@ before_install:
  
 install:
   - docker pull $image
-  - docker run -d --name rt -p 8080:80 -e RT_WEB_PORT=8080 $image
+  - docker run -d --name rt -p 8080:8080 -e RT_WEB_PORT=8080 $image
   - docker ps
   - pip install coveralls codecov nose
   - if [[ $mode == codestyle ]]; then pip install pycodestyle; fi

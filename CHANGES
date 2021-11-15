@@ -1,3 +1,6 @@
+v2.2.0, 2021-11-15
+- Search has a parameter fields that can be used to return only particular fields for tickets. In some cases I noticed it will improve the speed of the query completion if you only need specific fields (#65 by @kimmoal).
+
 v2.1.1, 2021-03-23
 - Fix support for custom field values containing newlines in API responses (#10, #11)
   (the previous change in v1.0.11 fixed API requests) (#64)
