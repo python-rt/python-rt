@@ -457,7 +457,8 @@ class Rt:
         return self.search(Queue=queue, order='-LastUpdated', LastUpdatedBy__notexact=self.default_login, LastUpdated__gt=since)
 
     def search(self, Queue: typing.Optional[typing.Union[str, object]] = None, order: typing.Optional[str] = None,
-               raw_query: typing.Optional[str] = None, Format: str = 'l', **kwargs: typing.Any) -> typing.List[dict]:
+               raw_query: typing.Optional[str] = None, Format: str = 'l', Fields: typing.Optional[typing.List[str]] = None,
+               **kwargs: typing.Any) -> typing.List[dict]:
         """ Search arbitrary needles in given fields and queue.
 
         Example::
@@ -545,6 +546,9 @@ class Rt:
         if order:
             get_params['orderby'] = order
         get_params['format'] = Format
+
+        if Fields:
+            get_params['fields'] = ''.join(Fields)
 
         msg = self.__request(url, get_params=get_params)
         lines = msg.split('\n')
