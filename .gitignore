@@ -1,5 +1,9 @@
+*.pyc
+
 build
 dist
 rt.egg-info
-*.pyc
 .idea
+.vscode
+.mypy_cache
+doc/_build/
