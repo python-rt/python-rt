@@ -39,6 +39,7 @@ from .exceptions import *
 
 __license__ = """ Copyright (C) 2012 CZ.NIC, z.s.p.o.
     Copyright (c) 2015 Genome Research Ltd.
+    Copyright (c) 2017 CERT Gouvernemental (GOVCERT.LU)
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -56,7 +57,8 @@ __license__ = """ Copyright (C) 2012 CZ.NIC, z.s.p.o.
 __docformat__ = "reStructuredText en"
 __authors__ = [
     '"Jiri Machalek" <jiri.machalek@nic.cz>',
-    '"Joshua C. randall" <jcrandall@alum.mit.edu>'
+    '"Joshua C. randall" <jcrandall@alum.mit.edu>',
+    '"Georges Toth" <georges.toth@govcert.etat.lu>',
 ]
 
 DEFAULT_QUEUE = 'General'
@@ -478,10 +480,11 @@ class Rt:
                              you are doing. You may still pass Queue and order
                              kwargs, so use these instead of including them in
                              the raw query. You can refer to the RT query builder.
-                             If passing raw_query, all other **kwargs will be ignored.
+                             If passing raw_query, all other \\**kwargs will be ignored.
         :keyword Format:     Format of the query:
-                               - i: only `id' fields are populated
-                               - s: only `id' and `subject' fields are populated
+
+                               - i: only `id` fields are populated
+                               - s: only `id` and `subject` fields are populated
                                - l: multi-line format, all fields are populated
         :keyword kwargs:     Other arguments possible to set if not passing raw_query:
 
@@ -494,22 +497,22 @@ class Rt:
                              with keywords CF_CustomFieldName.
 
                              To alter lookup operators you can append one of the
-                             following endings to each keyword:
+                             following endings to each keyword::
 
-                             __exact    for operator = (default)
-                             __notexact for operator !=
-                             __gt       for operator >
-                             __lt       for operator <
-                             __like     for operator LIKE
-                             __notlike  for operator NOT LIKE
-                             __is       for operator IS
-                             __isnot    for operator IS NOT
+                                 __exact    for operator = (default)
+                                 __notexact for operator !=
+                                 __gt       for operator >
+                                 __lt       for operator <
+                                 __like     for operator LIKE
+                                 __notlike  for operator NOT LIKE
+                                 __is       for operator IS
+                                 __isnot    for operator IS NOT
 
                              Setting values to keywords constrain search
                              result to the tickets satisfying all of them.
 
         :returns: List of matching tickets. Each ticket is the same dictionary
-                  as in :py:meth:`~Rt.get_ticket`.
+                  as in :py:meth:`~Rt.get_ticket`\\.
         :raises:  UnexpectedMessageFormat: Unexpected format of returned message.
                   InvalidQueryError: If raw query is malformed
         """
