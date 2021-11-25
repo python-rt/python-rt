@@ -28,7 +28,7 @@ Using pip::
 
 Using project git repository::
     
-    $ git clone https://github.com/CZ-NIC/python-rt
+    $ git clone https://github.com/python-rt/python-rt
 
 Indices and tables
 ==================
