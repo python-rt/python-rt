@@ -87,9 +87,5 @@ in ReStructuredText. You can also generate HTML documentation by running
 OFFICIAL SITE
 =============
 
-Project site and issue tracking:
-    https://github.com/CZ-NIC/python-rt
-
-Git repository:
-    git://github.com/CZ-NIC/python-rt.git    
-    
+Project site, issue tracking and git repository:
+    https://github.com/python-rt/python-rt
