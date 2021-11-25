@@ -274,8 +274,8 @@ class Rt:
     @classmethod
     def __parse_response_dict(cls,
                               msg: typing.Iterable[str],
-                              expect_keys: typing.Iterable[str]=(),
-    ) -> typing.Dict[str, str]:
+                              expect_keys: typing.Iterable[str] = (),
+                              ) -> typing.Dict[str, str]:
         """Parse an RT API response body into a Python dictionary
 
         This method knows the general format for key-value RT API responses,
@@ -296,8 +296,8 @@ class Rt:
         key = '<no key>'
         for line in msg:
             if (not line
-                or line.startswith('#')
-                or (not fields and cls.RE_PATTERNS['status_pattern'].match(line))
+                    or line.startswith('#')
+                    or (not fields and cls.RE_PATTERNS['status_pattern'].match(line))
             ):
                 key = '<no key>'
             elif line[0].isspace():
@@ -305,7 +305,7 @@ class Rt:
                     fields[key].append(line.lstrip())
                 except KeyError:
                     raise UnexpectedMessageFormat(
-                        "Response has a continuation line with no field to continue",
+                            "Response has a continuation line with no field to continue",
                     ) from None
             else:
                 if line.startswith('CF.{'):
@@ -321,18 +321,18 @@ class Rt:
                     fields[key] = []
                 else:
                     raise UnexpectedMessageFormat(
-                        "Response has a line without a field name: {!r}".format(line),
+                            "Response has a line without a field name: {!r}".format(line),
                     )
         for key in expect_keys:
             if key not in fields:
                 raise UnexpectedMessageFormat(
-                    "Missing line starting with `{}:`.".format(key),
+                        "Missing line starting with `{}:`.".format(key),
                 )
         return {key: '\n'.join(lines) for key, lines in fields.items() if lines}
 
     @classmethod
     def __parse_response_numlist(cls, msg: typing.Iterable[str],
-    ) -> typing.List[typing.Tuple[int, str]]:
+                                 ) -> typing.List[typing.Tuple[int, str]]:
         """Parse an RT API response body into a numbered list
 
         The RT API for transactions and attachments returns a numbered list of
@@ -346,8 +346,8 @@ class Rt:
         :rtype: List of 2-tuples (int, str)
         """
         return sorted(
-            (int(key), value)
-            for key, value in cls.__parse_response_dict(msg).items()
+                (int(key), value)
+                for key, value in cls.__parse_response_dict(msg).items()
         )
 
     @classmethod
@@ -771,9 +771,9 @@ class Rt:
                 lines[2])):
             return None
         items = typing.cast(
-            typing.List[typing.Dict[str, typing.Union[str, typing.List[typing.Tuple[int, str]]]]],
-            [self.__parse_response_dict(msg, ['Content', 'Attachments'])
-             for msg in msgs.split('\n--\n')],
+                typing.List[typing.Dict[str, typing.Union[str, typing.List[typing.Tuple[int, str]]]]],
+                [self.__parse_response_dict(msg, ['Content', 'Attachments'])
+                 for msg in msgs.split('\n--\n')],
         )
         for body in items:
             attachments = typing.cast(str, body.get('Attachments', ''))
