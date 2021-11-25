@@ -5,16 +5,15 @@ cache: pip
 
 matrix:
   include:
-  - python: "3.5"
-  - python: "3.6"
   - python: "3.7"
   - python: "3.7"
     env: mode=codestyle
   - python: "3.8"
+  - python: "3.9"
 
 
 before_install:
-  - image="netsandbox/request-tracker:4.4"
+  - image="netsandbox/request-tracker:5.0"
  
 install:
   - docker pull $image
