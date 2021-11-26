@@ -35,7 +35,7 @@ from urllib.parse import urljoin
 import requests
 import requests.auth
 
-from .exceptions import *
+from .exceptions import NotAllowed, UnexpectedResponse, UnexpectedMessageFormat, InvalidUse, BadRequest, AuthorizationError, APISyntaxError, InvalidQueryError
 
 __license__ = """ Copyright (C) 2012 CZ.NIC, z.s.p.o.
     Copyright (c) 2015 Genome Research Ltd.
@@ -221,11 +221,11 @@ class Rt:
                 else:
                     # try utf-8 if encoding is not filled
                     result = response.content.decode('utf-8')
-            except LookupError:
-                raise UnexpectedResponse('Unknown response encoding: {}.'.format(response.encoding))
-            except UnicodeError:
+            except LookupError as exc:
+                raise UnexpectedResponse('Unknown response encoding: {}.'.format(response.encoding)) from exc
+            except UnicodeError as exc:
                 if text_response:
-                    raise UnexpectedResponse('Unknown response encoding (UTF-8 does not work).')
+                    raise UnexpectedResponse('Unknown response encoding (UTF-8 does not work).') from exc
 
                 # replace errors - we need decoded content just to check for error codes in __check_response
                 result = response.content.decode('utf-8', 'replace')
@@ -233,8 +233,8 @@ class Rt:
             if not text_response:
                 return response.content  # type: ignore
             return result
-        except requests.exceptions.ConnectionError as e:
-            raise ConnectionError("Connection error", e)
+        except requests.exceptions.ConnectionError as exc:
+            raise ConnectionError("Connection error", exc) from exc
 
     @staticmethod
     def __get_status_code(msg: str) -> typing.Optional[int]:
@@ -407,7 +407,6 @@ class Rt:
         :raises AuthorizationError: In case that credentials are not supplied neither
                                     during inicialization or call of this method.
         """
-
         if (login is not None) and (password is not None):
             login_data = {'user': login, 'pass': password}  # type: typing.Optional[typing.Dict[str, str]]
         elif (self.default_login is not None) and (self.default_password is not None):
@@ -632,10 +631,11 @@ class Rt:
                 not_found = self.RE_PATTERNS['does_not_exist_pattern'].match(msg[2])
             except IndexError:
                 not_found = None
+
             if not_found:
                 return None
-            else:
-                return self.__parse_response_ticket(msg)
+
+            return self.__parse_response_ticket(msg)
 
         raise UnexpectedMessageFormat('Received status code is {} instead of 200.'.format(status_code))
 
@@ -704,7 +704,6 @@ class Rt:
                          with keywords CF_CustomFieldName.
         :returns: ID of new ticket or ``-1``, if creating failed
         """
-
         kwargs['id'] = 'ticket/new'
         kwargs['Queue'] = Queue or self.default_queue
         post_data = self.__ticket_post_data(kwargs)
@@ -1052,7 +1051,6 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
         Returns: Bytes with content of attachment or None if ticket or
                  attachment does not exist.
         """
-
         msg = typing.cast(bytes, self.__request('ticket/{}/attachments/{}/content'.format
                                                 (str(ticket_id), str(attachment_id)),
                                                 text_response=False))
@@ -1060,7 +1058,7 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
         if (len(lines) == 4) and (
                 self.RE_PATTERNS['invalid_attachment_pattern_bytes'].match(lines[2]) or self.RE_PATTERNS['does_not_exist_pattern_bytes'].match(lines[2])):
             return None
-        return msg[msg.find(b'\n') + 2:-3]
+        return msg[msg.find(b'\n') + 2:]
 
     def get_user(self, user_id: typing.Union[str, int]) -> typing.Optional[typing.Dict[str, str]]:
         """ Get user details.
@@ -1113,7 +1111,6 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
         :raises BadRequest: When user already exists
         :raises InvalidUse: When invalid fields are set
         """
-
         return self.edit_user('new', Name=Name, EmailAddress=EmailAddress, **kwargs)
 
     def edit_user(self, user_id: typing.Union[str, int], **kwargs: typing.Any) -> typing.Union[int, bool]:
@@ -1157,7 +1154,6 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
         :raises BadRequest: When user does not exist
         :raises InvalidUse: When invalid fields are set
         """
-
         valid_fields = {'name', 'password', 'emailaddress', 'realname',
                         'nickname', 'gecos', 'organization', 'address1', 'address2',
                         'city', 'state', 'zip', 'country', 'homephone', 'workphone',
@@ -1228,7 +1224,6 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
         :raises BadRequest: When queue does not exist
         :raises InvalidUse: When invalid fields are set
         """
-
         valid_fields = {'name', 'description', 'correspondaddress', 'commentaddress', 'initialpriority',
                         'finalpriority',
                         'defaultduein'}
@@ -1257,7 +1252,6 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
         :raises BadRequest: When queue already exists
         :raises InvalidUse: When invalid fields are set
         """
-
         return int(self.edit_queue('new', Name=Name, **kwargs))
 
     def get_links(self, ticket_id: typing.Union[str, int]) -> typing.Optional[typing.Dict[str, typing.List[str]]]:
@@ -1311,8 +1305,8 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
                       was set (in this case all other valid fields are changed)
         """
         post_data = ''
-        for key in kwargs:
-            post_data += "{}: {}\n".format(key, str(kwargs[key]))
+        for key, value in kwargs.items():
+            post_data += "{}: {}\n".format(key, str(value))
         msg = self.__request('ticket/{}/links'.format(str(ticket_id), ),
                              post_data={'content': post_data})
         state = msg.split('\n')[2]
