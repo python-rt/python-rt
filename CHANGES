@@ -1,3 +1,6 @@
+v2.2.1, 2021-11-26
+- Fix bug in get_attachment_content which was a workaround for a bug in RT <=4.2 (trailing new-lines) but which was fixed in RT >=4.2. This made tests fail and return falsely stripped attachment content.
+
 v2.2.0, 2021-11-15
 - Search has a parameter fields that can be used to return only particular fields for tickets. In some cases I noticed it will improve the speed of the query completion if you only need specific fields (#65 by @kimmoal).
 
