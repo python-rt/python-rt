@@ -159,8 +159,13 @@ class Rt:
             # assured, that we are login in instantly)
             self.login_result = True
 
-    def __request(self, selector, get_params=None, post_data=None, files=None, without_login=False,
-                  text_response=True):
+    def __request(self,
+                  selector: str,
+                  get_params: typing.Dict[str, typing.Any] = None,
+                  post_data: typing.Dict[str, typing.Any] = None,
+                  files: typing.Optional[typing.List[typing.Tuple[str, typing.IO, typing.Optional[str]]]] = None,
+                  without_login: bool = False,
+                  text_response: bool = True) -> str:
         """ General request for :term:`API`.
 
         :keyword selector: End part of URL which completes self.url parameter
@@ -226,7 +231,7 @@ class Rt:
                 result = response.content.decode('utf-8', 'replace')
             self.__check_response(result)
             if not text_response:
-                return response.content
+                return response.content  # type: ignore
             return result
         except requests.exceptions.ConnectionError as e:
             raise ConnectionError("Connection error", e)
@@ -265,11 +270,15 @@ class Rt:
             raise BadRequest(msg[3] if len(msg) > 2 else 'Bad request.')
 
     @staticmethod
-    def __normalize_list(msg):
+    def __normalize_list(msg: typing.Union[str, typing.Sequence[str]]) -> typing.Sequence[str]:
         """Split message to list by commas and trim whitespace."""
         if isinstance(msg, list):
-            msg = "".join(msg)
-        return list(map(lambda x: x.strip(), msg.split(",")))
+            _msg = "".join(msg)
+        elif isinstance(msg, str):
+            _msg = msg
+        else:
+            raise ValueError('Invalid parameter type.')
+        return list(map(lambda x: x.strip(), _msg.split(",")))
 
     @classmethod
     def __parse_response_dict(cls,
@@ -615,10 +624,10 @@ class Rt:
                       * TimeLeft
         :raises UnexpectedMessageFormat: Unexpected format of returned message.
         """
-        msg = self.__request('ticket/{}/show'.format(str(ticket_id), ))
-        status_code = self.__get_status_code(msg)
+        _msg = self.__request('ticket/{}/show'.format(str(ticket_id), ))
+        status_code = self.__get_status_code(_msg)
         if status_code is not None and status_code == 200:
-            msg = msg.split('\n')
+            msg = _msg.split('\n')
             try:
                 not_found = self.RE_PATTERNS['does_not_exist_pattern'].match(msg[2])
             except IndexError:
@@ -796,8 +805,14 @@ class Rt:
             return self.__parse_response_numlist(lines)
         return []
 
-    def __correspond(self, ticket_id: typing.Union[str, int], text: str = '', action: str = 'correspond', cc: str = '', bcc: str = '',
-                     content_type: str = 'text/plain', files: typing.Optional[typing.List[typing.Tuple[str, typing.IO, typing.Optional[str]]]] = None):
+    def __correspond(self,
+                     ticket_id: typing.Union[str, int],
+                     text: str = '',
+                     action: str = 'correspond',
+                     cc: str = '',
+                     bcc: str = '',
+                     content_type: str = 'text/plain',
+                     files: typing.Optional[typing.List[typing.Tuple[str, typing.IO, typing.Optional[str]]]] = None) -> bool:
         """ Sends out the correspondence
 
         :param ticket_id: ID of ticket to which message belongs
@@ -983,9 +998,9 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
                   Returns None if ticket or attachment does not exist.
         :raises UnexpectedMessageFormat: Unexpected format of returned message.
         """
-        msg = self.__request('ticket/{}/attachments/{}'.format(str(ticket_id), str(attachment_id)),
-                             text_response=False)
-        msg = msg.split(b'\n')
+        _msg = self.__request('ticket/{}/attachments/{}'.format(str(ticket_id), str(attachment_id)),
+                              text_response=False)
+        msg = typing.cast(bytes, _msg).split(b'\n')
         if (len(msg) > 2) and (
                 self.RE_PATTERNS['invalid_attachment_pattern_bytes'].match(msg[2]) or self.RE_PATTERNS['does_not_exist_pattern_bytes'].match(msg[2])):
             return None
@@ -995,13 +1010,13 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
         if not head_id:
             raise UnexpectedMessageFormat('Unexpected headers part of attachment entry. \
                                            Missing line starting with `Headers:`.')
-        msg[head_id] = re.sub(b'^Headers: (.*)$', r'\1', msg[head_id])
+        msg[head_id] = re.sub(b'^Headers: (.*)$', rb'\1', msg[head_id])
         cont_matching = [i for i, m in enumerate(msg) if self.RE_PATTERNS['content_pattern_bytes'].match(m)]
         if not cont_matching:
             raise UnexpectedMessageFormat('Unexpected content part of attachment entry. \
                                            Missing line starting with `Content:`.')
         cont_id = cont_matching[0]
-        pairs = {}
+        pairs = {}  # type: typing.Dict[str, typing.Any]
         for i in range(head_id):
             if b': ' in msg[i]:
                 header, content = msg[i].split(b': ', 1)
@@ -1038,16 +1053,16 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
                  attachment does not exist.
         """
 
-        msg = self.__request('ticket/{}/attachments/{}/content'.format
-                             (str(ticket_id), str(attachment_id)),
-                             text_response=False)
+        msg = typing.cast(bytes, self.__request('ticket/{}/attachments/{}/content'.format
+                                                (str(ticket_id), str(attachment_id)),
+                                                text_response=False))
         lines = msg.split(b'\n', 3)
         if (len(lines) == 4) and (
                 self.RE_PATTERNS['invalid_attachment_pattern_bytes'].match(lines[2]) or self.RE_PATTERNS['does_not_exist_pattern_bytes'].match(lines[2])):
             return None
         return msg[msg.find(b'\n') + 2:-3]
 
-    def get_user(self, user_id) -> typing.Optional[typing.Dict[str, str]]:
+    def get_user(self, user_id: typing.Union[str, int]) -> typing.Optional[typing.Dict[str, str]]:
         """ Get user details.
 
         :param user_id: Identification of user by username (str) or user ID
