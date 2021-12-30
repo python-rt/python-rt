@@ -36,7 +36,7 @@ from urllib.parse import urljoin
 import requests
 import requests.auth
 
-from .exceptions import *
+from .exceptions import AuthorizationError, UnexpectedResponse, NotFoundError, InvalidUse
 
 __license__ = """ Copyright (C) 2012 CZ.NIC, z.s.p.o.
     Copyright (c) 2015 Genome Research Ltd.
@@ -501,8 +501,7 @@ class Rt:
             get_params['orderby'] = order
 
         if Format == 'l':
-            get_params[
-                'fields'] = 'Owner,Status,Created,Subject,Queue,CustomFields,Requestor,Cc,AdminCc,Started,Created,TimeEstimated,Due,Type,InitialPriority,Priority,TimeLeft,LastUpdated'
+            get_params['fields'] = 'Owner,Status,Created,Subject,Queue,CustomFields,Requestor,Cc,AdminCc,Started,Created,TimeEstimated,Due,Type,InitialPriority,Priority,TimeLeft,LastUpdated'
             get_params['fields[Queue]'] = 'Name'
         elif Format == 's':
             get_params[
@@ -629,8 +628,7 @@ class Rt:
 
         return bool(msg[0])
 
-    def get_ticket_history(self, ticket_id: typing.Union[str, int]) -> typing.Optional[
-        typing.List[typing.Dict[str, typing.Union[int, str]]]]:
+    def get_ticket_history(self, ticket_id: typing.Union[str, int]) -> typing.Optional[typing.List[typing.Dict[str, typing.Union[int, str]]]]:
         """ Get set of short history items
 
         :param ticket_id: ID of ticket
@@ -924,7 +922,6 @@ class Rt:
         :raises BadRequest: When user already exists
         :raises InvalidUse: When invalid fields are set
         """
-
         return self.edit_user('new', Name=Name, EmailAddress=EmailAddress, **kwargs)
 
     def edit_user(self, user_id: typing.Union[str, int], **kwargs: typing.Any) -> typing.Union[int, bool]:
@@ -970,7 +967,6 @@ class Rt:
         :raises BadRequest: When user does not exist
         :raises InvalidUse: When invalid fields are set
         """
-
         valid_fields = {'name', 'password', 'emailaddress', 'realname',
                         'nickname', 'gecos', 'organization', 'address1', 'address2',
                         'city', 'state', 'zip', 'country', 'homephone', 'workphone',
@@ -1054,7 +1050,6 @@ class Rt:
         :raises BadRequest: When queue does not exist
         :raises InvalidUse: When invalid fields are set
         """
-
         valid_fields = {'name', 'description', 'correspondaddress', 'commentaddress', 'initialpriority',
                         'finalpriority',
                         'defaultduein'}
@@ -1085,7 +1080,6 @@ class Rt:
         :raises BadRequest: When queue already exists
         :raises InvalidUse: When invalid fields are set
         """
-
         return int(self.edit_queue('new', Name=Name, **kwargs))
 
     def get_links(self, ticket_id: typing.Union[str, int]) -> typing.Optional[typing.List[typing.Dict[str, str]]]:
@@ -1106,9 +1100,8 @@ class Rt:
                   None is returned if ticket does not exist.
         :raises UnexpectedMessageFormat: In case that returned status code is not 200
         """
-
         """REST2
-        
+
             DependsOn => 'depends-on',
             DependedOnBy => 'depended-on-by',
             Parent => 'parent',
@@ -1139,7 +1132,7 @@ class Rt:
         :raises InvalidUse: When none or more then one links are specified. Also
                             when wrong link name is used.
         """
-        if not link_name in VALID_TICKET_LINK_NAMES:
+        if link_name not in VALID_TICKET_LINK_NAMES:
             raise InvalidUse(f'Unsupported link name. Use one of "{", ".join(VALID_TICKET_LINK_NAMES)}".')
 
         if delete:
