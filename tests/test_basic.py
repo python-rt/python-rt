@@ -28,8 +28,8 @@ import string
 
 import requests.auth
 
-import rt.rest2
 import rt.exceptions
+import rt.rest2
 
 RT_URL = 'http://localhost:8080/REST/2.0/'
 RT_USER = 'root'
@@ -37,14 +37,6 @@ RT_PASSWORD = 'password'
 RT_QUEUE = 'General'
 
 c = rt.rest2.Rt(url=RT_URL, http_auth=requests.auth.HTTPBasicAuth(RT_USER, RT_PASSWORD))
-
-
-def test_login():
-    assert c.login()
-
-    # bad login
-    _c = rt.rest2.Rt(url=RT_URL, http_auth=requests.auth.HTTPBasicAuth(RT_USER, f'{RT_PASSWORD}123'))
-    assert _c.login() is False
 
 
 def test_get_user():
@@ -158,6 +150,11 @@ def test_ticket_operations():
     attachment = rt.rest2.Attachment(attachment_name, 'text/plain', attachment_content)
     # should provide a content type as RT 4.0 type guessing is broken (missing use statement for guess_media_type in REST.pm)
     assert c.reply(ticket_id, text=reply_text, attachments=[attachment])
+
+    # reply with a comment
+    reply_text = 'Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.'
+    # should provide a content type as RT 4.0 type guessing is broken (missing use statement for guess_media_type in REST.pm)
+    assert c.comment(ticket_id, text=reply_text)
 
     # attachments list
     at_list = c.get_attachments(ticket_id)

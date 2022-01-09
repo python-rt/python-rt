@@ -94,15 +94,12 @@ class Rt:
                  proxy: typing.Optional[str] = None,
                  skip_login: bool = False,
                  verify_cert: typing.Optional[typing.Union[str, bool]] = True,
-                 http_auth: requests.auth.AuthBase = None,
-                 fix_urls: bool = False) -> None:
+                 http_auth: requests.auth.AuthBase = None
+                 ) -> None:
         """ API initialization.
 
         :keyword url: Base URL for Request Tracker API.
-                      E.g.: http://tracker.example.com/REST/1.0/
-        :keyword default_login: Default RT login used by self.login if no
-                                other credentials are provided
-        :keyword default_password: Default RT password
+                      E.g.: http://tracker.example.com/REST/2.0/
         :keyword proxy: Proxy server (string with http://user:password@host/ syntax)
         :keyword skip_login: Set this option True when HTTP Basic authentication
                              credentials for RT are in .netrc file. You do not
@@ -122,7 +119,6 @@ class Rt:
 
         self.url = url
         self.base_url = url.split('REST/2.0/', 1)[0]
-        self.fix_urls = fix_urls
 
         self.login_result = None
         self.session = requests.session()
@@ -140,30 +136,35 @@ class Rt:
             # assured, that we are login in instantly)
             self.login_result = True
 
-    def __request(self, selector, get_params=None, json_data=None, post_data=None, files=None, without_login=False,
-                  text_response=True):
+    def __request(self,
+                  selector: str,
+                  get_params: typing.Optional[typing.Dict[str, typing.Any]] = None,
+                  json_data: typing.Optional[typing.Dict[str, typing.Any]] = None,
+                  post_data: typing.Optional[typing.Dict[str, typing.Any]] = None,
+                  files: typing.Optional[typing.Dict[str, str]] = None,
+                  without_login: bool = False
+                  ) -> typing.Dict[str, typing.Any]:
         """ General request for :term:`API`.
 
         :keyword selector: End part of URL which completes self.url parameter
                            set during class initialization.
                            E.g.: ``ticket/123456/show``
+        :keyword get_params: Parameters to add for a GET request.
+        :keyword json_data: JSON request to send to the API.
         :keyword post_data: Dictionary with POST method fields
         :keyword files: List of pairs (filename, file-like object) describing
                         files to attach as multipart/form-data
                         (list is necessary to keep files ordered)
         :keyword without_login: Turns off checking last login result
                                 (usually needed just for login itself)
-        :keyword text_response: If set to false the received message will be
-                                returned without decoding (useful for attachments)
-        :returns: Requested messsage including state line in form
-                  ``RT/3.8.7 200 Ok\\n``
-        :rtype: string or bytes if text_response is False
+        :returns: dict
+        :rtype: dict
         :raises AuthorizationError: In case that request is called without previous
                                     login or login attempt failed.
         :raises ConnectionError: In case of connection error.
         """
         try:
-            if (not self.login_result) and (not without_login):
+            if not (self.login_result or without_login):
                 raise AuthorizationError('First login by calling method `login`.')
             url = str(urljoin(self.url, selector))
             if not files:
@@ -173,7 +174,7 @@ class Rt:
                     self.logger.debug("Request URL: %s", response.request.url)
                     self.logger.debug("Request method: %s", response.request.method)
                     self.logger.debug("Request headers: {}".format(response.request.headers))
-                    self.logger.debug("Request body: {}".format(response.request.body))
+                    self.logger.debug("Request body: {}".format(str(response.request.body)))
                     self.logger.debug("Response status code: %s", str(response.status_code))
                     self.logger.debug("Response content:")
                 elif post_data:
@@ -187,7 +188,7 @@ class Rt:
             self.logger.debug("Request URL: %s", response.request.url)
             self.logger.debug("Request method: %s", response.request.method)
             self.logger.debug("Request headers: {}".format(response.request.headers))
-            self.logger.debug("Request body: {}".format(response.request.body))
+            self.logger.debug("Request body: {}".format(str(response.request.body)))
             self.logger.debug("Respone status code: %s", str(response.status_code))
             self.logger.debug("Response content:")
             self.logger.debug(response.content.decode())
@@ -199,35 +200,24 @@ class Rt:
             except LookupError:
                 raise UnexpectedResponse('Unknown response encoding: {}.'.format(response.encoding))
             except UnicodeError:
-                if text_response:
-                    raise UnexpectedResponse('Unknown response encoding (UTF-8 does not work).')
+                raise UnexpectedResponse('Unknown response encoding (UTF-8 does not work) - "{}".'.format(response.content.decode('utf-8', 'replace')))
 
-                # replace errors - we need decoded content just to check for error codes in __check_response
-                result = response.content.decode('utf-8', 'replace')
-
-            if not text_response:
-                return response.content
             return result
         except requests.exceptions.ConnectionError as e:
             raise ConnectionError("Connection error", e)
 
-    def __request_put(self, selector, json_data=None):
+    def __request_put(self,
+                      selector: str,
+                      json_data: typing.Optional[typing.Dict[str, typing.Any]] = None
+                      ) -> typing.Dict[str, str]:
         """ General request for :term:`API`.
 
         :keyword selector: End part of URL which completes self.url parameter
                            set during class initialization.
                            E.g.: ``ticket/123456/show``
-        :keyword post_data: Dictionary with POST method fields
-        :keyword files: List of pairs (filename, file-like object) describing
-                        files to attach as multipart/form-data
-                        (list is necessary to keep files ordered)
-        :keyword without_login: Turns off checking last login result
-                                (usually needed just for login itself)
-        :keyword text_response: If set to false the received message will be
-                                returned without decoding (useful for attachments)
-        :returns: Requested messsage including state line in form
-                  ``RT/3.8.7 200 Ok\\n``
-        :rtype: string or bytes if text_response is False
+        :keyword json_data: JSON request to send to the API.
+        :returns: dict
+        :rtype: dict
         :raises AuthorizationError: In case that request is called without previous
                                     login or login attempt failed.
         :raises ConnectionError: In case of connection error.
@@ -246,30 +236,32 @@ class Rt:
             except LookupError:
                 raise UnexpectedResponse('Unknown response encoding: {}.'.format(response.encoding))
             except UnicodeError:
-                # replace errors - we need decoded content just to check for error codes in __check_response
-                result = response.content.decode('utf-8', 'replace')
+                raise UnexpectedResponse('Unknown response encoding (UTF-8 does not work) - "{}".'.format(response.content.decode('utf-8', 'replace')))
 
             return result
         except requests.exceptions.ConnectionError as e:
             raise ConnectionError("Connection error", e)
 
-    def __paged_request(self, selector, json_data=None, params=None, page=1, per_page=10, recurse=True):
+    def __paged_request(self,
+                        selector: str,
+                        json_data: typing.Optional[typing.Union[typing.List[typing.Dict[str, typing.Any]], typing.Dict[str, typing.Any]]] = None,
+                        params: typing.Optional[typing.Dict[str, typing.Any]] = None,
+                        page: int = 1,
+                        per_page: int = 10,
+                        recurse: bool = True
+                        ) -> typing.Iterator[typing.Dict[str, str]]:
         """ General request for :term:`API`.
 
         :keyword selector: End part of URL which completes self.url parameter
                            set during class initialization.
                            E.g.: ``ticket/123456/show``
-        :keyword post_data: Dictionary with POST method fields
-        :keyword files: List of pairs (filename, file-like object) describing
-                        files to attach as multipart/form-data
-                        (list is necessary to keep files ordered)
-        :keyword without_login: Turns off checking last login result
-                                (usually needed just for login itself)
-        :keyword text_response: If set to false the received message will be
-                                returned without decoding (useful for attachments)
-        :returns: Requested messsage including state line in form
-                  ``RT/3.8.7 200 Ok\\n``
-        :rtype: string or bytes if text_response is False
+        :keyword json_data: JSON request to send to the API.
+        :keyword page: The page number to get.
+        :keyword per_page: Number of results per page to get.
+        :keyword recurse: Set on the initial call in order to retrieve all pages recursively.
+
+        :returns: dict
+        :rtype: iterator
         :raises AuthorizationError: In case that request is called without previous
                                     login or login attempt failed.
         :raises ConnectionError: In case of connection error.
@@ -312,14 +304,13 @@ class Rt:
         except requests.exceptions.ConnectionError as e:
             raise ConnectionError("Connection error", e)
 
-    def __check_response(self, response) -> None:
+    def __check_response(self, response: requests.Response) -> None:
         """ Search general errors in server response and raise exceptions when found.
 
-        :keyword msg: Result message
-        :raises NotAllowed: Exception raised when operation was called with
-                            insufficient privileges
+        :keyword response: Response from HTTP request.
         :raises AuthorizationError: Credentials are invalid or missing
-        :raises APISyntaxError: Syntax error
+        :raises NotFoundError: Resource was not found.
+        :raises UnexpectedResponse: Server returned an unexpected status code.
         """
         if response.status_code == 401:
             raise AuthorizationError(
@@ -334,41 +325,6 @@ class Rt:
         url_ = url.split('/REST/2.0/', 1)[1]
         return self.__request(url_)
 
-    def login(self) -> bool:
-        """ Login with default or supplied credetials.
-
-        @TODO REST2
-
-        .. note::
-
-            Calling this method is not necessary when HTTP basic or HTTP
-            digest_auth authentication is used and RT accepts it as external
-            authentication method, because the login in this case is done
-            transparently by requests module. Anyway this method can be useful
-            to check whether given credentials are valid or not.
-
-        :keyword login: Username used for RT, if not supplied together with
-                        *password* :py:attr:`~Rt.default_login` and
-                        :py:attr:`~Rt.default_password` are used instead
-        :keyword password: Similarly as *login*
-
-        :returns: ``True``
-                      Successful login
-                  ``False``
-                      Otherwise
-        :raises AuthorizationError: In case that credentials are not supplied neither
-                                    during inicialization or call of this method.
-        """
-        try:
-            self.login_result = self.__request('rt', without_login=True)
-        except AuthorizationError:
-            # This happens when HTTP Basic or Digest authentication fails, but
-            # we will not raise the error but just return False to indicate
-            # invalid credentials
-            return False
-
-        return True
-
     def new_correspondence(self, queue: typing.Optional[typing.Union[str, object]] = None) -> typing.List[dict]:
         """ Obtains tickets changed by other users than the system one.
 
@@ -379,7 +335,7 @@ class Rt:
                   Each ticket is dictionary, the same as in
                   :py:meth:`~Rt.get_ticket`.
         """
-        return self.search(Queue=queue, order='-LastUpdated', LastUpdatedBy__notexact=self.default_login)
+        return self.search(Queue=queue, order='-LastUpdated')
 
     def last_updated(self, since: str, queue: typing.Optional[str] = None) -> typing.List[dict]:
         """ Obtains tickets changed after given date.
@@ -395,11 +351,11 @@ class Rt:
         if not self.__validate_date(since):
             raise InvalidUse(f'Invalid date specified - "{since}"')
 
-        return self.search(Queue=queue, order='-LastUpdated', LastUpdatedBy__notexact=self.default_login,
+        return self.search(Queue=queue, order='-LastUpdated',
                            LastUpdated__gt=since)
 
     @classmethod
-    def __validate_date(cls, _date) -> bool:
+    def __validate_date(cls, _date: str) -> bool:
         m = re.match(r'(\d{4})-(\d{2})-(\d{2})', _date)
         if m:
             try:
@@ -420,7 +376,7 @@ class Rt:
 
         Example::
 
-            >>> tracker = Rt('http://tracker.example.com/REST/1.0/', 'rt-username', 'top-secret')
+            >>> tracker = Rt('http://tracker.example.com/REST/2.0/', 'rt-username', 'top-secret')
             >>> tracker.login()
             >>> tickets = tracker.search(CF_Domain='example.com', Subject__like='warning')
             >>> tickets = tracker.search(Queue='General', order='Status', raw_query="id='1'+OR+id='2'+OR+id='3'")
@@ -504,8 +460,7 @@ class Rt:
             get_params['fields'] = 'Owner,Status,Created,Subject,Queue,CustomFields,Requestor,Cc,AdminCc,Started,Created,TimeEstimated,Due,Type,InitialPriority,Priority,TimeLeft,LastUpdated'
             get_params['fields[Queue]'] = 'Name'
         elif Format == 's':
-            get_params[
-                'fields'] = 'Subject'
+            get_params['fields'] = 'Subject'
 
         msgs = self.__request(url, get_params=get_params)
 
@@ -550,7 +505,7 @@ class Rt:
                       **kwargs: typing.Any) -> int:
         """ Create new ticket and set given parameters.
 
-        Example of message sended to ``http://tracker.example.com/REST/1.0/ticket/new``::
+        Example of message sended to ``http://tracker.example.com/REST/2.0/ticket/new``::
 
             content=id: ticket/new
             Queue: General
@@ -588,7 +543,7 @@ class Rt:
                          with keywords CF_CustomFieldName.
         :returns: ID of new ticket
         """
-        ticket_data = {'Queue': Queue}
+        ticket_data: typing.Dict[str, typing.Any] = {'Queue': Queue}
 
         for k, v in kwargs.items():
             ticket_data[k] = v
@@ -623,7 +578,7 @@ class Rt:
 
         self.logger.debug(msg)
 
-        if not len(msg) >= 1:
+        if not (isinstance(msg, list) and len(msg) >= 1):
             raise UnexpectedResponse(str(msg))
 
         return bool(msg[0])
@@ -659,20 +614,16 @@ class Rt:
                      ticket_id: typing.Union[str, int],
                      text: str = '',
                      action: str = 'correspond',
-                     cc: str = '',
-                     bcc: str = '',
                      content_type: str = 'text/plain',
                      attachments: typing.Optional[typing.Sequence[Attachment]] = None,
-                     ):
+                     ) -> typing.List[str]:
         """ Sends out the correspondence
 
         :param ticket_id: ID of ticket to which message belongs
         :keyword text: Content of email message
         :keyword action: correspond or comment
         :keyword content_type: Content type of email message, default to text/plain
-        :keyword cc: Carbon copy just for this reply
-        :keyword bcc: Blind carbon copy just for this reply
-        :keyword files: Files to attach as multipart/form-data
+        :keyword attachments: Files to attach as multipart/form-data
                         List of 2/3 tuples: (filename, file-like object, [content type])
         :returns: ``True``
                       Operation was successful
@@ -683,21 +634,24 @@ class Rt:
         if action not in ('correspond', 'comment'):
             raise InvalidUse('action must be either "correspond" or "comment"')
 
-        post_data = {'Content': text,
-                     'ContentType': content_type,
-                     }
+        post_data: typing.Dict[str, typing.Any] = {'Content': text,
+                                                   'ContentType': content_type,
+                                                   }
 
-        # @TODO / @FIXME cc/bcc broken ATM
-        if cc:
-            post_data['Cc'] = cc
-
-        if bcc:
-            post_data['Bcc'] = bcc
+        # Adding a one-shot cc/bcc is not supported by RT5.0.2
+        # if cc:
+        #     post_data['Cc'] = cc
+        #
+        # if bcc:
+        #     post_data['Bcc'] = bcc
 
         if attachments:
             post_data['Attachments'] = [attachment.to_dict() for attachment in attachments]
 
         msg = self.__request(f'ticket/{ticket_id}/{action}', json_data=post_data)
+
+        if not isinstance(msg, list):
+            raise UnexpectedResponse(str(msg))
 
         self.logger.debug(msg)
 
@@ -706,31 +660,16 @@ class Rt:
     def reply(self,
               ticket_id: typing.Union[str, int],
               text: str = '',
-              cc: str = '',
-              bcc: str = '',
               content_type: str = 'text/plain',
               attachments: typing.Optional[typing.Sequence[Attachment]] = None,
               ) -> bool:
         """ Sends email message to the contacts in ``Requestors`` field of
         given ticket with subject as is set in ``Subject`` field.
 
-        Form of message according to documentation::
-
-            id: <ticket-id>
-            Action: correspond
-            Text: the text comment
-                  second line starts with the same indentation as first
-            Cc: <...>
-            Bcc: <...>
-            TimeWorked: <...>
-            Attachment: an attachment filename/path
-
         :param ticket_id: ID of ticket to which message belongs
         :keyword text: Content of email message
         :keyword content_type: Content type of email message, default to text/plain
-        :keyword cc: Carbon copy just for this reply
-        :keyword bcc: Blind carbon copy just for this reply
-        :keyword files: Files to attach as multipart/form-data
+        :keyword attachments: Files to attach as multipart/form-data
                         List of 2/3 tuples: (filename, file-like object, [content type])
         :returns: ``True``
                       Operation was successful
@@ -738,9 +677,9 @@ class Rt:
                       Sending failed (status code != 200)
         :raises BadRequest: When ticket does not exist
         """
-        msg = self.__correspond(ticket_id, text, 'correspond', cc, bcc, content_type, attachments)
+        msg = self.__correspond(ticket_id, text, 'correspond', content_type, attachments)
 
-        if not len(msg) == 1:
+        if not (isinstance(msg, list) and len(msg) >= 1):
             raise UnexpectedResponse(str(msg))
 
         return bool(msg[0])
@@ -748,36 +687,15 @@ class Rt:
     def comment(self,
                 ticket_id: typing.Union[str, int],
                 text: str = '',
-                cc: str = '',
-                bcc: str = '',
                 content_type: str = 'text/plain',
                 attachments: typing.Optional[typing.Sequence[Attachment]] = None,
                 ) -> bool:
         """ Adds comment to the given ticket.
 
-        Form of message according to documentation::
-
-            id: <ticket-id>
-            Action: comment
-            Text: the text comment
-                  second line starts with the same indentation as first
-            Attachment: an attachment filename/path
-
-        Example::
-
-            >>> tracker = Rt('http://tracker.example.com/REST/1.0/', 'rt-username', 'top-secret')
-            >>> attachment_name = sys.argv[1]
-            >>> message_text = ' '.join(sys.argv[2:])
-            >>> ret = tracker.comment(ticket_id, text=message_text,
-            ... files=[(attachment_name, open(attachment_name, 'rb'))])
-            >>> if not ret:
-            ...     print('Error: could not send attachment', file=sys.stderr)
-            ...     exit(1)
-
         :param ticket_id: ID of ticket to which comment belongs
         :keyword text: Content of comment
         :keyword content_type: Content type of comment, default to text/plain
-        :keyword files: Files to attach as multipart/form-data
+        :keyword attachments: Files to attach as multipart/form-data
                         List of 2/3 tuples: (filename, file-like object, [content type])
         :returns: ``True``
                       Operation was successful
@@ -785,7 +703,12 @@ class Rt:
                       Sending failed (status code != 200)
         :raises BadRequest: When ticket does not exist
         """
-        return self.__correspond(ticket_id, text, 'comment', cc, bcc, content_type, attachments)
+        msg = self.__correspond(ticket_id, text, 'comment', content_type, attachments)
+
+        if not (isinstance(msg, list) and len(msg) >= 1):
+            raise UnexpectedResponse(str(msg))
+
+        return bool(msg[0])
 
     def get_attachments(self, ticket_id: typing.Union[str, int]) -> typing.Sequence[typing.Dict[str, str]]:
         """ Get attachment list for a given ticket
@@ -1142,7 +1065,7 @@ class Rt:
 
         msg = self.__request_put(f'ticket/{ticket_id}', json_data=json_data)
 
-        if msg and msg[0].startswith('Couldn\'t resolve'):
+        if msg and isinstance(msg, list) and msg[0].startswith('Couldn\'t resolve'):
             raise NotFoundError(msg[0])
 
         return True
@@ -1160,7 +1083,7 @@ class Rt:
         """
         msg = self.__request_put(f'ticket/{ticket_id}', json_data={'MergeInto': into_id})
 
-        if not len(msg) == 1:
+        if not isinstance(msg, list) or len(msg) != 1:
             raise UnexpectedResponse(str(msg))
 
         self.logger.debug(str(msg))
@@ -1179,7 +1102,7 @@ class Rt:
         """
         msg = self.__request_put(f'ticket/{ticket_id}/take')
 
-        if not len(msg) == 1:
+        if not isinstance(msg, list) or len(msg) != 1:
             raise UnexpectedResponse(str(msg))
 
         self.logger.debug(str(msg))
@@ -1198,7 +1121,7 @@ class Rt:
         """
         msg = self.__request_put(f'ticket/{ticket_id}/untake')
 
-        if not len(msg) == 1:
+        if not isinstance(msg, list) or len(msg) != 1:
             raise UnexpectedResponse(str(msg))
 
         self.logger.debug(str(msg))
@@ -1217,7 +1140,7 @@ class Rt:
         """
         msg = self.__request_put(f'ticket/{ticket_id}/steal')
 
-        if not len(msg) == 1:
+        if not isinstance(msg, list) or len(msg) != 1:
             raise UnexpectedResponse(str(msg))
 
         self.logger.debug(str(msg))
