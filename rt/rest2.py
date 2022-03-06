@@ -1,28 +1,7 @@
-"""
-======================================================
- Rt - Python interface to Request Tracker :term:`API`
-======================================================
+"""Python interface to Request Tracker :term:`API`
 
-Description of Request Tracker :term:`REST` :term:`API`:
-http://requesttracker.wikia.com/wiki/REST
-
-Provided functionality:
-
-* login to RT
-* logout
-* getting, creating and editing tickets
-* getting attachments
-* getting history of ticket
-* replying to ticket requestors
-* adding comments
-* getting and editing ticket links
-* searching
-* providing lists of last updated tickets
-* providing tickets with new correspondence
-* merging tickets
-* take tickets
-* steal tickets
-* untake tickets
+Description of Request Tracker :term:`REST2` :term:`API`:
+https://docs.bestpractical.com/rt/5.0.0/RT/REST2.html
 """
 
 import base64
@@ -36,6 +15,7 @@ from urllib.parse import urljoin
 import requests
 import requests.auth
 
+import rt.exceptions
 from .exceptions import AuthorizationError, UnexpectedResponse, NotFoundError, InvalidUse
 
 __license__ = """ Copyright (C) 2012 CZ.NIC, z.s.p.o.
@@ -81,7 +61,7 @@ class Attachment:
 
 class Rt:
     """ :term:`API` for Request Tracker according to
-    http://requesttracker.wikia.com/wiki/REST. Interface is based on
+    https://docs.bestpractical.com/rt/5.0.0/RT/REST2.html. Interface is based on
     :term:`REST` architecture, which is based on HTTP/1.1 protocol. This module
     is therefore mainly sending and parsing special HTTP messages.
 
@@ -318,7 +298,9 @@ class Rt:
         if response.status_code == 404:
             raise NotFoundError('No such resource found.')
         if response.status_code != 200 and response.status_code != 201:
-            raise UnexpectedResponse('Received status code {:d} instead of 200.'.format(response.status_code))
+            raise UnexpectedResponse('Received status code {:d} instead of 200.'.format(response.status_code),
+                                     status_code=response.status_code,
+                                     response_message=response.text)
 
     def __get_url(self, url: str) -> typing.Dict[str, typing.Any]:
         """Call a URL as specified in the returned JSON of an API operation."""
@@ -833,10 +815,8 @@ class Rt:
         """
         return self.__request(f'user/{user_id}')
 
-    def create_user(self, Name: str, EmailAddress: str, **kwargs: typing.Any) -> typing.Union[int, bool]:
-        """ Create user (undocumented API feature).
-
-        @TODO REST2
+    def create_user(self, Name: str, EmailAddress: str, **kwargs: typing.Any) -> str:
+        """ Create user.
 
         :param Name: User name (login for privileged, required)
         :param EmailAddress: Email address (required)
@@ -845,7 +825,38 @@ class Rt:
         :raises BadRequest: When user already exists
         :raises InvalidUse: When invalid fields are set
         """
-        return self.edit_user('new', Name=Name, EmailAddress=EmailAddress, **kwargs)
+        valid_fields = {'Name', 'Password', 'EmailAddress', 'RealName',
+                        'Nickname', 'Gecos', 'Organization', 'Address1', 'Address2',
+                        'City', 'State', 'Zip', 'Country', 'HomePhone', 'WorkPhone',
+                        'MobilePhone', 'PagerPhone', 'ContactInfo', 'Comments',
+                        'Signature', 'Lang', 'EmailEncoding', 'WebEncoding',
+                        'ExternalContactInfoId', 'ContactInfoSystem', 'ExternalAuthId',
+                        'AuthSystem', 'Privileged', 'Disabled'}
+        invalid_fields = []
+
+        post_data = {'Name': Name,
+                     'EmailAddress': EmailAddress
+                     }
+
+        for k in kwargs.keys():
+            if k not in valid_fields:
+                invalid_fields.append(k)
+
+            else:
+                post_data[k] = kwargs[k]
+
+        if invalid_fields:
+            raise InvalidUse("Unsupported names of fields: {}.".format(', '.join(invalid_fields)))
+
+        try:
+            ret = self.__request('user', json_data=post_data)
+        except UnexpectedResponse as exc:
+            if exc.status_code == 400:
+                raise rt.exceptions.BadRequest(exc.response_message) from exc
+
+            raise
+
+        return ret['id']
 
     def edit_user(self, user_id: typing.Union[str, int], **kwargs: typing.Any) -> typing.Union[int, bool]:
         """ Edit user profile (undocumented API feature).

@@ -18,6 +18,11 @@ class NotAllowed(RtError):
 class UnexpectedResponse(RtError):
     """ Exception raised when unexpected HTTP code is received. """
 
+    def __init__(self, message, status_code=None, response_message=None) -> None:
+        super().__init__(message)
+        self.status_code = status_code
+        self.response_message = response_message
+
 
 class UnexpectedMessageFormat(RtError):
     """ Exception raised when response has bad status code (not the HTTP code,
