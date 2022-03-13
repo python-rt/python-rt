@@ -74,7 +74,8 @@ class Rt:
                  proxy: typing.Optional[str] = None,
                  skip_login: bool = False,
                  verify_cert: typing.Optional[typing.Union[str, bool]] = True,
-                 http_auth: requests.auth.AuthBase = None
+                 http_auth: requests.auth.AuthBase = None,
+                 http_timeout: typing.Optional[int] = 20,
                  ) -> None:
         """ API initialization.
 
@@ -87,6 +88,7 @@ class Rt:
                              requests library instantly.
         :keyword http_auth: Specify a http authentication instance, e.g. HTTPBasicAuth(), HTTPDigestAuth(),
                             etc. to be used for authenticating to RT
+        :keyword http_timeout: HTTP timeout after which a request is aborted.
         """
         self.logger = logging.getLogger(__name__)
 
@@ -103,6 +105,7 @@ class Rt:
         self.login_result = None
         self.session = requests.session()
         self.session.verify = verify_cert
+
         if proxy is not None:
             if url.lower().startswith("https://"):
                 self.session.proxies = {"https": proxy}
@@ -115,6 +118,8 @@ class Rt:
             # explicitly with basic or digest authentication (or if this is
             # assured, that we are login in instantly)
             self.login_result = True
+
+        self.http_timeout = http_timeout
 
     def __request(self,
                   selector: str,
@@ -149,7 +154,7 @@ class Rt:
             url = str(urljoin(self.url, selector))
             if not files:
                 if json_data:
-                    response = self.session.post(url, json=json_data)
+                    response = self.session.post(url, json=json_data, timeout=self.http_timeout)
                     self.logger.debug("### %s", datetime.datetime.now().isoformat())
                     self.logger.debug("Request URL: %s", response.request.url)
                     self.logger.debug("Request method: %s", response.request.method)
@@ -158,11 +163,11 @@ class Rt:
                     self.logger.debug("Response status code: %s", str(response.status_code))
                     self.logger.debug("Response content:")
                 elif post_data:
-                    response = self.session.post(url, data=post_data)
+                    response = self.session.post(url, data=post_data, timeout=self.http_timeout)
                 else:
-                    response = self.session.get(url, params=get_params)
+                    response = self.session.get(url, params=get_params, timeout=self.http_timeout)
             else:
-                response = self.session.post(url, data=post_data, files=files)
+                response = self.session.post(url, data=post_data, files=files, timeout=self.http_timeout)
 
             self.logger.debug("### %s", datetime.datetime.now().isoformat())
             self.logger.debug("Request URL: %s", response.request.url)
@@ -207,7 +212,60 @@ class Rt:
 
             _headers = dict(self.session.headers)
             _headers['Content-Type'] = 'application/json'
-            response = self.session.put(url, json=json_data, headers=_headers)
+            response = self.session.put(url, json=json_data, headers=_headers, timeout=self.http_timeout)
+
+            self.logger.debug("### %s", datetime.datetime.now().isoformat())
+            self.logger.debug("Request URL: %s", response.request.url)
+            self.logger.debug("Request method: %s", response.request.method)
+            self.logger.debug("Request headers: {}".format(response.request.headers))
+            self.logger.debug("Request body: {}".format(str(response.request.body)))
+            self.logger.debug("Respone status code: %s", str(response.status_code))
+            self.logger.debug("Response content:")
+            self.logger.debug(response.content.decode())
+
+            self.__check_response(response)
+
+            try:
+                result = response.json()
+            except LookupError:
+                raise UnexpectedResponse('Unknown response encoding: {}.'.format(response.encoding))
+            except UnicodeError:
+                raise UnexpectedResponse('Unknown response encoding (UTF-8 does not work) - "{}".'.format(response.content.decode('utf-8', 'replace')))
+
+            return result
+        except requests.exceptions.ConnectionError as e:
+            raise ConnectionError("Connection error", e)
+
+    def __request_delete(self,
+                         selector: str,
+                         ) -> typing.Dict[str, str]:
+        """ General request for :term:`API`.
+
+        :keyword selector: End part of URL which completes self.url parameter
+                           set during class initialization.
+                           E.g.: ``ticket/123456/show``
+
+        :returns: dict
+        :rtype: dict
+        :raises AuthorizationError: In case that request is called without previous
+                                    login or login attempt failed.
+        :raises ConnectionError: In case of connection error.
+        """
+        try:
+            url = str(urljoin(self.url, selector))
+
+            _headers = dict(self.session.headers)
+            _headers['Content-Type'] = 'application/json'
+            response = self.session.delete(url, headers=_headers, timeout=self.http_timeout)
+
+            self.logger.debug("### %s", datetime.datetime.now().isoformat())
+            self.logger.debug("Request URL: %s", response.request.url)
+            self.logger.debug("Request method: %s", response.request.method)
+            self.logger.debug("Request headers: {}".format(response.request.headers))
+            self.logger.debug("Request body: {}".format(str(response.request.body)))
+            self.logger.debug("Respone status code: %s", str(response.status_code))
+            self.logger.debug("Response content:")
+            self.logger.debug(response.content.decode())
 
             self.__check_response(response)
 
@@ -259,7 +317,7 @@ class Rt:
             if json_data is not None:
                 method = 'post'
 
-            response = self.session.request(method, url, json=json_data, params=params)
+            response = self.session.request(method, url, json=json_data, params=params, timeout=self.http_timeout)
 
             self.__check_response(response)
 
@@ -858,10 +916,8 @@ class Rt:
 
         return ret['id']
 
-    def edit_user(self, user_id: typing.Union[str, int], **kwargs: typing.Any) -> typing.Union[int, bool]:
+    def edit_user(self, user_id: typing.Union[str, int], **kwargs: typing.Any) -> typing.List[str]:
         """ Edit user profile (undocumented API feature).
-
-        @TODO REST2
 
         :param user_id: Identification of user by username (str) or user ID
                         (int)
@@ -897,32 +953,43 @@ class Rt:
                           * Privileged
                           * Disabled
 
-        :returns: ID of edited user or False when edit fails
+        :returns: List of status messages
         :raises BadRequest: When user does not exist
         :raises InvalidUse: When invalid fields are set
         """
-        valid_fields = {'name', 'password', 'emailaddress', 'realname',
-                        'nickname', 'gecos', 'organization', 'address1', 'address2',
-                        'city', 'state', 'zip', 'country', 'homephone', 'workphone',
-                        'mobilephone', 'pagerphone', 'contactinfo', 'comments',
-                        'signature', 'lang', 'emailencoding', 'webencoding',
-                        'externalcontactinfoid', 'contactinfosystem', 'externalauthid',
-                        'authsystem', 'privileged', 'disabled'}
-        used_fields = set(map(lambda x: x.lower(), kwargs.keys()))
+        valid_fields = {'Name', 'Password', 'EmailAddress', 'RealName',
+                        'Nickname', 'Gecos', 'Organization', 'Address1', 'Address2',
+                        'City', 'State', 'Zip', 'Country', 'HomePhone', 'WorkPhone',
+                        'MobilePhone', 'PagerPhone', 'ContactInfo', 'Comments',
+                        'Signature', 'Lang', 'EmailEncoding', 'WebEncoding',
+                        'ExternalContactInfoId', 'ContactInfoSystem', 'ExternalAuthId',
+                        'AuthSystem', 'Privileged', 'Disabled'}
+        invalid_fields = []
 
-        if not used_fields <= valid_fields:
-            invalid_fields = ", ".join(list(used_fields - valid_fields))
-            raise InvalidUse("Unsupported names of fields: {}.".format(invalid_fields))
-        post_data = 'id: user/{}\n'.format(str(user_id))
+        post_data = {}
+
+        for k in kwargs.keys():
+            if k not in valid_fields:
+                invalid_fields.append(k)
+
+            else:
+                post_data[k] = kwargs[k]
+
+        if invalid_fields:
+            raise InvalidUse("Unsupported names of fields: {}.".format(', '.join(invalid_fields)))
+
         for key, val in kwargs.items():
-            post_data += '{}: {}\n'.format(key, val)
-        msg = self.__request('edit', post_data={'content': post_data})
-        msgs = msg.split('\n')
-        if (self.__get_status_code(msg) == 200) and (len(msgs) > 2):
-            match = self.RE_PATTERNS['user_pattern'].match(msgs[2])
-            if match:
-                return int(match.group(1))
-        return False
+            post_data[key] = val
+
+        try:
+            ret = self.__request_put(f'user/{user_id}', json_data=post_data)
+        except UnexpectedResponse as exc:
+            if exc.status_code == 400:
+                raise rt.exceptions.BadRequest(exc.response_message) from exc
+
+            raise
+
+        return ret
 
     def get_queue(self, queue_id: typing.Union[str, int]) -> typing.Optional[typing.Dict[str, typing.Any]]:
         """ Get queue details.
@@ -930,7 +997,7 @@ class Rt:
         :param queue_id: Identification of queue by name (str) or queue ID
                          (int)
         :returns: Queue details as strings in dictionary with these keys
-                  if queue exists (otherwise None):
+                  if queue exists:
 
                       * id
                       * Name
@@ -942,11 +1009,14 @@ class Rt:
                       * DefaultDueIn
 
         :raises UnexpectedMessageFormat: In case that returned status code is not 200
+        :raises NotFoundError: In case the queue does not exist
         """
         return self.__request(f'queue/{queue_id}')
 
-    def get_all_queues(self) -> typing.List[typing.Dict[str, typing.Any]]:
+    def get_all_queues(self, include_disabled: bool = False) -> typing.List[typing.Dict[str, typing.Any]]:
         """ Return a list of all queues.
+
+        :param include_disabled: Set to True to also return disabled queues.
 
         :returns: Queue details as strings in dictionary with these keys
                   if queue exists (otherwise None):
@@ -962,12 +1032,12 @@ class Rt:
 
         :raises UnexpectedMessageFormat: In case that returned status code is not 200
         """
-        return [q for q in self.__paged_request('queues/all', params={'fields': 'Name,Description'})]
+        params = {'fields': 'Name,Description', 'find_disabled_rows': int(include_disabled)}
+
+        return [q for q in self.__paged_request('queues/all', params=params)]
 
     def edit_queue(self, queue_id: typing.Union[str, int], **kwargs: typing.Any) -> typing.Union[str, bool]:
         """ Edit queue (undocumented API feature).
-
-        @TODO REST2
 
         :param queue_id: Identification of queue by name (str) or ID (int)
         :param kwargs: Other fields to edit from the following list:
@@ -976,37 +1046,47 @@ class Rt:
                           * Description
                           * CorrespondAddress
                           * CommentAddress
-                          * InitialPriority
-                          * FinalPriority
-                          * DefaultDueIn
+                          * Disabled
+                          * SLADisabled
+                          * Lifecycle
+                          * SortOrder
 
         :returns: ID or name of edited queue or False when edit fails
         :raises BadRequest: When queue does not exist
         :raises InvalidUse: When invalid fields are set
         """
-        valid_fields = {'name', 'description', 'correspondaddress', 'commentaddress', 'initialpriority',
-                        'finalpriority',
-                        'defaultduein'}
-        used_fields = set(map(lambda x: x.lower(), kwargs.keys()))
+        valid_fields = {'Name', 'Description', 'CorrespondAddress', 'CommentAddress',
+                        'Disabled', 'SLADisabled', 'Lifecycle', 'SortOrder'
+                        }
+        invalid_fields = []
 
-        if not used_fields <= valid_fields:
-            invalid_fields = ", ".join(list(used_fields - valid_fields))
-            raise InvalidUse("Unsupported names of fields: {}.".format(invalid_fields))
-        post_data = 'id: queue/{}\n'.format(str(queue_id))
+        post_data = {}
+
+        for k in kwargs.keys():
+            if k not in valid_fields:
+                invalid_fields.append(k)
+
+            else:
+                post_data[k] = kwargs[k]
+
+        if invalid_fields:
+            raise InvalidUse("Unsupported names of fields: {}.".format(', '.join(invalid_fields)))
+
         for key, val in kwargs.items():
-            post_data += '{}: {}\n'.format(key, val)
-        msg = self.__request('edit', post_data={'content': post_data})
-        msgs = msg.split('\n')
-        if (self.__get_status_code(msg) == 200) and (len(msgs) > 2):
-            match = self.RE_PATTERNS['queue_pattern'].match(msgs[2])
-            if match:
-                return match.group(1)
-        return False
+            post_data[key] = val
+
+        try:
+            ret = self.__request_put(f'queue/{queue_id}', json_data=post_data)
+        except UnexpectedResponse as exc:
+            if exc.status_code == 400:
+                raise rt.exceptions.BadRequest(exc.response_message) from exc
+
+            raise
+
+        return ret
 
     def create_queue(self, Name: str, **kwargs: typing.Any) -> int:
         """ Create queue (undocumented API feature).
-
-        @TODO REST2
 
         :param Name: Queue name (required)
         :param kwargs: Optional fields to set (see edit_queue)
@@ -1014,7 +1094,56 @@ class Rt:
         :raises BadRequest: When queue already exists
         :raises InvalidUse: When invalid fields are set
         """
-        return int(self.edit_queue('new', Name=Name, **kwargs))
+        valid_fields = {'Name', 'Description', 'CorrespondAddress', 'CommentAddress',
+                        'Disabled', 'SLADisabled', 'Lifecycle', 'SortOrder'
+                        }
+        invalid_fields = []
+
+        post_data = {'Name': Name}
+
+        for k in kwargs.keys():
+            if k not in valid_fields:
+                invalid_fields.append(k)
+
+            else:
+                post_data[k] = kwargs[k]
+
+        if invalid_fields:
+            raise InvalidUse("Unsupported names of fields: {}.".format(', '.join(invalid_fields)))
+
+        for key, val in kwargs.items():
+            post_data[key] = val
+
+        try:
+            ret = self.__request('queue', json_data=post_data)
+        except UnexpectedResponse as exc:
+            if exc.status_code == 400:
+                raise rt.exceptions.BadRequest(exc.response_message) from exc
+
+            raise
+
+        return int(ret['id'])
+
+    def delete_queue(self, queue_id: typing.Union[str, int]) -> None:
+        """ Disable a queue.
+
+        :param queue_id: Identification of queue by name (str) or ID (int)
+
+        :returns: ID or name of edited queue or False when edit fails
+        :raises BadRequest: When queue does not exist
+        :raises InvalidUse: When invalid fields are set
+        """
+        try:
+            ret = self.__request_delete(f'queue/{queue_id}')
+        except UnexpectedResponse as exc:
+            if exc.status_code == 400:
+                raise rt.exceptions.BadRequest(exc.response_message) from exc
+
+            elif exc.status_code == 204:
+                pass
+
+            else:
+                raise
 
     def get_links(self, ticket_id: typing.Union[str, int]) -> typing.Optional[typing.List[typing.Dict[str, str]]]:
         """ Gets the ticket links for a single ticket.

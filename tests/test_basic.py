@@ -36,7 +36,7 @@ RT_USER = 'root'
 RT_PASSWORD = 'password'
 RT_QUEUE = 'General'
 
-c = rt.rest2.Rt(url=RT_URL, http_auth=requests.auth.HTTPBasicAuth(RT_USER, RT_PASSWORD))
+c = rt.rest2.Rt(url=RT_URL, http_auth=requests.auth.HTTPBasicAuth(RT_USER, RT_PASSWORD), http_timeout=None)
 
 
 def test_get_user():
@@ -171,3 +171,26 @@ def test_ticket_operations():
 
     # delete ticket
     assert c.edit_ticket(ticket_id, Status='deleted')
+
+
+def test_queues():
+    queue = c.get_queue(RT_QUEUE)
+    assert queue['Name'] == RT_QUEUE
+
+    queues = c.get_all_queues()
+    assert len(queues) == 1
+    assert queues[0]['Name'] == RT_QUEUE
+
+    c.edit_queue('General', Disabled="1")
+    assert c.get_queue(RT_QUEUE)['Disabled'] == "1"
+    assert len(c.get_all_queues()) == 0
+    assert len(c.get_all_queues(include_disabled=True)) == 2
+
+    c.edit_queue('General', Disabled="0")
+    assert c.get_queue(RT_QUEUE)['Disabled'] == "0"
+
+    c.create_queue('General2', CorrespondAddress='q@example.com', Description='test queue')
+    queues = c.get_all_queues()
+    assert len(queues) == 2
+    queue = c.get_queue('General2')
+    assert queue['Name'] == 'General2'
