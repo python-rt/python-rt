@@ -26,6 +26,7 @@ import base64
 import random
 import string
 
+import pytest
 import requests.auth
 
 import rt.exceptions
@@ -194,3 +195,6 @@ def test_queues():
     assert len(queues) == 2
     queue = c.get_queue('General2')
     assert queue['Name'] == 'General2'
+
+    with pytest.raises(rt.exceptions.NotFoundError):
+        c.get_queue('InvalidName')
