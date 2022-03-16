@@ -18,7 +18,7 @@ __license__ = """ Copyright (C) 2013 CZ.NIC, z.s.p.o.
 """
 __docformat__ = "reStructuredText en"
 __authors__ = [
-    '"Jiri Machalek" <jiri.machalek@nic.cz>',
+    '"Jiri Machalek" <jiri.machalek@nirt_connection.cz>',
     '"Georges Toth" <georges.toth@govcert.etat.lu>',
 ]
 
@@ -28,7 +28,7 @@ import string
 
 import pytest
 import requests.auth
-
+from . import random_string
 import rt.exceptions
 import rt.rest2
 
@@ -37,42 +37,43 @@ RT_USER = 'root'
 RT_PASSWORD = 'password'
 RT_QUEUE = 'General'
 
-c = rt.rest2.Rt(url=RT_URL, http_auth=requests.auth.HTTPBasicAuth(RT_USER, RT_PASSWORD), http_timeout=None)
 
-
-def test_get_user():
-    user = c.get_user(RT_USER)
+def test_get_user(rt_connection: rt.rest2.Rt):
+    user = rt_connection.get_user(RT_USER)
     assert user['Name'] == RT_USER
     assert '@' in user['EmailAddress']
     assert user['Privileged'] == 1
 
+def test_invalid_api_url():
+    with pytest.raises(ValueError):
+        rt_connection = rt.rest2.Rt(url='https://example.com', http_auth=requests.auth.HTTPBasicAuth('dummy', 'dummy'))
 
-def test_ticket_operations():
-    ticket_subject = 'Testing issue ' + "".join([random.choice(string.ascii_letters) for i in range(15)])
+def test_ticket_operations(rt_connection: rt.rest2.Rt):
+    ticket_subject = f'Testing issue {random_string()}'
     ticket_text = 'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'
 
     # empty search result
-    search_result = c.search(Subject=ticket_subject)
+    search_result = rt_connection.search(Subject=ticket_subject)
     assert not len(search_result)
 
     # create
-    ticket_id = c.create_ticket(Subject=ticket_subject, Content=ticket_text, Queue=RT_QUEUE)
+    ticket_id = rt_connection.create_ticket(Subject=ticket_subject, Content=ticket_text, Queue=RT_QUEUE)
     assert ticket_id > -1
 
     # search
-    search_result = c.search(Subject=ticket_subject)
+    search_result = rt_connection.search(Subject=ticket_subject)
     assert len(search_result) == 1
     assert search_result[0]['id'] == str(ticket_id)
     assert search_result[0]['Status'] == 'new'
 
     # # raw search
-    search_result = c.search(raw_query=f'Subject="{ticket_subject}"')
+    search_result = rt_connection.search(raw_query=f'Subject="{ticket_subject}"')
     assert len(search_result) == 1
     assert search_result[0]['id'] == str(ticket_id)
     assert search_result[0]['Status'] == 'new'
 
     # get ticket
-    ticket = c.get_ticket(ticket_id)
+    ticket = rt_connection.get_ticket(ticket_id)
     search_result[0]['id'] = int(search_result[0]['id'])
 
     for k in search_result[0]:
@@ -84,10 +85,10 @@ def test_ticket_operations():
 
     # edit ticket
     requestors = ['tester1@example.com', 'tester2@example.com']
-    c.edit_ticket(ticket_id, Status='open', Requestor=requestors)
+    rt_connection.edit_ticket(ticket_id, Status='open', Requestor=requestors)
 
     # get ticket (edited)
-    ticket = c.get_ticket(ticket_id)
+    ticket = rt_connection.get_ticket(ticket_id)
     assert ticket['Status'] == 'open'
     for requestor in ticket['Requestor']:
         assert requestor['id'] in requestors
@@ -101,14 +102,14 @@ def test_ticket_operations():
         assert found
 
     # get history
-    hist = c.get_ticket_history(ticket_id)
+    hist = rt_connection.get_ticket_history(ticket_id)
     assert len(hist) > 0
-    transaction = c.get_transaction(hist[0]['id'])
+    transaction = rt_connection.get_transaction(hist[0]['id'])
     found = False
     for hyperlink in transaction['_hyperlinks']:
         if hyperlink['ref'] == 'attachment':
             attachment_id = hyperlink['_url'].rsplit('/', 1)[1]
-            attachment = base64.b64decode(c.get_attachment(attachment_id)['Content']).decode('utf-8')
+            attachment = base64.b64decode(rt_connection.get_attachment(attachment_id)['Content']).decode('utf-8')
             found = True
             assert attachment == ticket_text
             break
@@ -116,28 +117,28 @@ def test_ticket_operations():
     assert found
 
     # get_short_history
-    short_hist = c.get_ticket_history(ticket_id)
+    short_hist = rt_connection.get_ticket_history(ticket_id)
     assert len(short_hist) > 0
     assert short_hist[0]['Type'] == 'Create'
     assert short_hist[0]['Creator']['Name'] == RT_USER
 
     # create 2nd ticket
     ticket2_subject = 'Testing issue ' + "".join([random.choice(string.ascii_letters) for i in range(15)])
-    ticket2_id = c.create_ticket(Queue=RT_QUEUE, Subject=ticket2_subject)
+    ticket2_id = rt_connection.create_ticket(Queue=RT_QUEUE, Subject=ticket2_subject)
     assert ticket2_id > -1
 
     # edit link
-    assert c.edit_link(ticket_id, 'DependsOn', ticket2_id)
+    assert rt_connection.edit_link(ticket_id, 'DependsOn', ticket2_id)
 
     # get links
-    links1 = c.get_links(ticket_id)
+    links1 = rt_connection.get_links(ticket_id)
     found = False
     for link in links1:
         if link['ref'] == 'depends-on' and link['id'] == str(ticket2_id):
             found = True
     assert found
 
-    links2 = c.get_links(ticket2_id)
+    links2 = rt_connection.get_links(ticket2_id)
     found = False
     for link in links2:
         if link['ref'] == 'depended-on-by' and link['id'] == str(ticket_id):
@@ -150,51 +151,59 @@ def test_ticket_operations():
     reply_text = 'Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.'
     attachment = rt.rest2.Attachment(attachment_name, 'text/plain', attachment_content)
     # should provide a content type as RT 4.0 type guessing is broken (missing use statement for guess_media_type in REST.pm)
-    assert c.reply(ticket_id, text=reply_text, attachments=[attachment])
+    assert rt_connection.reply(ticket_id, text=reply_text, attachments=[attachment])
 
     # reply with a comment
     reply_text = 'Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.'
     # should provide a content type as RT 4.0 type guessing is broken (missing use statement for guess_media_type in REST.pm)
-    assert c.comment(ticket_id, text=reply_text)
+    assert rt_connection.comment(ticket_id, text=reply_text)
 
     # attachments list
-    at_list = c.get_attachments(ticket_id)
+    at_list = rt_connection.get_attachments(ticket_id)
     assert at_list
     at_names = [at['Filename'] for at in at_list]
     assert attachment_name in at_names
     # get the attachment and compare it's content
     at_id = at_list[at_names.index(attachment_name)]['id']
-    at_content = base64.b64decode(c.get_attachment(at_id)['Content'])
+    at_content = base64.b64decode(rt_connection.get_attachment(at_id)['Content'])
     assert at_content == attachment_content
 
     # merge tickets
-    assert c.merge_ticket(ticket2_id, ticket_id)
+    assert rt_connection.merge_ticket(ticket2_id, ticket_id)
 
     # delete ticket
-    assert c.edit_ticket(ticket_id, Status='deleted')
+    assert rt_connection.edit_ticket(ticket_id, Status='deleted')
 
 
-def test_queues():
-    queue = c.get_queue(RT_QUEUE)
+def test_queues(rt_connection: rt.rest2.Rt):
+    queue = rt_connection.get_queue(RT_QUEUE)
     assert queue['Name'] == RT_QUEUE
 
-    queues = c.get_all_queues()
-    assert len(queues) == 1
-    assert queues[0]['Name'] == RT_QUEUE
+    queues = rt_connection.get_all_queues()
+    assert len(queues) >= 1
 
-    c.edit_queue('General', Disabled="1")
-    assert c.get_queue(RT_QUEUE)['Disabled'] == "1"
-    assert len(c.get_all_queues()) == 0
-    assert len(c.get_all_queues(include_disabled=True)) == 2
+    found = False
+    for q in queues:
+        if q['Name'] == RT_QUEUE:
+            found = True
+    assert found
 
-    c.edit_queue('General', Disabled="0")
-    assert c.get_queue(RT_QUEUE)['Disabled'] == "0"
+    random_queue_name = f'Queue {random_string()}'
+    random_queue_email = f'q-{random_string()}@example.com'
 
-    c.create_queue('General2', CorrespondAddress='q@example.com', Description='test queue')
-    queues = c.get_all_queues()
-    assert len(queues) == 2
-    queue = c.get_queue('General2')
-    assert queue['Name'] == 'General2'
+    rt_connection.create_queue(random_queue_name, CorrespondAddress=random_queue_email, Description='test queue')
+    queues = rt_connection.get_all_queues()
+    found = False
+    for q in queues:
+        if q['Name'] == random_queue_name:
+            found = True
+    assert found
+
+    rt_connection.edit_queue(random_queue_name, Disabled="1")
+    assert rt_connection.get_queue(random_queue_name)['Disabled'] == "1"
+
+    rt_connection.edit_queue(random_queue_name, Disabled="0")
+    assert rt_connection.get_queue(random_queue_name)['Disabled'] == "0"
 
     with pytest.raises(rt.exceptions.NotFoundError):
-        c.get_queue('InvalidName')
+        rt_connection.get_queue('InvalidName')
