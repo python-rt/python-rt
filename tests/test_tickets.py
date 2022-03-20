@@ -37,7 +37,7 @@ def test_ticket_attachments(rt_connection: rt.rest2.Rt):
     attachment_name = 'attachment-name.txt'
 
     attachment = rt.rest2.Attachment(attachment_name, 'text/plain', attachment_content)
-    ticket_id = rt_connection.create_ticket(Subject=ticket_subject, Content=ticket_text, Queue=RT_QUEUE, attachments=[attachment])
+    ticket_id = rt_connection.create_ticket(subject=ticket_subject, content=ticket_text, queue=RT_QUEUE, attachments=[attachment])
     assert ticket_id
 
     att_ids = rt_connection.get_attachments_ids(ticket_id)
@@ -60,7 +60,7 @@ def test_ticket_take(rt_connection: rt.rest2.Rt):
     ticket_subject = f'Testing issue {random_string()}'
     ticket_text = 'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'
 
-    ticket_id = rt_connection.create_ticket(Subject=ticket_subject, Content=ticket_text, Queue=RT_QUEUE)
+    ticket_id = rt_connection.create_ticket(subject=ticket_subject, content=ticket_text, queue=RT_QUEUE)
     assert ticket_id
 
     assert rt_connection.take(ticket_id)

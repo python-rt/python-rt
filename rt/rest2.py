@@ -72,9 +72,9 @@ class Rt:
 
     def __init__(self, url: str,
                  proxy: typing.Optional[str] = None,
-                 skip_login: bool = False,
                  verify_cert: typing.Optional[typing.Union[str, bool]] = True,
-                 http_auth: requests.auth.AuthBase = None,
+                 http_auth: typing.Optional[requests.auth.AuthBase] = None,
+                 token: typing.Optional[str] = None,
                  http_timeout: typing.Optional[int] = 20,
                  ) -> None:
         """ API initialization.
@@ -82,12 +82,9 @@ class Rt:
         :keyword url: Base URL for Request Tracker API.
                       E.g.: http://tracker.example.com/REST/2.0/
         :keyword proxy: Proxy server (string with http://user:password@host/ syntax)
-        :keyword skip_login: Set this option True when HTTP Basic authentication
-                             credentials for RT are in .netrc file. You do not
-                             need to call login, because it is managed by
-                             requests library instantly.
         :keyword http_auth: Specify a http authentication instance, e.g. HTTPBasicAuth(), HTTPDigestAuth(),
                             etc. to be used for authenticating to RT
+        :keyword token: Optional authentication token to be used instead of basic authentication.
         :keyword http_timeout: HTTP timeout after which a request is aborted.
         """
         self.logger = logging.getLogger(__name__)
@@ -102,7 +99,6 @@ class Rt:
         self.url = url
         self.base_url = url.split('REST/2.0/', 1)[0]
 
-        self.login_result = None
         self.session = requests.session()
         self.session.verify = verify_cert
 
@@ -111,13 +107,10 @@ class Rt:
                 self.session.proxies = {"https": proxy}
             else:
                 self.session.proxies = {"http": proxy}
-        if http_auth:
+        if http_auth is not None:
             self.session.auth = http_auth
-        if skip_login or http_auth:
-            # Assume valid credentials, because we do not need to call login()
-            # explicitly with basic or digest authentication (or if this is
-            # assured, that we are login in instantly)
-            self.login_result = True
+        if token is not None:
+            self.session.headers['Authorization'] = f'token {token}'
 
         self.http_timeout = http_timeout
 
@@ -127,7 +120,6 @@ class Rt:
                   json_data: typing.Optional[typing.Dict[str, typing.Any]] = None,
                   post_data: typing.Optional[typing.Dict[str, typing.Any]] = None,
                   files: typing.Optional[typing.Dict[str, str]] = None,
-                  without_login: bool = False
                   ) -> typing.Dict[str, typing.Any]:
         """ General request for :term:`API`.
 
@@ -140,8 +132,6 @@ class Rt:
         :keyword files: List of pairs (filename, file-like object) describing
                         files to attach as multipart/form-data
                         (list is necessary to keep files ordered)
-        :keyword without_login: Turns off checking last login result
-                                (usually needed just for login itself)
         :returns: dict
         :rtype: dict
         :raises AuthorizationError: In case that request is called without previous
@@ -149,8 +139,6 @@ class Rt:
         :raises ConnectionError: In case of connection error.
         """
         try:
-            if not (self.login_result or without_login):
-                raise AuthorizationError('First login by calling method `login`.')
             url = str(urljoin(self.url, selector))
             if not files:
                 if json_data:
@@ -540,50 +528,54 @@ class Rt:
         """
         return self.__request(f'ticket/{ticket_id}', get_params={'fields[Queue]': 'Name'})
 
-    def create_ticket(self, Queue: str,
+    def create_ticket(self,
+                      queue: str,
+                      content_type: str = 'text/plain',
+                      subject: typing.Optional[str] = None,
+                      content: typing.Optional[str] = None,
                       attachments: typing.Optional[typing.Sequence[Attachment]] = None,
                       **kwargs: typing.Any) -> int:
         """ Create new ticket and set given parameters.
 
-        Example of message sended to ``http://tracker.example.com/REST/2.0/ticket/new``::
+        Example of message sent to ``http://tracker.example.com/REST/2.0/ticket/new``::
 
-            content=id: ticket/new
-            Queue: General
-            Owner: Nobody
-            Requestors: somebody@example.com
-            Subject: Ticket created through REST API
-            Text: Lorem Ipsum
-
-        In case of success returned message has this form::
-
-            RT/3.8.7 200 Ok
-
-            # Ticket 123456 created.
-            # Ticket 123456 updated.
-
-        Otherwise::
-
-            RT/3.8.7 200 Ok
-
-            # Required: id, Queue
+            { "Queue": "General",
+              "Subject": "Ticket created through REST API",
+              "Owner": "Nobody",
+              "Requestor": "somebody@example.com",
+              "Cc": "user2@example.com",
+              "CustomRoles": {"My Role": "staff1@example.com"},
+              "Content": "Lorem Ipsum",
+              "CustomFields": {"Severity": "Low"}
+            }
 
         + list of some key, value pairs, probably default values.
 
-        :keyword Queue: Queue where to create ticket
-        :keyword files: Files to attach as multipart/form-data
-                        List of 2/3 tuples: (filename, file-like object, [content type])
+        :keyword queue: Queue where to create ticket
+        :keyword content_type: Content-type of the Content parameter; can be either text/plain or text/html.
+        :keyword subject: Optional subject for the ticket.
+        :keyword content: Optional content of the ticket. Must be specified unless attachments are specified.
+        :keyword attachments: Optional list of Attachment objects
         :keyword kwargs: Other arguments possible to set:
 
                          Requestors, Subject, Cc, AdminCc, Owner, Status,
                          Priority, InitialPriority, FinalPriority,
-                         TimeEstimated, Starts, Due, Text,... (according to RT
+                         TimeEstimated, Starts, Due, Content (according to RT
                          fields)
 
-                         Custom fields CF.{<CustomFieldName>} could be set
-                         with keywords CF_CustomFieldName.
         :returns: ID of new ticket
         """
-        ticket_data: typing.Dict[str, typing.Any] = {'Queue': Queue}
+        if content_type not in ('text/plain', 'text/html'):
+            raise ValueError('Invalid content-type specified.')
+
+        ticket_data: typing.Dict[str, typing.Any] = {'Queue': queue}
+
+        if subject is not None:
+            ticket_data['Subject'] = subject
+
+        if content is not None:
+            ticket_data['Content'] = content
+            ticket_data['ContentType'] = content_type
 
         for k, v in kwargs.items():
             ticket_data[k] = v
@@ -606,8 +598,9 @@ class Rt:
                          TimeEstimated, Starts, Due, Text,... (according to RT
                          fields)
 
-                         Custom fields CF.{<CustomFieldName>} could be set
-                         with keywords CF_CustomFieldName.
+                         Custom fields can be specified as dict:
+                            CustomFields = {"Severity": "Low"}
+
         :returns: ``True``
                       Operation was successful
                   ``False``
@@ -652,7 +645,7 @@ class Rt:
 
     def __correspond(self,
                      ticket_id: typing.Union[str, int],
-                     text: str = '',
+                     content: str = '',
                      action: str = 'correspond',
                      content_type: str = 'text/plain',
                      attachments: typing.Optional[typing.Sequence[Attachment]] = None,
@@ -660,7 +653,7 @@ class Rt:
         """ Sends out the correspondence
 
         :param ticket_id: ID of ticket to which message belongs
-        :keyword text: Content of email message
+        :keyword content: Content of email message
         :keyword action: correspond or comment
         :keyword content_type: Content type of email message, default to text/plain
         :keyword attachments: Files to attach as multipart/form-data
@@ -674,7 +667,7 @@ class Rt:
         if action not in ('correspond', 'comment'):
             raise InvalidUse('action must be either "correspond" or "comment"')
 
-        post_data: typing.Dict[str, typing.Any] = {'Content': text,
+        post_data: typing.Dict[str, typing.Any] = {'Content': content,
                                                    'ContentType': content_type,
                                                    }
 
@@ -699,7 +692,7 @@ class Rt:
 
     def reply(self,
               ticket_id: typing.Union[str, int],
-              text: str = '',
+              content: str = '',
               content_type: str = 'text/plain',
               attachments: typing.Optional[typing.Sequence[Attachment]] = None,
               ) -> bool:
@@ -707,17 +700,16 @@ class Rt:
         given ticket with subject as is set in ``Subject`` field.
 
         :param ticket_id: ID of ticket to which message belongs
-        :keyword text: Content of email message
+        :keyword content: Content of email message
         :keyword content_type: Content type of email message, default to text/plain
-        :keyword attachments: Files to attach as multipart/form-data
-                        List of 2/3 tuples: (filename, file-like object, [content type])
+        :keyword attachments: Optional list of Attachment objects
         :returns: ``True``
                       Operation was successful
                   ``False``
                       Sending failed (status code != 200)
         :raises BadRequest: When ticket does not exist
         """
-        msg = self.__correspond(ticket_id, text, 'correspond', content_type, attachments)
+        msg = self.__correspond(ticket_id, content, 'correspond', content_type, attachments)
 
         if not (isinstance(msg, list) and len(msg) >= 1):
             raise UnexpectedResponse(str(msg))
@@ -726,14 +718,14 @@ class Rt:
 
     def comment(self,
                 ticket_id: typing.Union[str, int],
-                text: str = '',
+                content: str = '',
                 content_type: str = 'text/plain',
                 attachments: typing.Optional[typing.Sequence[Attachment]] = None,
                 ) -> bool:
         """ Adds comment to the given ticket.
 
         :param ticket_id: ID of ticket to which comment belongs
-        :keyword text: Content of comment
+        :keyword content: Content of comment
         :keyword content_type: Content type of comment, default to text/plain
         :keyword attachments: Files to attach as multipart/form-data
                         List of 2/3 tuples: (filename, file-like object, [content type])
@@ -743,7 +735,7 @@ class Rt:
                       Sending failed (status code != 200)
         :raises BadRequest: When ticket does not exist
         """
-        msg = self.__correspond(ticket_id, text, 'comment', content_type, attachments)
+        msg = self.__correspond(ticket_id, content, 'comment', content_type, attachments)
 
         if not (isinstance(msg, list) and len(msg) >= 1):
             raise UnexpectedResponse(str(msg))
@@ -1214,7 +1206,7 @@ class Rt:
         """ Merge ticket into another (undocumented API feature).
 
         :param ticket_id: ID of ticket to be merged
-        :param into: ID of destination ticket
+        :param into_id: ID of destination ticket
         :returns: ``True``
                       Operation was successful
                   ``False``

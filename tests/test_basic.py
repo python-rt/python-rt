@@ -28,9 +28,10 @@ import string
 
 import pytest
 import requests.auth
-from . import random_string
+
 import rt.exceptions
 import rt.rest2
+from . import random_string
 
 RT_URL = 'http://localhost:8080/REST/2.0/'
 RT_USER = 'root'
@@ -44,9 +45,11 @@ def test_get_user(rt_connection: rt.rest2.Rt):
     assert '@' in user['EmailAddress']
     assert user['Privileged'] == 1
 
+
 def test_invalid_api_url():
     with pytest.raises(ValueError):
         rt_connection = rt.rest2.Rt(url='https://example.com', http_auth=requests.auth.HTTPBasicAuth('dummy', 'dummy'))
+
 
 def test_ticket_operations(rt_connection: rt.rest2.Rt):
     ticket_subject = f'Testing issue {random_string()}'
@@ -57,7 +60,7 @@ def test_ticket_operations(rt_connection: rt.rest2.Rt):
     assert not len(search_result)
 
     # create
-    ticket_id = rt_connection.create_ticket(Subject=ticket_subject, Content=ticket_text, Queue=RT_QUEUE)
+    ticket_id = rt_connection.create_ticket(subject=ticket_subject, content=ticket_text, queue=RT_QUEUE)
     assert ticket_id > -1
 
     # search
@@ -124,7 +127,7 @@ def test_ticket_operations(rt_connection: rt.rest2.Rt):
 
     # create 2nd ticket
     ticket2_subject = 'Testing issue ' + "".join([random.choice(string.ascii_letters) for i in range(15)])
-    ticket2_id = rt_connection.create_ticket(Queue=RT_QUEUE, Subject=ticket2_subject)
+    ticket2_id = rt_connection.create_ticket(queue=RT_QUEUE, subject=ticket2_subject)
     assert ticket2_id > -1
 
     # edit link
@@ -150,13 +153,15 @@ def test_ticket_operations(rt_connection: rt.rest2.Rt):
     attachment_name = 'attachment-name.txt'
     reply_text = 'Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.'
     attachment = rt.rest2.Attachment(attachment_name, 'text/plain', attachment_content)
-    # should provide a content type as RT 4.0 type guessing is broken (missing use statement for guess_media_type in REST.pm)
-    assert rt_connection.reply(ticket_id, text=reply_text, attachments=[attachment])
+    assert rt_connection.reply(ticket_id, content=reply_text, attachments=[attachment])
 
     # reply with a comment
     reply_text = 'Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.'
-    # should provide a content type as RT 4.0 type guessing is broken (missing use statement for guess_media_type in REST.pm)
-    assert rt_connection.comment(ticket_id, text=reply_text)
+    assert rt_connection.comment(ticket_id, content=reply_text)
+
+    # reply with a html content
+    reply_text = '<em>Ut enim ad minim veniam</em>, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.'
+    assert rt_connection.reply(ticket_id, content=reply_text, content_type='text/html')
 
     # attachments list
     at_list = rt_connection.get_attachments(ticket_id)
