@@ -180,6 +180,14 @@ def test_ticket_operations(rt_connection: rt.rest2.Rt):
     assert rt_connection.edit_ticket(ticket_id, Status='deleted')
 
 
+def test_users(rt_connection: rt.rest2.Rt):
+    assert rt_connection.get_user('tester1@example.com') is not None
+    assert rt_connection.user_exists('root', privileged=True) is True
+    assert rt_connection.user_exists('tester1@example.com', privileged=False) is True
+    assert rt_connection.user_exists('tester1@example.com', privileged=True) is False
+    assert rt_connection.user_exists('does-not-exist@example.com') is False
+
+
 def test_queues(rt_connection: rt.rest2.Rt):
     queue = rt_connection.get_queue(RT_QUEUE)
     assert queue['Name'] == RT_QUEUE

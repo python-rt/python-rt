@@ -865,6 +865,24 @@ class Rt:
         """
         return self.__request(f'user/{user_id}')
 
+    def user_exists(self, user_id: typing.Union[int, str], privileged: bool = True) -> bool:
+        """Check if a given user_id exists.
+
+        :parameter user_id: User ID to lookup.
+        :parameter privileged: If set to True, only return True if the user_id was found and is privileged.
+
+        :returns: bool: True on success, else False.
+        """
+        try:
+            user_dict = self.get_user(user_id)
+
+            if not privileged or (privileged and user_dict.get('Privileged', '0') == 1):
+                return True
+        except rt.exceptions.NotFoundError:
+            return False
+
+        return False
+
     def create_user(self, Name: str, EmailAddress: str, **kwargs: typing.Any) -> str:
         """ Create user.
 
