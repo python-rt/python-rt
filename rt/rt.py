@@ -278,6 +278,8 @@ class Rt:
             _msg = msg
         else:
             raise ValueError('Invalid parameter type.')
+        if not _msg:
+            return []
         return list(map(lambda x: x.strip(), _msg.split(",")))
 
     @classmethod
@@ -337,7 +339,7 @@ class Rt:
                 raise UnexpectedMessageFormat(
                         "Missing line starting with `{}:`.".format(key),
                 )
-        return {key: '\n'.join(lines) if lines else [] for key, lines in fields.items()}
+        return {key: '\n'.join(lines) for key, lines in fields.items()}
 
     @classmethod
     def __parse_response_numlist(cls, msg: typing.Iterable[str],
@@ -360,7 +362,7 @@ class Rt:
         )
 
     @classmethod
-    def __parse_response_ticket(cls, msg: typing.Iterable[str]) -> typing.Dict[str, typing.Sequence[str]]:
+    def __parse_response_ticket(cls, msg: typing.Iterable[str]) -> typing.Dict[str, typing.Union[str, typing.Sequence[str]]]:
         """Parse an RT API ticket response into a Python dictionary
 
         :keyword msg: A multiline string, or an iterable of string lines, with
