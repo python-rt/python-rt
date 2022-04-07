@@ -1,3 +1,6 @@
+v2.2.2, 2022-04-07
+- Fix a bug in get_ticket() which would ommit certain fields if they were empty instead of returning an empty list (#70 #71 #72).
+
 v2.2.1, 2021-11-26
 - Fix bug in get_attachment_content which was a workaround for a bug in RT <=4.2 (trailing new-lines) but which was fixed in RT >=4.2. This made tests fail and return falsely stripped attachment content.
 
