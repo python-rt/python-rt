@@ -337,7 +337,7 @@ class Rt:
                 raise UnexpectedMessageFormat(
                         "Missing line starting with `{}:`.".format(key),
                 )
-        return {key: '\n'.join(lines) for key, lines in fields.items() if lines}
+        return {key: '\n'.join(lines) if lines else [] for key, lines in fields.items()}
 
     @classmethod
     def __parse_response_numlist(cls, msg: typing.Iterable[str],
