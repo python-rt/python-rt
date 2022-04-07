@@ -272,6 +272,9 @@ class Rt:
     @staticmethod
     def __normalize_list(msg: typing.Union[str, typing.Sequence[str]]) -> typing.Sequence[str]:
         """Split message to list by commas and trim whitespace."""
+        if isinstance(msg, list) and not msg:
+            return []
+
         if isinstance(msg, list):
             _msg = "".join(msg)
         elif isinstance(msg, str):
@@ -337,7 +340,7 @@ class Rt:
                 raise UnexpectedMessageFormat(
                         "Missing line starting with `{}:`.".format(key),
                 )
-        return {key: '\n'.join(lines) if lines else [] for key, lines in fields.items()}
+        return {key: '\n'.join(lines) if lines else '' for key, lines in fields.items()}
 
     @classmethod
     def __parse_response_numlist(cls, msg: typing.Iterable[str],
@@ -360,7 +363,7 @@ class Rt:
         )
 
     @classmethod
-    def __parse_response_ticket(cls, msg: typing.Iterable[str]) -> typing.Dict[str, typing.Sequence[str]]:
+    def __parse_response_ticket(cls, msg: typing.Iterable[str]) -> typing.Dict[str, typing.Union[str, typing.Sequence[str]]]:
         """Parse an RT API ticket response into a Python dictionary
 
         :keyword msg: A multiline string, or an iterable of string lines, with
@@ -379,6 +382,9 @@ class Rt:
         ticket['numerical_id'] = numerical_id
         for key in ['Requestors', 'Cc', 'AdminCc']:
             try:
+                if key in ticket and ticket[key] == '':
+                    ticket[key] = []
+
                 ticket[key] = cls.__normalize_list(ticket[key])
             except KeyError:
                 pass
