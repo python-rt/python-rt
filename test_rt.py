@@ -186,6 +186,59 @@ class RtTestCase(unittest.TestCase):
             # get user
             self.assertIn('@', tracker.get_user(default_login)['EmailAddress'])
 
+    @unittest.skipUnless(_have_creds(RT_VALID_CREDENTIALS),
+                         "missing credentials required to run test")
+    def test_ticket_operations_admincc_cc(self):
+        ticket_subject = 'Testing issue ' + "".join([random.choice(string.ascii_letters) for i in range(15)])
+        ticket_text = 'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'
+        for name in ('RT4.4 stable',):
+            url = self.RT_VALID_CREDENTIALS[name]['url']
+            default_login = self.RT_VALID_CREDENTIALS[name]['support']['default_login']
+            default_password = self.RT_VALID_CREDENTIALS[name]['support']['default_password']
+            tracker = rt.Rt(url, default_login=default_login, default_password=default_password)
+            self.assertTrue(tracker.login(), 'Invalid login to RT demo site ' + name)
+
+            ticket_id = tracker.create_ticket(Subject=ticket_subject, Text=ticket_text)
+            self.assertTrue(ticket_id > -1, 'Creating ticket failed.')
+
+            # make sure Requestors, AdminCc and Cc are present and an empty list, as would be expected
+            ticket = tracker.get_ticket(ticket_id)
+            self.assertTrue(len(ticket['Requestors']) >= 0)
+            self.assertTrue(len(ticket['AdminCc']) >= 0)
+            self.assertTrue(len(ticket['Cc']) >= 0)
+
+            # set requestors
+            requestors = ['tester1@example.com', 'tester2@example.com']
+            tracker.edit_ticket(ticket_id, Status='open', Requestors=requestors)
+            # verify
+            ticket = tracker.get_ticket(ticket_id)
+            self.assertListEqual(requestors, ticket['Requestors'])
+
+            # set admincc
+            admincc = ['tester2@example.com', 'tester3@example.com']
+            tracker.edit_ticket(ticket_id, Status='open', AdminCc=admincc)
+            # verify
+            ticket = tracker.get_ticket(ticket_id)
+            self.assertListEqual(requestors, ticket['Requestors'])
+            self.assertListEqual(admincc, ticket['AdminCc'])
+
+            # update admincc
+            admincc = ['tester2@example.com', 'tester3@example.com', 'tester4@example.com']
+            tracker.edit_ticket(ticket_id, Status='open', AdminCc=admincc)
+            # verify
+            ticket = tracker.get_ticket(ticket_id)
+            self.assertListEqual(requestors, ticket['Requestors'])
+            self.assertListEqual(admincc, ticket['AdminCc'])
+
+            # unset requestors and admincc
+            requestors = []
+            admincc = []
+            tracker.edit_ticket(ticket_id, Status='open', Requestors=requestors, AdminCc=admincc)
+            # verify
+            ticket = tracker.get_ticket(ticket_id)
+            self.assertListEqual(requestors, ticket['Requestors'])
+            self.assertListEqual(admincc, ticket['AdminCc'])
+
 
 if __name__ == '__main__':
     unittest.main()
