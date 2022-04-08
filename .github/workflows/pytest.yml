@@ -42,7 +42,7 @@ jobs:
 
       - name: Test with nosetests (REST1)
         run: |
-          nosetests
+          nosetests test_rt.py
 
       - name: "Upload coverage to Codecov"
         uses: codecov/codecov-action@v2
