@@ -1,3 +1,7 @@
+v2.2.2, 2022-04-08
+- Fix bug in the get_ticket would omit certain fields in case they were empty instead of returning an empty list as was the previous behavior (#70).
+- Add tests for verifying correct return result for AdminCc, Cc and Requestor fields.
+
 v2.2.1, 2021-11-26
 - Fix bug in get_attachment_content which was a workaround for a bug in RT <=4.2 (trailing new-lines) but which was fixed in RT >=4.2. This made tests fail and return falsely stripped attachment content.
 
