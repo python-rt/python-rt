@@ -25,6 +25,7 @@ __authors__ = [
 import base64
 import random
 import string
+import typing
 
 import pytest
 import requests.auth
@@ -178,6 +179,65 @@ def test_ticket_operations(rt_connection: rt.rest2.Rt):
 
     # delete ticket
     assert rt_connection.edit_ticket(ticket_id, Status='deleted')
+
+
+def test_ticket_operations_admincc_cc(rt_connection: rt.rest2.Rt):
+    ticket_subject = f'Testing issue {random_string()}'
+    ticket_text = 'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'
+
+    def compare_list(from_list: typing.List[str], ticket_list: typing.List[dict]) -> bool:
+        """Lists (Requestor, AdminCc, Cc) returned from REST2 contain a list of dicts with additional user information.
+
+        Thus a simple compare of both lists is not enough.
+        """
+        if len(from_list) != len(ticket_list):
+            return False
+
+        to_list = [entry['id'] for entry in ticket_list]
+        diff = set(from_list) ^ set(to_list)
+
+        return not diff
+
+    ticket_id = rt_connection.create_ticket(subject=ticket_subject, content=ticket_text, queue=RT_QUEUE)
+    assert ticket_id > -1
+
+    # make sure Requestor, AdminCc and Cc are present and an empty list, as would be expected
+    ticket = rt_connection.get_ticket(ticket_id)
+    assert len(ticket['Requestor']) >= 0
+    assert len(ticket['AdminCc']) >= 0
+    assert len(ticket['Cc']) >= 0
+
+    # set requestors
+    requestors = ['tester1@example.com', 'tester2@example.com']
+    rt_connection.edit_ticket(ticket_id, Status='open', Requestor=requestors)
+    # verify
+    ticket = rt_connection.get_ticket(ticket_id)
+    assert compare_list(requestors, ticket['Requestor'])
+
+    # set admincc
+    admincc = ['tester2@example.com', 'tester3@example.com']
+    rt_connection.edit_ticket(ticket_id, Status='open', AdminCc=admincc)
+    # verify
+    ticket = rt_connection.get_ticket(ticket_id)
+    assert compare_list(requestors, ticket['Requestor'])
+    assert compare_list(admincc, ticket['AdminCc'])
+
+    # update admincc
+    admincc = ['tester2@example.com', 'tester3@example.com', 'tester4@example.com']
+    rt_connection.edit_ticket(ticket_id, Status='open', AdminCc=admincc)
+    # verify
+    ticket = rt_connection.get_ticket(ticket_id)
+    assert compare_list(requestors, ticket['Requestor'])
+    assert compare_list(admincc, ticket['AdminCc'])
+
+    # unset requestors and admincc
+    requestors = []
+    admincc = []
+    rt_connection.edit_ticket(ticket_id, Status='open', Requestor=requestors, AdminCc=admincc)
+    # verify
+    ticket = rt_connection.get_ticket(ticket_id)
+    assert compare_list(requestors, ticket['Requestor'])
+    assert compare_list(admincc, ticket['AdminCc'])
 
 
 def test_users(rt_connection: rt.rest2.Rt):
