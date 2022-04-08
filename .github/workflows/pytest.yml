@@ -36,9 +36,13 @@ jobs:
           python -m pip install --upgrade pip
           pip install -e .[test]
 
-      - name: Test with pytest
+      - name: Test with pytest (REST2)
         run: |
           pytest --cov=./rt --cov-report=xml -v tests
+
+      - name: Test with nosetests (REST1)
+        run: |
+          nosetests --with-coverage
 
       - name: "Upload coverage to Codecov"
         uses: codecov/codecov-action@v2
