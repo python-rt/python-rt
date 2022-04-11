@@ -44,7 +44,7 @@ LICENCE
 
 This module is distributed under the terms of GNU General Public Licence v3
 and was developed by CZ.NIC Labs - research and development department of
-CZ.NIC association - top level domain registy for .CZ.  Copy of the GNU
+CZ.NIC association - top level domain registry for .CZ.  Copy of the GNU
 General Public License is distributed along with this module.
 
 USAGE
