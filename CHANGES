@@ -31,7 +31,7 @@ v2.0.0, 2020-02-11
 - Add "logging" support (basically replacing "debug_mode" and the various "print"s)
 - Fix "no-else-after-return" and "no-else-after-raise"
 - Fix "startswitch" typos / bugs
-- Removed deprecated "basic_auth" and "digest_auth" paramters. The same functionality is given by specifying the
+- Removed deprecated "basic_auth" and "digest_auth" parameters. The same functionality is given by specifying the
   "http_auth" with an instance of either object. This allows for more flexibility with various other alternative
   authentication methods.
 

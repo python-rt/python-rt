@@ -179,7 +179,7 @@ class Rt:
                                 (usually needed just for login itself)
         :keyword text_response: If set to false the received message will be
                                 returned without decoding (useful for attachments)
-        :returns: Requested messsage including state line in form
+        :returns: Requested message including state line in form
                   ``RT/3.8.7 200 Ok\\n``
         :rtype: string or bytes if text_response is False
         :raises AuthorizationError: In case that request is called without previous
@@ -387,7 +387,7 @@ class Rt:
         return ticket
 
     def login(self, login: typing.Optional[str] = None, password: typing.Optional[str] = None) -> bool:
-        """ Login with default or supplied credetials.
+        """ Login with default or supplied credentials.
 
         .. note::
 
