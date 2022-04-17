@@ -1,4 +1,6 @@
 *.pyc
+.coverage
+coverage.xml
 
 build
 dist
@@ -7,3 +9,4 @@ rt.egg-info
 .vscode
 .mypy_cache
 doc/_build/
+venv
