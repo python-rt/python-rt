@@ -21,3 +21,9 @@ check_untyped_defs = false
 files = [
     "rt/**/*.py"
 ]
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+testpaths = [
+    "tests"
+]
