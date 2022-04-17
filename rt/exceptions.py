@@ -50,11 +50,7 @@ class ConnectionError(RtError):
     """ Encapsulation of various exceptions indicating network problems. """
 
     def __init__(self, message: str, cause: Exception) -> None:
-<<<<<<< HEAD
         """ Initialization of exception extended by cause parameter.
-=======
-        """ Initialization of exception extented by cause parameter.
->>>>>>> cbcee45 (fix indentation)
 
         :keyword message: Exception details
         :keyword cause: Cause exception
