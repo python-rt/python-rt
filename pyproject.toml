@@ -3,3 +3,21 @@ requires = ["wheel", "setuptools>=42", "setuptools_scm[toml]>=3.4"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools_scm]
+
+[tool.mypy]
+show_error_codes = true
+show_error_context = true
+show_column_numbers = true
+ignore_missing_imports = true
+disallow_incomplete_defs = true
+disallow_untyped_defs = true
+disallow_untyped_calls = false
+warn_no_return = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+strict_optional = true
+check_untyped_defs = false
+
+files = [
+    "rt/**/*.py"
+]
