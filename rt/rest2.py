@@ -182,7 +182,7 @@ class Rt:
     def __request_put(self,
                       selector: str,
                       json_data: typing.Optional[typing.Dict[str, typing.Any]] = None
-                      ) -> typing.Dict[str, str]:
+                      ) -> typing.List[str]:
         """ General request for :term:`API`.
 
         :keyword selector: End part of URL which completes self.url parameter
@@ -275,7 +275,7 @@ class Rt:
                         page: int = 1,
                         per_page: int = 10,
                         recurse: bool = True
-                        ) -> typing.Iterator[typing.Dict[str, str]]:
+                        ) -> typing.Iterator[typing.Dict[str, typing.Any]]:
         """ General request for :term:`API`.
 
         :keyword selector: End part of URL which completes self.url parameter
@@ -494,7 +494,7 @@ class Rt:
 
         return msgs['items']
 
-    def get_ticket(self, ticket_id: typing.Union[str, int]) -> typing.Optional[dict]:
+    def get_ticket(self, ticket_id: typing.Union[str, int]) -> dict:
         """ Fetch ticket by its ID.
 
         :param ticket_id: ID of demanded ticket
@@ -525,6 +525,7 @@ class Rt:
                       * TimeWorked
                       * TimeLeft
         :raises UnexpectedMessageFormat: Unexpected format of returned message.
+        :raises NotFoundError: If there is no ticket with the specified ticket_id.
         """
         return self.__request(f'ticket/{ticket_id}', get_params={'fields[Queue]': 'Name'})
 
@@ -616,7 +617,7 @@ class Rt:
 
         return bool(msg[0])
 
-    def get_ticket_history(self, ticket_id: typing.Union[str, int]) -> typing.Optional[typing.List[typing.Dict[str, typing.Union[int, str]]]]:
+    def get_ticket_history(self, ticket_id: typing.Union[str, int]) -> typing.Optional[typing.List[typing.Dict[str, typing.Any]]]:
         """ Get set of short history items
 
         :param ticket_id: ID of ticket
@@ -771,7 +772,7 @@ class Rt:
         for item in self.__paged_request(f'ticket/{ticket_id}/attachments',
                                          json_data=[{"field": "Filename", "operator": "IS NOT", "value": ""}]
                                          ):
-            attachments.append(item)
+            attachments.append(int(item['id']))
 
         return attachments
 
@@ -832,7 +833,7 @@ class Rt:
         """
         return self.__request(f'attachment/{attachment_id}')
 
-    def get_user(self, user_id: typing.Union[int, str]) -> typing.Optional[typing.Dict[str, str]]:
+    def get_user(self, user_id: typing.Union[int, str]) -> typing.Dict[str, typing.Any]:
         """ Get user details.
 
         :param user_id: Identification of user by username (str) or user ID
@@ -860,8 +861,8 @@ class Rt:
                       * id
                       * Name
 
-                  None is returned if user does not exist.
         :raises UnexpectedMessageFormat: In case that returned status code is not 200
+        :raises NotFoundError: If the user does not exist.
         """
         return self.__request(f'user/{user_id}')
 
@@ -1046,7 +1047,7 @@ class Rt:
 
         return [q for q in self.__paged_request('queues/all', params=params)]
 
-    def edit_queue(self, queue_id: typing.Union[str, int], **kwargs: typing.Any) -> typing.Union[str, bool]:
+    def edit_queue(self, queue_id: typing.Union[str, int], **kwargs: typing.Any) -> typing.List[str]:
         """ Edit queue (undocumented API feature).
 
         :param queue_id: Identification of queue by name (str) or ID (int)
@@ -1061,7 +1062,7 @@ class Rt:
                           * Lifecycle
                           * SortOrder
 
-        :returns: ID or name of edited queue or False when edit fails
+        :returns: List of status messages
         :raises BadRequest: When queue does not exist
         :raises InvalidUse: When invalid fields are set
         """
