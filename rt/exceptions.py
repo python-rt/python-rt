@@ -1,4 +1,5 @@
 """Exceptions collection for the rt library."""
+import typing
 
 
 class RtError(Exception):
@@ -18,7 +19,7 @@ class NotAllowed(RtError):
 class UnexpectedResponse(RtError):
     """ Exception raised when unexpected HTTP code is received. """
 
-    def __init__(self, message, status_code=None, response_message=None) -> None:
+    def __init__(self, message: str, status_code: typing.Optional[int] = None, response_message: typing.Optional[str] = None) -> None:
         super().__init__(message)
         self.status_code = status_code
         self.response_message = response_message
