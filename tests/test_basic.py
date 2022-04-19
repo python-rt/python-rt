@@ -247,6 +247,16 @@ def test_users(rt_connection: rt.rest2.Rt):
     assert rt_connection.user_exists('tester1@example.com', privileged=True) is False
     assert rt_connection.user_exists('does-not-exist@example.com') is False
 
+    random_user_name = f'username_{random_string()}'
+    random_user_email = f'user-{random_string()}@example.com'
+    random_user_password = f'user_password-{random_string()}'
+
+    assert rt_connection.create_user(random_user_name, random_user_email, Password=random_user_password) == random_user_name
+    rt_connection.delete_user(random_user_name)
+
+    with pytest.raises(rt.exceptions.NotFoundError):
+        rt_connection.delete_user(f'username_{random_string()}')
+
 
 def test_queues(rt_connection: rt.rest2.Rt):
     queue = rt_connection.get_queue(RT_QUEUE)
@@ -280,3 +290,8 @@ def test_queues(rt_connection: rt.rest2.Rt):
 
     with pytest.raises(rt.exceptions.NotFoundError):
         rt_connection.get_queue('InvalidName')
+
+    rt_connection.delete_queue(random_queue_name)
+
+    with pytest.raises(rt.exceptions.NotFoundError):
+        rt_connection.delete_queue(f'Queue {random_string()}')

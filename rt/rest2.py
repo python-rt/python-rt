@@ -102,14 +102,14 @@ class Rt:
         self.session = requests.session()
         self.session.verify = verify_cert
 
-        if proxy is not None:
+        if proxy is not None:  # pragma: no cover
             if url.lower().startswith("https://"):
                 self.session.proxies = {"https": proxy}
             else:
                 self.session.proxies = {"http": proxy}
         if http_auth is not None:
             self.session.auth = http_auth
-        if token is not None:
+        if token is not None:  # pragma: no cover  # no way to add tests for this with the current docker image
             self.session.headers['Authorization'] = f'token {token}'
 
         self.http_timeout = http_timeout
@@ -170,13 +170,13 @@ class Rt:
 
             try:
                 result = response.json()
-            except LookupError:
+            except LookupError:  # pragma: no cover
                 raise UnexpectedResponse('Unknown response encoding: {}.'.format(response.encoding))
-            except UnicodeError:
+            except UnicodeError:  # pragma: no cover
                 raise UnexpectedResponse('Unknown response encoding (UTF-8 does not work) - "{}".'.format(response.content.decode('utf-8', 'replace')))
 
             return result
-        except requests.exceptions.ConnectionError as e:
+        except requests.exceptions.ConnectionError as e:  # pragma: no cover
             raise ConnectionError("Connection error", e)
 
     def __request_put(self,
@@ -215,13 +215,13 @@ class Rt:
 
             try:
                 result = response.json()
-            except LookupError:
+            except LookupError:  # pragma: no cover
                 raise UnexpectedResponse('Unknown response encoding: {}.'.format(response.encoding))
-            except UnicodeError:
+            except UnicodeError:  # pragma: no cover
                 raise UnexpectedResponse('Unknown response encoding (UTF-8 does not work) - "{}".'.format(response.content.decode('utf-8', 'replace')))
 
             return result
-        except requests.exceptions.ConnectionError as e:
+        except requests.exceptions.ConnectionError as e:  # pragma: no cover
             raise ConnectionError("Connection error", e)
 
     def __request_delete(self,
@@ -259,13 +259,13 @@ class Rt:
 
             try:
                 result = response.json()
-            except LookupError:
+            except LookupError:  # pragma: no cover
                 raise UnexpectedResponse('Unknown response encoding: {}.'.format(response.encoding))
-            except UnicodeError:
+            except UnicodeError:  # pragma: no cover
                 raise UnexpectedResponse('Unknown response encoding (UTF-8 does not work) - "{}".'.format(response.content.decode('utf-8', 'replace')))
 
             return result
-        except requests.exceptions.ConnectionError as e:
+        except requests.exceptions.ConnectionError as e:  # pragma: no cover
             raise ConnectionError("Connection error", e)
 
     def __paged_request(self,
@@ -311,9 +311,9 @@ class Rt:
 
             try:
                 result = response.json()
-            except LookupError:
+            except LookupError:  # pragma: no cover
                 raise UnexpectedResponse('Unknown response encoding: {}.'.format(response.encoding))
-            except UnicodeError:
+            except UnicodeError:  # pragma: no cover
                 # replace errors - we need decoded content just to check for error codes in __check_response
                 result = response.content.decode('utf-8', 'replace')
 
@@ -327,7 +327,7 @@ class Rt:
                     yield from self.__paged_request(selector, json_data=json_data, page=page,
                                                     per_page=result['per_page'], params=params, recurse=False)
 
-        except requests.exceptions.ConnectionError as e:
+        except requests.exceptions.ConnectionError as e:  # pragma: no cover
             raise ConnectionError("Connection error", e)
 
     def __check_response(self, response: requests.Response) -> None:
@@ -338,7 +338,7 @@ class Rt:
         :raises NotFoundError: Resource was not found.
         :raises UnexpectedResponse: Server returned an unexpected status code.
         """
-        if response.status_code == 401:
+        if response.status_code == 401:  # pragma: no cover
             raise AuthorizationError(
                 'Server could not verify that you are authorized to access the requested document.')
         if response.status_code == 404:
@@ -566,7 +566,7 @@ class Rt:
 
         :returns: ID of new ticket
         """
-        if content_type not in ('text/plain', 'text/html'):
+        if content_type not in ('text/plain', 'text/html'):  # pragma: no cover
             raise ValueError('Invalid content-type specified.')
 
         ticket_data: typing.Dict[str, typing.Any] = {'Queue': queue}
@@ -612,7 +612,7 @@ class Rt:
 
         self.logger.debug(msg)
 
-        if not (isinstance(msg, list) and len(msg) >= 1):
+        if not (isinstance(msg, list) and len(msg) >= 1):  # pragma: no cover
             raise UnexpectedResponse(str(msg))
 
         return bool(msg[0])
@@ -659,13 +659,10 @@ class Rt:
         :keyword content_type: Content type of email message, default to text/plain
         :keyword attachments: Files to attach as multipart/form-data
                         List of 2/3 tuples: (filename, file-like object, [content type])
-        :returns: ``True``
-                      Operation was successful
-                  ``False``
-                      Sending failed (status code != 200)
+        :returns: List of messages returned by the backend related to the executed action.
         :raises BadRequest: When ticket does not exist
         """
-        if action not in ('correspond', 'comment'):
+        if action not in ('correspond', 'comment'):  # pragma: no cover
             raise InvalidUse('action must be either "correspond" or "comment"')
 
         post_data: typing.Dict[str, typing.Any] = {'Content': content,
@@ -684,7 +681,7 @@ class Rt:
 
         msg = self.__request(f'ticket/{ticket_id}/{action}', json_data=post_data)
 
-        if not isinstance(msg, list):
+        if not isinstance(msg, list):  # pragma: no cover
             raise UnexpectedResponse(str(msg))
 
         self.logger.debug(msg)
@@ -712,7 +709,7 @@ class Rt:
         """
         msg = self.__correspond(ticket_id, content, 'correspond', content_type, attachments)
 
-        if not (isinstance(msg, list) and len(msg) >= 1):
+        if not (isinstance(msg, list) and len(msg) >= 1):  # pragma: no cover
             raise UnexpectedResponse(str(msg))
 
         return bool(msg[0])
@@ -738,7 +735,7 @@ class Rt:
         """
         msg = self.__correspond(ticket_id, content, 'comment', content_type, attachments)
 
-        if not (isinstance(msg, list) and len(msg) >= 1):
+        if not (isinstance(msg, list) and len(msg) >= 1):  # pragma: no cover
             raise UnexpectedResponse(str(msg))
 
         return bool(msg[0])
@@ -919,7 +916,7 @@ class Rt:
 
         try:
             ret = self.__request('user', json_data=post_data)
-        except UnexpectedResponse as exc:
+        except UnexpectedResponse as exc:  # pragma: no cover
             if exc.status_code == 400:
                 raise rt.exceptions.BadRequest(exc.response_message) from exc
 
@@ -994,13 +991,33 @@ class Rt:
 
         try:
             ret = self.__request_put(f'user/{user_id}', json_data=post_data)
-        except UnexpectedResponse as exc:
+        except UnexpectedResponse as exc:  # pragma: no cover
             if exc.status_code == 400:
                 raise rt.exceptions.BadRequest(exc.response_message) from exc
 
             raise
 
         return ret
+
+    def delete_user(self, user_id: typing.Union[str, int]) -> None:
+        """ Disable a user.
+
+        :param user_id: Identification of a user by name (str) or ID (int)
+
+        :raises BadRequest: When user does not exist
+        :raises NotFoundError: If the user does not exist
+        """
+        try:
+            _ = self.__request_delete(f'user/{user_id}')
+        except UnexpectedResponse as exc:
+            if exc.status_code == 400:  # pragma: no cover
+                raise rt.exceptions.BadRequest(exc.response_message) from exc
+
+            elif exc.status_code == 204:
+                pass
+
+            else:  # pragma: no cover
+                raise
 
     def get_queue(self, queue_id: typing.Union[str, int]) -> typing.Optional[typing.Dict[str, typing.Any]]:
         """ Get queue details.
@@ -1088,7 +1105,7 @@ class Rt:
 
         try:
             ret = self.__request_put(f'queue/{queue_id}', json_data=post_data)
-        except UnexpectedResponse as exc:
+        except UnexpectedResponse as exc:  # pragma: no cover
             if exc.status_code == 400:
                 raise rt.exceptions.BadRequest(exc.response_message) from exc
 
@@ -1127,7 +1144,7 @@ class Rt:
 
         try:
             ret = self.__request('queue', json_data=post_data)
-        except UnexpectedResponse as exc:
+        except UnexpectedResponse as exc:  # pragma: no cover
             if exc.status_code == 400:
                 raise rt.exceptions.BadRequest(exc.response_message) from exc
 
@@ -1142,18 +1159,18 @@ class Rt:
 
         :returns: ID or name of edited queue or False when edit fails
         :raises BadRequest: When queue does not exist
-        :raises InvalidUse: When invalid fields are set
+        :raises NotFoundError: If the queue does not exist
         """
         try:
-            ret = self.__request_delete(f'queue/{queue_id}')
-        except UnexpectedResponse as exc:
+            _ = self.__request_delete(f'queue/{queue_id}')
+        except UnexpectedResponse as exc:  # pragma: no cover
             if exc.status_code == 400:
                 raise rt.exceptions.BadRequest(exc.response_message) from exc
 
             elif exc.status_code == 204:
                 pass
 
-            else:
+            else:  # pragma: no cover
                 raise
 
     def get_links(self, ticket_id: typing.Union[str, int]) -> typing.Optional[typing.List[typing.Dict[str, str]]]:
@@ -1234,7 +1251,7 @@ class Rt:
         """
         msg = self.__request_put(f'ticket/{ticket_id}', json_data={'MergeInto': into_id})
 
-        if not isinstance(msg, list) or len(msg) != 1:
+        if not isinstance(msg, list) or len(msg) != 1:  # pragma: no cover
             raise UnexpectedResponse(str(msg))
 
         self.logger.debug(str(msg))
@@ -1253,7 +1270,7 @@ class Rt:
         """
         msg = self.__request_put(f'ticket/{ticket_id}/take')
 
-        if not isinstance(msg, list) or len(msg) != 1:
+        if not isinstance(msg, list) or len(msg) != 1:  # pragma: no cover
             raise UnexpectedResponse(str(msg))
 
         self.logger.debug(str(msg))
@@ -1272,7 +1289,7 @@ class Rt:
         """
         msg = self.__request_put(f'ticket/{ticket_id}/untake')
 
-        if not isinstance(msg, list) or len(msg) != 1:
+        if not isinstance(msg, list) or len(msg) != 1:  # pragma: no cover
             raise UnexpectedResponse(str(msg))
 
         self.logger.debug(str(msg))
@@ -1291,7 +1308,7 @@ class Rt:
         """
         msg = self.__request_put(f'ticket/{ticket_id}/steal')
 
-        if not isinstance(msg, list) or len(msg) != 1:
+        if not isinstance(msg, list) or len(msg) != 1:  # pragma: no cover
             raise UnexpectedResponse(str(msg))
 
         self.logger.debug(str(msg))
