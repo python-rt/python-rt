@@ -257,6 +257,8 @@ def test_users(rt_connection: rt.rest2.Rt):
     with pytest.raises(rt.exceptions.NotFoundError):
         rt_connection.delete_user(f'username_{random_string()}')
 
+    assert rt_connection.edit_user(user_id=random_user_name, RealName=random_user_name)
+
 
 def test_queues(rt_connection: rt.rest2.Rt):
     queue = rt_connection.get_queue(RT_QUEUE)

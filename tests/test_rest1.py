@@ -24,7 +24,7 @@ import random
 import string
 import unittest
 
-import rt
+import rt.rest1
 
 
 class RtTestCase(unittest.TestCase):
@@ -83,19 +83,19 @@ class RtTestCase(unittest.TestCase):
                          "missing credentials required to run test")
     def test_login_and_logout(self):
         for name in self.RT_VALID_CREDENTIALS:
-            tracker = rt.Rt(self.RT_VALID_CREDENTIALS[name]['url'], **self.RT_VALID_CREDENTIALS[name]['support'])
+            tracker = rt.rest1.Rt(self.RT_VALID_CREDENTIALS[name]['url'], **self.RT_VALID_CREDENTIALS[name]['support'])
             self.assertTrue(tracker.login(), 'Invalid login to RT demo site ' + name)
             self.assertTrue(tracker.logout(), 'Invalid logout from RT demo site ' + name)
         for name, params in self.RT_INVALID_CREDENTIALS.items():
-            tracker = rt.Rt(**params)
+            tracker = rt.rest1.Rt(**params)
             self.assertFalse(tracker.login(), 'Login to RT demo site ' + name + ' should fail but did not')
-            self.assertRaises(rt.AuthorizationError, lambda: tracker.search())
+            self.assertRaises(rt.exceptions.AuthorizationError, lambda: tracker.search())
         for name, params in self.RT_MISSING_CREDENTIALS.items():
-            tracker = rt.Rt(**params)
-            self.assertRaises(rt.AuthorizationError, lambda: tracker.login())
+            tracker = rt.rest1.Rt(**params)
+            self.assertRaises(rt.exceptions.AuthorizationError, lambda: tracker.login())
         for name, params in self.RT_BAD_URL.items():
-            tracker = rt.Rt(**params)
-            self.assertRaises(rt.UnexpectedResponse, lambda: tracker.login())
+            tracker = rt.rest1.Rt(**params)
+            self.assertRaises(rt.exceptions.UnexpectedResponse, lambda: tracker.login())
 
     @unittest.skipUnless(_have_creds(RT_VALID_CREDENTIALS),
                          "missing credentials required to run test")
@@ -106,7 +106,7 @@ class RtTestCase(unittest.TestCase):
             url = self.RT_VALID_CREDENTIALS[name]['url']
             default_login = self.RT_VALID_CREDENTIALS[name]['support']['default_login']
             default_password = self.RT_VALID_CREDENTIALS[name]['support']['default_password']
-            tracker = rt.Rt(url, default_login=default_login, default_password=default_password)
+            tracker = rt.rest1.Rt(url, default_login=default_login, default_password=default_password)
             self.assertTrue(tracker.login(), 'Invalid login to RT demo site ' + name)
             # empty search result
             search_result = tracker.search(Subject=ticket_subject)
@@ -120,7 +120,7 @@ class RtTestCase(unittest.TestCase):
             self.assertEqual(search_result[0]['id'], 'ticket/' + str(ticket_id), 'Bad id in search result of just created ticket.')
             self.assertEqual(search_result[0]['Status'], 'new', 'Bad status in search result of just created ticket.')
             # search all queues
-            search_result = tracker.search(Queue=rt.ALL_QUEUES, Subject=ticket_subject)
+            search_result = tracker.search(Queue=rt.rest1.ALL_QUEUES, Subject=ticket_subject)
             self.assertEqual(search_result[0]['id'], 'ticket/' + str(ticket_id), 'Bad id in search result of just created ticket.')
             # raw search
             search_result = tracker.search(raw_query='Subject="{}"'.format(ticket_subject))
@@ -128,7 +128,7 @@ class RtTestCase(unittest.TestCase):
             self.assertEqual(search_result[0]['id'], 'ticket/' + str(ticket_id), 'Bad id in search result of just created ticket.')
             self.assertEqual(search_result[0]['Status'], 'new', 'Bad status in search result of just created ticket.')
             # raw search all queues
-            search_result = tracker.search(Queue=rt.ALL_QUEUES, raw_query='Subject="{}"'.format(ticket_subject))
+            search_result = tracker.search(Queue=rt.rest1.ALL_QUEUES, raw_query='Subject="{}"'.format(ticket_subject))
             self.assertEqual(search_result[0]['id'], 'ticket/' + str(ticket_id), 'Bad id in search result of just created ticket.')
             # get ticket
             ticket = tracker.get_ticket(ticket_id)
@@ -195,7 +195,7 @@ class RtTestCase(unittest.TestCase):
             url = self.RT_VALID_CREDENTIALS[name]['url']
             default_login = self.RT_VALID_CREDENTIALS[name]['support']['default_login']
             default_password = self.RT_VALID_CREDENTIALS[name]['support']['default_password']
-            tracker = rt.Rt(url, default_login=default_login, default_password=default_password)
+            tracker = rt.rest1.Rt(url, default_login=default_login, default_password=default_password)
             self.assertTrue(tracker.login(), 'Invalid login to RT demo site ' + name)
 
             ticket_id = tracker.create_ticket(Subject=ticket_subject, Text=ticket_text)

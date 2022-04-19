@@ -1,2 +1,3 @@
-from .rt import *
-from .exceptions import *
+from .exceptions import RtError
+
+__all__ = ['RtError']
