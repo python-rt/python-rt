@@ -117,7 +117,7 @@ class Rt:
     def __request(self,
                   selector: str,
                   get_params: typing.Optional[typing.Dict[str, typing.Any]] = None,
-                  json_data: typing.Optional[typing.Dict[str, typing.Any]] = None,
+                  json_data: typing.Optional[typing.Union[typing.Dict[str, typing.Any], typing.List[typing.Any]]] = None,
                   post_data: typing.Optional[typing.Dict[str, typing.Any]] = None,
                   files: typing.Optional[typing.Dict[str, str]] = None,
                   ) -> typing.Dict[str, typing.Any]:
@@ -162,7 +162,7 @@ class Rt:
             self.logger.debug("Request method: %s", response.request.method)
             self.logger.debug("Request headers: {}".format(response.request.headers))
             self.logger.debug("Request body: {}".format(str(response.request.body)))
-            self.logger.debug("Respone status code: %s", str(response.status_code))
+            self.logger.debug("Response status code: %s", str(response.status_code))
             self.logger.debug("Response content:")
             self.logger.debug(response.content.decode())
 
@@ -207,7 +207,7 @@ class Rt:
             self.logger.debug("Request method: %s", response.request.method)
             self.logger.debug("Request headers: {}".format(response.request.headers))
             self.logger.debug("Request body: {}".format(str(response.request.body)))
-            self.logger.debug("Respone status code: %s", str(response.status_code))
+            self.logger.debug("Response status code: %s", str(response.status_code))
             self.logger.debug("Response content:")
             self.logger.debug(response.content.decode())
 
@@ -251,7 +251,7 @@ class Rt:
             self.logger.debug("Request method: %s", response.request.method)
             self.logger.debug("Request headers: {}".format(response.request.headers))
             self.logger.debug("Request body: {}".format(str(response.request.body)))
-            self.logger.debug("Respone status code: %s", str(response.status_code))
+            self.logger.debug("Response status code: %s", str(response.status_code))
             self.logger.debug("Response content:")
             self.logger.debug(response.content.decode())
 
@@ -405,7 +405,6 @@ class Rt:
         Example::
 
             >>> tracker = Rt('http://tracker.example.com/REST/2.0/', 'rt-username', 'top-secret')
-            >>> tracker.login()
             >>> tickets = tracker.search(CF_Domain='example.com', Subject__like='warning')
             >>> tickets = tracker.search(Queue='General', order='Status', raw_query="id='1'+OR+id='2'+OR+id='3'")
 
