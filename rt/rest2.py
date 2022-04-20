@@ -48,11 +48,14 @@ VALID_TICKET_LINK_NAMES = ('Parent', 'Child', 'RefersTo',
 
 @dataclasses.dataclass
 class Attachment:
+    """Dataclass representing an attachment."""
+
     file_name: str
     file_type: str
     file_content: bytes
 
     def to_dict(self) -> typing.Dict[str, str]:
+        """Convert to a dictionary for submitting to the REST API."""
         return {'FileName': self.file_name,
                 'FileType': self.file_type,
                 'FileContent': base64.b64encode(self.file_content).decode('utf-8')
@@ -167,9 +170,9 @@ class Rt:
             try:
                 result = response.json()
             except LookupError:  # pragma: no cover
-                raise UnexpectedResponse('Unknown response encoding: {}.'.format(response.encoding))
+                raise UnexpectedResponse(f'Unknown response encoding: {response.encoding}.')
             except UnicodeError:  # pragma: no cover
-                raise UnexpectedResponse('Unknown response encoding (UTF-8 does not work) - "{}".'.format(response.content.decode('utf-8', 'replace')))
+                raise UnexpectedResponse(f'''Unknown response encoding (UTF-8 does not work) - "{response.content.decode('utf-8', 'replace')}".''')
 
             return result
         except requests.exceptions.ConnectionError as e:  # pragma: no cover
@@ -204,9 +207,9 @@ class Rt:
             try:
                 result = response.json()
             except LookupError:  # pragma: no cover
-                raise UnexpectedResponse('Unknown response encoding: {}.'.format(response.encoding))
+                raise UnexpectedResponse(f'Unknown response encoding: {response.encoding}.')
             except UnicodeError:  # pragma: no cover
-                raise UnexpectedResponse('Unknown response encoding (UTF-8 does not work) - "{}".'.format(response.content.decode('utf-8', 'replace')))
+                raise UnexpectedResponse(f'''Unknown response encoding (UTF-8 does not work) - "{response.content.decode('utf-8', 'replace')}".''')
 
             return result
         except requests.exceptions.ConnectionError as e:  # pragma: no cover
@@ -240,9 +243,9 @@ class Rt:
             try:
                 result = response.json()
             except LookupError:  # pragma: no cover
-                raise UnexpectedResponse('Unknown response encoding: {}.'.format(response.encoding))
+                raise UnexpectedResponse(f'Unknown response encoding: {response.encoding}.')
             except UnicodeError:  # pragma: no cover
-                raise UnexpectedResponse('Unknown response encoding (UTF-8 does not work) - "{}".'.format(response.content.decode('utf-8', 'replace')))
+                raise UnexpectedResponse(f'''Unknown response encoding (UTF-8 does not work) - "{response.content.decode('utf-8', 'replace')}".''')
 
             return result
         except requests.exceptions.ConnectionError as e:  # pragma: no cover
@@ -292,7 +295,7 @@ class Rt:
             try:
                 result = response.json()
             except LookupError:  # pragma: no cover
-                raise UnexpectedResponse('Unknown response encoding: {}.'.format(response.encoding))
+                raise UnexpectedResponse(f'Unknown response encoding: {response.encoding}.')
             except UnicodeError:  # pragma: no cover
                 # replace errors - we need decoded content just to check for error codes in __check_response
                 result = response.content.decode('utf-8', 'replace')
@@ -303,14 +306,15 @@ class Rt:
             yield from result['items']
 
             if recurse and result['pages'] > result['page']:
-                for page in range(2, result['pages'] + 1):
-                    yield from self.__paged_request(selector, json_data=json_data, page=page,
+                for _page in range(2, result['pages'] + 1):
+                    yield from self.__paged_request(selector, json_data=json_data, page=_page,
                                                     per_page=result['per_page'], params=params, recurse=False)
 
         except requests.exceptions.ConnectionError as e:  # pragma: no cover
             raise ConnectionError("Connection error", e)
 
-    def __check_response(self, response: requests.Response) -> None:
+    @staticmethod
+    def __check_response(response: requests.Response) -> None:
         """ Search general errors in server response and raise exceptions when found.
 
         :keyword response: Response from HTTP request.
@@ -323,7 +327,7 @@ class Rt:
                 'Server could not verify that you are authorized to access the requested document.')
         if response.status_code == 404:
             raise NotFoundError('No such resource found.')
-        if response.status_code != 200 and response.status_code != 201:
+        if response.status_code not in (200, 201):
             raise UnexpectedResponse('Received status code {:d} instead of 200.'.format(response.status_code),
                                      status_code=response.status_code,
                                      response_message=response.text)
@@ -454,7 +458,7 @@ class Rt:
                     key = '__'.join(key_parts[:-1])
                     op = operators_map.get(key_parts[-1], '=')
                 if key[:3] != 'CF_':
-                    query.append("{}{}\'{}\'".format(key, op, value))
+                    query.append(f'{key}{op}\'{value}\'')
                 else:
                     query.append("'CF.{{{}}}'{}\'{}\'".format(key[3:], op, value))
         else:
@@ -604,14 +608,12 @@ class Rt:
                   Each history item is a tuple containing (id, Description).
                   Returns None if ticket does not exist.
         """
-        msgs = self.__paged_request(f'ticket/{ticket_id}/history', params={'fields': 'Type,Creator,Created,Description',
-                                                                           'fields[Creator]': 'id,Name,RealName,EmailAddress'
-                                                                           }
-                                    )
+        transactions = self.__paged_request(f'ticket/{ticket_id}/history', params={'fields': 'Type,Creator,Created,Description',
+                                                                                   'fields[Creator]': 'id,Name,RealName,EmailAddress'
+                                                                                   }
+                                            )
 
-        transactions = [transaction for transaction in msgs]
-
-        return transactions
+        return list(transactions)
 
     def get_transaction(self, transaction_id: typing.Union[str, int]) -> typing.Dict[str, typing.Any]:
         """Get a transaction
@@ -883,15 +885,15 @@ class Rt:
                      'EmailAddress': EmailAddress
                      }
 
-        for k in kwargs.keys():
+        for k, v in kwargs.items():
             if k not in valid_fields:
                 invalid_fields.append(k)
 
             else:
-                post_data[k] = kwargs[k]
+                post_data[k] = v
 
         if invalid_fields:
-            raise InvalidUse("Unsupported names of fields: {}.".format(', '.join(invalid_fields)))
+            raise InvalidUse(f'''Unsupported names of fields: {', '.join(invalid_fields)}.''')
 
         try:
             ret = self.__request('user', json_data=post_data)
@@ -955,18 +957,15 @@ class Rt:
 
         post_data = {}
 
-        for k in kwargs.keys():
-            if k not in valid_fields:
-                invalid_fields.append(k)
+        for key, val in kwargs.items():
+            if key not in valid_fields:
+                invalid_fields.append(key)
 
             else:
-                post_data[k] = kwargs[k]
+                post_data[key] = val
 
         if invalid_fields:
-            raise InvalidUse("Unsupported names of fields: {}.".format(', '.join(invalid_fields)))
-
-        for key, val in kwargs.items():
-            post_data[key] = val
+            raise InvalidUse(f'''Unsupported names of fields: {', '.join(invalid_fields)}.''')
 
         try:
             ret = self.__request_put(f'user/{user_id}', json_data=post_data)
@@ -992,11 +991,10 @@ class Rt:
             if exc.status_code == 400:  # pragma: no cover
                 raise rt.exceptions.BadRequest(exc.response_message) from exc
 
-            elif exc.status_code == 204:
-                pass
+            if exc.status_code == 204:
+                return
 
-            else:  # pragma: no cover
-                raise
+            raise  # pragma: no cover
 
     def get_queue(self, queue_id: typing.Union[str, int]) -> typing.Optional[typing.Dict[str, typing.Any]]:
         """ Get queue details.
@@ -1040,8 +1038,9 @@ class Rt:
         :raises UnexpectedMessageFormat: In case that returned status code is not 200
         """
         params = {'fields': 'Name,Description', 'find_disabled_rows': int(include_disabled)}
+        queues = self.__paged_request('queues/all', params=params)
 
-        return [q for q in self.__paged_request('queues/all', params=params)]
+        return list(queues)
 
     def edit_queue(self, queue_id: typing.Union[str, int], **kwargs: typing.Any) -> typing.List[str]:
         """ Edit queue (undocumented API feature).
@@ -1069,18 +1068,15 @@ class Rt:
 
         post_data = {}
 
-        for k in kwargs.keys():
-            if k not in valid_fields:
-                invalid_fields.append(k)
+        for key, val in kwargs.items():
+            if key not in valid_fields:
+                invalid_fields.append(key)
 
             else:
-                post_data[k] = kwargs[k]
+                post_data[key] = val
 
         if invalid_fields:
-            raise InvalidUse("Unsupported names of fields: {}.".format(', '.join(invalid_fields)))
-
-        for key, val in kwargs.items():
-            post_data[key] = val
+            raise InvalidUse(f'''Unsupported names of fields: {', '.join(invalid_fields)}.''')
 
         try:
             ret = self.__request_put(f'queue/{queue_id}', json_data=post_data)
@@ -1108,18 +1104,15 @@ class Rt:
 
         post_data = {'Name': Name}
 
-        for k in kwargs.keys():
-            if k not in valid_fields:
-                invalid_fields.append(k)
+        for key, val in kwargs.items():
+            if key not in valid_fields:
+                invalid_fields.append(key)
 
             else:
-                post_data[k] = kwargs[k]
+                post_data[key] = val
 
         if invalid_fields:
-            raise InvalidUse("Unsupported names of fields: {}.".format(', '.join(invalid_fields)))
-
-        for key, val in kwargs.items():
-            post_data[key] = val
+            raise InvalidUse(f'''Unsupported names of fields: {', '.join(invalid_fields)}.''')
 
         try:
             ret = self.__request('queue', json_data=post_data)
@@ -1146,11 +1139,10 @@ class Rt:
             if exc.status_code == 400:
                 raise rt.exceptions.BadRequest(exc.response_message) from exc
 
-            elif exc.status_code == 204:
-                pass
+            if exc.status_code == 204:
+                return
 
-            else:  # pragma: no cover
-                raise
+            raise  # pragma: no cover
 
     def get_links(self, ticket_id: typing.Union[str, int]) -> typing.Optional[typing.List[typing.Dict[str, str]]]:
         """ Gets the ticket links for a single ticket.
@@ -1159,25 +1151,15 @@ class Rt:
         :returns: Links as lists of strings in dictionary with these keys
                   (just those which are defined):
 
-                      * id
-                      * Members
-                      * MemberOf
-                      * RefersTo
-                      * ReferredToBy
-                      * DependsOn
-                      * DependedOnBy
+                        * depends-on
+                        * depended-on-by
+                        * parent
+                        * child
+                        * refers-to
+                        * referred-to-by
 
                   None is returned if ticket does not exist.
         :raises UnexpectedMessageFormat: In case that returned status code is not 200
-        """
-        """REST2
-
-            DependsOn => 'depends-on',
-            DependedOnBy => 'depended-on-by',
-            Parent => 'parent',
-            Child => 'child',
-            RefersTo => 'refers-to',
-            ReferredToBy => 'referred-to-by',
         """
         ticket = self.get_ticket(ticket_id)
 
