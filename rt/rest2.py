@@ -114,6 +114,17 @@ class Rt:
 
         self.http_timeout = http_timeout
 
+    def __debug_response(self, response: requests.Response) -> None:
+        """Output debug info for an HTTP response."""
+        self.logger.debug("### %s", datetime.datetime.now().isoformat())
+        self.logger.debug("Request URL: %s", response.request.url)
+        self.logger.debug("Request method: %s", response.request.method)
+        self.logger.debug("Request headers: %s", response.request.headers)
+        self.logger.debug("Request body: %s", str(response.request.body))
+        self.logger.debug("Response status code: %s", str(response.status_code))
+        self.logger.debug("Response content:")
+        self.logger.debug(response.content.decode())
+
     def __request(self,
                   selector: str,
                   get_params: typing.Optional[typing.Dict[str, typing.Any]] = None,
@@ -143,13 +154,6 @@ class Rt:
             if not files:
                 if json_data:
                     response = self.session.post(url, json=json_data, timeout=self.http_timeout)
-                    self.logger.debug("### %s", datetime.datetime.now().isoformat())
-                    self.logger.debug("Request URL: %s", response.request.url)
-                    self.logger.debug("Request method: %s", response.request.method)
-                    self.logger.debug("Request headers: {}".format(response.request.headers))
-                    self.logger.debug("Request body: {}".format(str(response.request.body)))
-                    self.logger.debug("Response status code: %s", str(response.status_code))
-                    self.logger.debug("Response content:")
                 elif post_data:
                     response = self.session.post(url, data=post_data, timeout=self.http_timeout)
                 else:
@@ -157,15 +161,7 @@ class Rt:
             else:
                 response = self.session.post(url, data=post_data, files=files, timeout=self.http_timeout)
 
-            self.logger.debug("### %s", datetime.datetime.now().isoformat())
-            self.logger.debug("Request URL: %s", response.request.url)
-            self.logger.debug("Request method: %s", response.request.method)
-            self.logger.debug("Request headers: {}".format(response.request.headers))
-            self.logger.debug("Request body: {}".format(str(response.request.body)))
-            self.logger.debug("Response status code: %s", str(response.status_code))
-            self.logger.debug("Response content:")
-            self.logger.debug(response.content.decode())
-
+            self.__debug_response(response)
             self.__check_response(response)
 
             try:
@@ -202,15 +198,7 @@ class Rt:
             _headers['Content-Type'] = 'application/json'
             response = self.session.put(url, json=json_data, headers=_headers, timeout=self.http_timeout)
 
-            self.logger.debug("### %s", datetime.datetime.now().isoformat())
-            self.logger.debug("Request URL: %s", response.request.url)
-            self.logger.debug("Request method: %s", response.request.method)
-            self.logger.debug("Request headers: {}".format(response.request.headers))
-            self.logger.debug("Request body: {}".format(str(response.request.body)))
-            self.logger.debug("Response status code: %s", str(response.status_code))
-            self.logger.debug("Response content:")
-            self.logger.debug(response.content.decode())
-
+            self.__debug_response(response)
             self.__check_response(response)
 
             try:
@@ -246,15 +234,7 @@ class Rt:
             _headers['Content-Type'] = 'application/json'
             response = self.session.delete(url, headers=_headers, timeout=self.http_timeout)
 
-            self.logger.debug("### %s", datetime.datetime.now().isoformat())
-            self.logger.debug("Request URL: %s", response.request.url)
-            self.logger.debug("Request method: %s", response.request.method)
-            self.logger.debug("Request headers: {}".format(response.request.headers))
-            self.logger.debug("Request body: {}".format(str(response.request.body)))
-            self.logger.debug("Response status code: %s", str(response.status_code))
-            self.logger.debug("Response content:")
-            self.logger.debug(response.content.decode())
-
+            self.__debug_response(response)
             self.__check_response(response)
 
             try:
