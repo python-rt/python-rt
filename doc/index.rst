@@ -9,15 +9,12 @@ Welcome to rt's documentation!
 Contents:
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
+   rest1
+   rest2
+   exceptions
    glossary
-
-.. automodule:: rt.rt
-   :members:
-
-.. automodule:: rt.exceptions
-   :members:
 
 Get rt module
 =============
