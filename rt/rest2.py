@@ -384,7 +384,7 @@ class Rt:
         return False
 
     def search(self, queue: typing.Optional[typing.Union[str, object]] = None, order: typing.Optional[str] = None,
-               raw_query: typing.Optional[str] = None, format: str = 'l', **kwargs: typing.Any) -> typing.List[dict]:
+               raw_query: typing.Optional[str] = None, query_format: str = 'l', **kwargs: typing.Any) -> typing.List[dict]:
         """ Search arbitrary needles in given fields and queue.
 
         Example::
@@ -404,7 +404,7 @@ class Rt:
                              kwargs, so use these instead of including them in
                              the raw query. You can refer to the RT query builder.
                              If passing raw_query, all other **kwargs will be ignored.
-        :param format:     Format of the query:
+        :param query_format:     Format of the query:
                                - i: only `id' fields are populated
                                - s: only `id' and `subject' fields are populated
                                - l: multi-line format, all fields are populated
@@ -468,10 +468,10 @@ class Rt:
         if order:
             get_params['orderby'] = order
 
-        if format == 'l':
+        if query_format == 'l':
             get_params['fields'] = 'Owner,Status,Created,Subject,Queue,CustomFields,Requestor,Cc,AdminCc,Started,Created,TimeEstimated,Due,Type,InitialPriority,Priority,TimeLeft,LastUpdated'
             get_params['fields[Queue]'] = 'Name'
-        elif format == 's':
+        elif query_format == 's':
             get_params['fields'] = 'Subject'
 
         msgs = self.__request(url, get_params=get_params)
