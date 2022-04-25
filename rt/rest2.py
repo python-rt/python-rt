@@ -1,7 +1,7 @@
 """Python interface to Request Tracker :term:`API`
 
-Description of Request Tracker :term:`REST2` :term:`API`:
-https://docs.bestpractical.com/rt/5.0.0/RT/REST2.html
+Description of Request Tracker :term:`REST` :term:`API`:
+https://docs.bestpractical.com/rt/5.0.2/RT/REST2.html
 """
 
 import base64
@@ -64,7 +64,7 @@ class Attachment:
 
 class Rt:
     """ :term:`API` for Request Tracker according to
-    https://docs.bestpractical.com/rt/5.0.0/RT/REST2.html. Interface is based on
+    https://docs.bestpractical.com/rt/5.0.2/RT/REST2.html. Interface is based on
     :term:`REST` architecture, which is based on HTTP/1.1 protocol. This module
     is therefore mainly sending and parsing special HTTP messages.
 
@@ -82,13 +82,15 @@ class Rt:
                  ) -> None:
         """ API initialization.
 
-        :keyword url: Base URL for Request Tracker API.
+        :param url: Base URL for Request Tracker API.
                       E.g.: http://tracker.example.com/REST/2.0/
-        :keyword proxy: Proxy server (string with http://user:password@host/ syntax)
-        :keyword http_auth: Specify a http authentication instance, e.g. HTTPBasicAuth(), HTTPDigestAuth(),
+        :param proxy: Proxy server (string with http://user:password@host/ syntax)
+        :param http_auth: Specify a http authentication instance, e.g. HTTPBasicAuth(), HTTPDigestAuth(),
                             etc. to be used for authenticating to RT
-        :keyword token: Optional authentication token to be used instead of basic authentication.
-        :keyword http_timeout: HTTP timeout after which a request is aborted.
+        :param token: Optional authentication token to be used instead of basic authentication.
+        :param http_timeout: HTTP timeout after which a request is aborted.
+
+        :raises ValueError: If the specified `url` is invalid.
         """
         self.logger = logging.getLogger(__name__)
 
@@ -118,7 +120,7 @@ class Rt:
         self.http_timeout = http_timeout
 
     def __debug_response(self, response: requests.Response) -> None:
-        """Output debug info for an HTTP response."""
+        """Output debug information for a given HTTP response."""
         self.logger.debug("### %s", datetime.datetime.now().isoformat())
         self.logger.debug("Request URL: %s", response.request.url)
         self.logger.debug("Request method: %s", response.request.method)
@@ -137,17 +139,16 @@ class Rt:
                   ) -> typing.Dict[str, typing.Any]:
         """ General request for :term:`API`.
 
-        :keyword selector: End part of URL which completes self.url parameter
+        :param selector: End part of URL which completes self.url parameter
                            set during class initialization.
                            E.g.: ``ticket/123456/show``
-        :keyword get_params: Parameters to add for a GET request.
-        :keyword json_data: JSON request to send to the API.
-        :keyword post_data: Dictionary with POST method fields
-        :keyword files: List of pairs (filename, file-like object) describing
+        :param get_params: Parameters to add for a GET request.
+        :param json_data: JSON request to send to the API.
+        :param post_data: Dictionary with POST method fields
+        :param files: List of pairs (filename, file-like object) describing
                         files to attach as multipart/form-data
                         (list is necessary to keep files ordered)
         :returns: dict
-        :rtype: dict
         :raises AuthorizationError: In case that request is called without previous
                                     login or login attempt failed.
         :raises ConnectionError: In case of connection error.
@@ -184,12 +185,11 @@ class Rt:
                       ) -> typing.List[str]:
         """ General request for :term:`API`.
 
-        :keyword selector: End part of URL which completes self.url parameter
+        :param selector: End part of URL which completes self.url parameter
                            set during class initialization.
                            E.g.: ``ticket/123456/show``
-        :keyword json_data: JSON request to send to the API.
-        :returns: dict
-        :rtype: dict
+        :param json_data: JSON request to send to the API.
+        :returns: list
         :raises AuthorizationError: In case that request is called without previous
                                     login or login attempt failed.
         :raises ConnectionError: In case of connection error.
@@ -220,12 +220,11 @@ class Rt:
                          ) -> typing.Dict[str, str]:
         """ General request for :term:`API`.
 
-        :keyword selector: End part of URL which completes self.url parameter
+        :param selector: End part of URL which completes self.url parameter
                            set during class initialization.
                            E.g.: ``ticket/123456/show``
 
         :returns: dict
-        :rtype: dict
         :raises AuthorizationError: In case that request is called without previous
                                     login or login attempt failed.
         :raises ConnectionError: In case of connection error.
@@ -261,16 +260,15 @@ class Rt:
                         ) -> typing.Iterator[typing.Dict[str, typing.Any]]:
         """ General request for :term:`API`.
 
-        :keyword selector: End part of URL which completes self.url parameter
+        :param selector: End part of URL which completes self.url parameter
                            set during class initialization.
                            E.g.: ``ticket/123456/show``
-        :keyword json_data: JSON request to send to the API.
-        :keyword page: The page number to get.
-        :keyword per_page: Number of results per page to get.
-        :keyword recurse: Set on the initial call in order to retrieve all pages recursively.
+        :param json_data: JSON request to send to the API.
+        :param page: The page number to get.
+        :param per_page: Number of results per page to get.
+        :param recurse: Set on the initial call in order to retrieve all pages recursively.
 
         :returns: dict
-        :rtype: iterator
         :raises AuthorizationError: In case that request is called without previous
                                     login or login attempt failed.
         :raises ConnectionError: In case of connection error.
@@ -317,7 +315,7 @@ class Rt:
     def __check_response(response: requests.Response) -> None:
         """ Search general errors in server response and raise exceptions when found.
 
-        :keyword response: Response from HTTP request.
+        :param response: Response from HTTP request.
         :raises AuthorizationError: Credentials are invalid or missing
         :raises NotFoundError: Resource was not found.
         :raises UnexpectedResponse: Server returned an unexpected status code.
@@ -340,34 +338,37 @@ class Rt:
     def new_correspondence(self, queue: typing.Optional[typing.Union[str, object]] = None) -> typing.List[dict]:
         """ Obtains tickets changed by other users than the system one.
 
-        :keyword queue: Queue where to search
+        :param queue: Queue where to search
 
-        :returns: List of tickets which were last updated by other user than
-                  the system one ordered in decreasing order by LastUpdated.
+        :returns: List of tickets which were last updated by another user than
+                  the system one, ordered in decreasing order by LastUpdated.
                   Each ticket is dictionary, the same as in
                   :py:meth:`~Rt.get_ticket`.
         """
-        return self.search(Queue=queue, order='-LastUpdated')
+        return self.search(queue=queue, order='-LastUpdated')
 
     def last_updated(self, since: str, queue: typing.Optional[str] = None) -> typing.List[dict]:
         """ Obtains tickets changed after given date.
 
         :param since: Date as string in form '2011-02-24'
-        :keyword queue: Queue where to search
+        :param queue: Queue where to search
 
         :returns: List of tickets with LastUpdated parameter later than
                   *since* ordered in decreasing order by LastUpdated.
-                  Each tickets is dictionary, the same as in
+                  Each ticket is a dictionary, the same as in
                   :py:meth:`~Rt.get_ticket`.
+
+        :raises InvalidUse: If the specified date is of an unsupported format.
         """
         if not self.__validate_date(since):
             raise InvalidUse(f'Invalid date specified - "{since}"')
 
-        return self.search(Queue=queue, order='-LastUpdated',
+        return self.search(queue=queue, order='-LastUpdated',
                            LastUpdated__gt=since)
 
     @classmethod
     def __validate_date(cls, _date: str) -> bool:
+        """Check whether the specified date is in the supported format."""
         m = re.match(r'(\d{4})-(\d{2})-(\d{2})', _date)
         if m:
             try:
@@ -382,32 +383,32 @@ class Rt:
 
         return False
 
-    def search(self, Queue: typing.Optional[typing.Union[str, object]] = None, order: typing.Optional[str] = None,
-               raw_query: typing.Optional[str] = None, Format: str = 'l', **kwargs: typing.Any) -> typing.List[dict]:
+    def search(self, queue: typing.Optional[typing.Union[str, object]] = None, order: typing.Optional[str] = None,
+               raw_query: typing.Optional[str] = None, format: str = 'l', **kwargs: typing.Any) -> typing.List[dict]:
         """ Search arbitrary needles in given fields and queue.
 
         Example::
 
             >>> tracker = Rt('http://tracker.example.com/REST/2.0/', 'rt-username', 'top-secret')
             >>> tickets = tracker.search(CF_Domain='example.com', Subject__like='warning')
-            >>> tickets = tracker.search(Queue='General', order='Status', raw_query="id='1'+OR+id='2'+OR+id='3'")
+            >>> tickets = tracker.search(queue='General', order='Status', raw_query="id='1'+OR+id='2'+OR+id='3'")
 
-        :keyword Queue:      Queue where to search. If you wish to search across
+        :param queue:      Queue where to search. If you wish to search across
                              all of your queues, pass the ALL_QUEUES object as the
                              argument.
-        :keyword order:      Name of field sorting result list, for descending
+        :param order:      Name of field sorting result list, for descending
                              order put - before the field name. E.g. -Created
                              will put the newest tickets at the beginning
-        :keyword raw_query:  A raw query to provide to RT if you know what
+        :param raw_query:  A raw query to provide to RT if you know what
                              you are doing. You may still pass Queue and order
                              kwargs, so use these instead of including them in
                              the raw query. You can refer to the RT query builder.
                              If passing raw_query, all other **kwargs will be ignored.
-        :keyword Format:     Format of the query:
+        :param format:     Format of the query:
                                - i: only `id' fields are populated
                                - s: only `id' and `subject' fields are populated
                                - l: multi-line format, all fields are populated
-        :keyword kwargs:     Other arguments possible to set if not passing raw_query:
+        :param kwargs:     Other arguments possible to set if not passing raw_query:
 
                              Requestors, Subject, Cc, AdminCc, Owner, Status,
                              Priority, InitialPriority, FinalPriority,
@@ -439,8 +440,8 @@ class Rt:
         query = []
         url = 'tickets'
 
-        if Queue is not None:
-            query.append(f'Queue=\'{Queue}\'')
+        if queue is not None:
+            query.append(f'Queue=\'{queue}\'')
         if not raw_query:
             operators_map = {
                 'gt': '>',
@@ -467,10 +468,10 @@ class Rt:
         if order:
             get_params['orderby'] = order
 
-        if Format == 'l':
+        if format == 'l':
             get_params['fields'] = 'Owner,Status,Created,Subject,Queue,CustomFields,Requestor,Cc,AdminCc,Started,Created,TimeEstimated,Due,Type,InitialPriority,Priority,TimeLeft,LastUpdated'
             get_params['fields[Queue]'] = 'Name'
-        elif Format == 's':
+        elif format == 's':
             get_params['fields'] = 'Subject'
 
         msgs = self.__request(url, get_params=get_params)
@@ -535,12 +536,12 @@ class Rt:
 
         + list of some key, value pairs, probably default values.
 
-        :keyword queue: Queue where to create ticket
-        :keyword content_type: Content-type of the Content parameter; can be either text/plain or text/html.
-        :keyword subject: Optional subject for the ticket.
-        :keyword content: Optional content of the ticket. Must be specified unless attachments are specified.
-        :keyword attachments: Optional list of Attachment objects
-        :keyword kwargs: Other arguments possible to set:
+        :param queue: Queue where to create ticket
+        :param content_type: Content-type of the Content parameter; can be either text/plain or text/html.
+        :param subject: Optional subject for the ticket.
+        :param content: Optional content of the ticket. Must be specified unless attachments are specified.
+        :param attachments: Optional list of Attachment objects
+        :param kwargs: Other arguments possible to set:
 
                          Requestors, Subject, Cc, AdminCc, Owner, Status,
                          Priority, InitialPriority, FinalPriority,
@@ -548,6 +549,7 @@ class Rt:
                          fields)
 
         :returns: ID of new ticket
+        :raises ValueError: If the `content_type` is not of a supported format.
         """
         if content_type not in ('text/plain', 'text/html'):  # pragma: no cover
             raise ValueError('Invalid content-type specified.')
@@ -575,7 +577,7 @@ class Rt:
         """ Edit ticket values.
 
         :param ticket_id: ID of ticket to edit
-        :keyword kwargs: Other arguments possible to set:
+        :param kwargs: Other arguments possible to set:
 
                          Requestors, Subject, Cc, AdminCc, Owner, Status,
                          Priority, InitialPriority, FinalPriority,
@@ -619,9 +621,7 @@ class Rt:
         """Get a transaction
 
         :param transaction_id: ID of transaction
-        :returns: List of history items ordered increasingly by time of event.
-                  Each history item is a tuple containing (id, Description).
-                  Returns None if ticket does not exist.
+        :returns: Return a single transaction.
         """
         return self.__request(f'transaction/{transaction_id}', get_params={'fields': 'Description'})
 
@@ -635,13 +635,14 @@ class Rt:
         """ Sends out the correspondence
 
         :param ticket_id: ID of ticket to which message belongs
-        :keyword content: Content of email message
-        :keyword action: correspond or comment
-        :keyword content_type: Content type of email message, default to text/plain
-        :keyword attachments: Files to attach as multipart/form-data
-                        List of 2/3 tuples: (filename, file-like object, [content type])
+        :param content: Content of email message
+        :param action: correspond or comment
+        :param content_type: Content type of email message, defaults to text/plain. Alternative is text/html.
+        :param attachments: Optional list of :py:class:`~rt.rest2.Attachment` objects
         :returns: List of messages returned by the backend related to the executed action.
         :raises BadRequest: When ticket does not exist
+        :raises InvalidUse: If the `action` parameter is invalid
+        :raises UnexpectedResponse: If the response from RT is not as expected
         """
         if action not in ('correspond', 'comment'):  # pragma: no cover
             raise InvalidUse('action must be either "correspond" or "comment"')
@@ -679,14 +680,15 @@ class Rt:
         given ticket with subject as is set in ``Subject`` field.
 
         :param ticket_id: ID of ticket to which message belongs
-        :keyword content: Content of email message
-        :keyword content_type: Content type of email message, default to text/plain
-        :keyword attachments: Optional list of Attachment objects
+        :param content: Content of email message (text/plain or text/html)
+        :param content_type: Content type of email message, default to text/plain
+        :param attachments: Optional list of :py:class:`~rt.rest2.Attachment` objects
         :returns: ``True``
                       Operation was successful
                   ``False``
                       Sending failed (status code != 200)
         :raises BadRequest: When ticket does not exist
+        :raises UnexpectedResponse: If the response from RT is not as expected
         """
         msg = self.__correspond(ticket_id, content, 'correspond', content_type, attachments)
 
@@ -704,15 +706,15 @@ class Rt:
         """ Adds comment to the given ticket.
 
         :param ticket_id: ID of ticket to which comment belongs
-        :keyword content: Content of comment
-        :keyword content_type: Content type of comment, default to text/plain
-        :keyword attachments: Files to attach as multipart/form-data
-                        List of 2/3 tuples: (filename, file-like object, [content type])
+        :param content: Content of comment
+        :param content_type: Content type of comment, default to text/plain
+        :param attachments: Optional list of :py:class:`~rt.rest2.Attachment` objects
         :returns: ``True``
                       Operation was successful
                   ``False``
                       Sending failed (status code != 200)
         :raises BadRequest: When ticket does not exist
+        :raises UnexpectedResponse: If the response from RT is not as expected
         """
         msg = self.__correspond(ticket_id, content, 'comment', content_type, attachments)
 
@@ -723,6 +725,21 @@ class Rt:
 
     def get_attachments(self, ticket_id: typing.Union[str, int]) -> typing.Sequence[typing.Dict[str, str]]:
         """ Get attachment list for a given ticket
+
+        Example of a return result:
+
+        .. code-block:: json
+
+            [
+                {
+                    "id": "17",
+                    "Filename": "README.rst",
+                    "ContentLength": "3578",
+                    "type": "attachment",
+                    "ContentType": "test/plain",
+                    "_url": "http://localhost:8080/REST/2.0/attachment/17"
+                }
+            ]
 
         :param ticket_id: ID of ticket
         :returns: List of tuples for attachments belonging to given ticket.
@@ -757,8 +774,7 @@ class Rt:
     def get_attachment(self, attachment_id: typing.Union[str, int]) -> typing.Optional[dict]:
         """ Get attachment.
 
-        :param ticket_id: ID of ticket
-        :param attachment_id: ID of attachment for obtain
+        :param attachment_id: ID of attachment to fetch
         :returns: Attachment as dictionary with these keys:
 
                       * Transaction
@@ -767,7 +783,7 @@ class Rt:
                       * Creator
                       * Created
                       * Filename
-                      * Content (bytes type)
+                      * Content (base64 encoded string)
                       * Headers
                       * MessageId
                       * ContentEncoding
@@ -800,14 +816,12 @@ class Rt:
                       * Content-Type
                       * Subject
 
-                  .. warning:: Content-Length parameter is set after opening
-                               ticket in web interface!
-
                   Set of headers available depends on mailservers sending
                   emails not on Request Tracker!
 
                   Returns None if ticket or attachment does not exist.
         :raises UnexpectedMessageFormat: Unexpected format of returned message.
+        :raises NotFoundError: If attachment with specified ID does not exist.
         """
         return self.__request(f'attachment/{attachment_id}')
 
@@ -862,15 +876,16 @@ class Rt:
 
         return False
 
-    def create_user(self, Name: str, EmailAddress: str, **kwargs: typing.Any) -> str:
+    def create_user(self, user_name: str, email_address: str, **kwargs: typing.Any) -> str:
         """ Create user.
 
-        :param Name: User name (login for privileged, required)
-        :param EmailAddress: Email address (required)
+        :param user_name: User name (login for privileged, required)
+        :param email_address: Email address (required)
         :param kwargs: Optional fields to set (see edit_user)
         :returns: ID of new user or False when create fails
         :raises BadRequest: When user already exists
         :raises InvalidUse: When invalid fields are set
+        :raises UnexpectedResponse: If the response from RT is not as expected
         """
         valid_fields = {'Name', 'Password', 'EmailAddress', 'RealName',
                         'Nickname', 'Gecos', 'Organization', 'Address1', 'Address2',
@@ -881,8 +896,8 @@ class Rt:
                         'AuthSystem', 'Privileged', 'Disabled'}
         invalid_fields = []
 
-        post_data = {'Name': Name,
-                     'EmailAddress': EmailAddress
+        post_data = {'Name': user_name,
+                     'EmailAddress': email_address
                      }
 
         for k, v in kwargs.items():
@@ -945,6 +960,7 @@ class Rt:
         :returns: List of status messages
         :raises BadRequest: When user does not exist
         :raises InvalidUse: When invalid fields are set
+        :raises UnexpectedResponse: If the response from RT is not as expected
         """
         valid_fields = {'Name', 'Password', 'EmailAddress', 'RealName',
                         'Nickname', 'Gecos', 'Organization', 'Address1', 'Address2',
@@ -984,6 +1000,7 @@ class Rt:
 
         :raises BadRequest: When user does not exist
         :raises NotFoundError: If the user does not exist
+        :raises UnexpectedResponse: If the response from RT is not as expected
         """
         try:
             _ = self.__request_delete(f'user/{user_id}')
@@ -999,19 +1016,59 @@ class Rt:
     def get_queue(self, queue_id: typing.Union[str, int]) -> typing.Optional[typing.Dict[str, typing.Any]]:
         """ Get queue details.
 
+        Example of a return result:
+
+        .. code-block:: json
+
+            {
+                "LastUpdatedBy": {
+                    "_url": "http://localhost:8080/REST/2.0/user/RT_System",
+                    "type": "user",
+                    "id": "RT_System"
+                },
+                "LastUpdated": "2022-03-06T04:53:38Z",
+                "AdminCc": [],
+                "SortOrder": "0",
+                "CorrespondAddress": "",
+                "Creator": {
+                    "id": "RT_System",
+                    "_url": "http://localhost:8080/REST/2.0/user/RT_System",
+                    "type": "user"
+                },
+                "Lifecycle": "default",
+                "Cc": [],
+                "Created": "2022-03-06T04:53:38Z",
+                "_hyperlinks": [
+                    {
+                        "_url": "http://localhost:8080/REST/2.0/queue/1",
+                        "type": "queue",
+                        "id": 1,
+                        "ref": "self"
+                    },
+                    {
+                        "ref": "history",
+                        "_url": "http://localhost:8080/REST/2.0/queue/1/history"
+                    },
+                    {
+                        "ref": "create",
+                        "type": "ticket",
+                        "_url": "http://localhost:8080/REST/2.0/ticket?Queue=1"
+                    }
+                ],
+                "SLADisabled": "1",
+                "Name": "General",
+                "TicketCustomFields": [],
+                "Disabled": "0",
+                "TicketTransactionCustomFields": [],
+                "CustomFields": [],
+                "Description": "The default queue",
+                "CommentAddress": "",
+                "id": 1
+            }
+
         :param queue_id: Identification of queue by name (str) or queue ID
                          (int)
-        :returns: Queue details as strings in dictionary with these keys
-                  if queue exists:
-
-                      * id
-                      * Name
-                      * Description
-                      * CorrespondAddress
-                      * CommentAddress
-                      * InitialPriority
-                      * FinalPriority
-                      * DefaultDueIn
+        :returns: Queue details as a dictionary
 
         :raises UnexpectedMessageFormat: In case that returned status code is not 200
         :raises NotFoundError: In case the queue does not exist
@@ -1021,23 +1078,34 @@ class Rt:
     def get_all_queues(self, include_disabled: bool = False) -> typing.List[typing.Dict[str, typing.Any]]:
         """ Return a list of all queues.
 
+        Example of a return result:
+
+        .. code-block:: json
+
+            [
+                {
+                    "InitialPriority": "",
+                    "_url": "http://localhost:8080/REST/2.0/queue/1",
+                    "type": "queue",
+                    "Name": "General",
+                    "DefaultDueIn": "",
+                    "Description": "The default queue",
+                    "CorrespondAddress": "",
+                    "CommentAddress": "",
+                    "id": "1",
+                    "FinalPriority": ""
+                }
+            ]
+
         :param include_disabled: Set to True to also return disabled queues.
 
-        :returns: Queue details as strings in dictionary with these keys
-                  if queue exists (otherwise None):
-
-                      * id
-                      * Name
-                      * Description
-                      * CorrespondAddress
-                      * CommentAddress
-                      * InitialPriority
-                      * FinalPriority
-                      * DefaultDueIn
+        :returns: Returns a list of dictionaries containing basic information on all queues.
 
         :raises UnexpectedMessageFormat: In case that returned status code is not 200
         """
-        params = {'fields': 'Name,Description', 'find_disabled_rows': int(include_disabled)}
+        params = {'fields': 'Name,Description,CorrespondAddress,CommentAddress,InitialPriority,FinalPriority,DefaultDueIn',
+                  'find_disabled_rows': int(include_disabled)
+                  }
         queues = self.__paged_request('queues/all', params=params)
 
         return list(queues)
@@ -1060,6 +1128,7 @@ class Rt:
         :returns: List of status messages
         :raises BadRequest: When queue does not exist
         :raises InvalidUse: When invalid fields are set
+        :raises UnexpectedResponse: If the response from RT is not as expected
         """
         valid_fields = {'Name', 'Description', 'CorrespondAddress', 'CommentAddress',
                         'Disabled', 'SLADisabled', 'Lifecycle', 'SortOrder'
@@ -1088,21 +1157,22 @@ class Rt:
 
         return ret
 
-    def create_queue(self, Name: str, **kwargs: typing.Any) -> int:
+    def create_queue(self, name: str, **kwargs: typing.Any) -> int:
         """ Create queue (undocumented API feature).
 
-        :param Name: Queue name (required)
+        :param name: Queue name (required)
         :param kwargs: Optional fields to set (see edit_queue)
         :returns: ID of new queue or False when create fails
         :raises BadRequest: When queue already exists
         :raises InvalidUse: When invalid fields are set
+        :raises UnexpectedResponse: If the response from RT is not as expected
         """
         valid_fields = {'Name', 'Description', 'CorrespondAddress', 'CommentAddress',
                         'Disabled', 'SLADisabled', 'Lifecycle', 'SortOrder'
                         }
         invalid_fields = []
 
-        post_data = {'Name': Name}
+        post_data = {'Name': name}
 
         for key, val in kwargs.items():
             if key not in valid_fields:
@@ -1132,6 +1202,7 @@ class Rt:
         :returns: ID or name of edited queue or False when edit fails
         :raises BadRequest: When queue does not exist
         :raises NotFoundError: If the queue does not exist
+        :raises UnexpectedResponse: If the response from RT is not as expected
         """
         try:
             _ = self.__request_delete(f'queue/{queue_id}')
@@ -1146,6 +1217,19 @@ class Rt:
 
     def get_links(self, ticket_id: typing.Union[str, int]) -> typing.Optional[typing.List[typing.Dict[str, str]]]:
         """ Gets the ticket links for a single ticket.
+
+        Example of a return result:
+
+        .. code-block:: json
+
+            [
+                {
+                    "id": "13",
+                    "type": "ticket",
+                    "_url": "http://localhost:8080/REST/2.0/ticket/13",
+                    "ref": "depends-on"
+                }
+            ]
 
         :param ticket_id: ticket ID
         :returns: Links as lists of strings in dictionary with these keys
@@ -1172,8 +1256,8 @@ class Rt:
         """ Creates or deletes a link between the specified tickets (undocumented API feature).
 
         :param ticket_id: ID of ticket to edit
-        :param link_name: Name of link to edit (DependsOn, DependedOnBy,
-                          RefersTo, ReferredToBy, HasMember or MemberOf)
+        :param link_name: Name of link to edit ('Parent', 'Child', 'RefersTo',
+                           'ReferredToBy', 'DependsOn', 'DependedOnBy')
         :param link_value: Either ticker ID or external link.
         :param delete: if True the link is deleted instead of created
         :returns: ``True``
@@ -1182,7 +1266,7 @@ class Rt:
                       Ticket with given ID does not exist or link to delete is
                       not found
         :raises InvalidUse: When none or more then one links are specified. Also
-                            when wrong link name is used.
+                            when wrong link name is used or when trying to link to a deleted ticket.
         """
         if link_name not in VALID_TICKET_LINK_NAMES:
             raise InvalidUse(f'Unsupported link name. Use one of "{", ".join(VALID_TICKET_LINK_NAMES)}".')
@@ -1194,8 +1278,11 @@ class Rt:
 
         msg = self.__request_put(f'ticket/{ticket_id}', json_data=json_data)
 
-        if msg and isinstance(msg, list) and msg[0].startswith('Couldn\'t resolve'):
-            raise NotFoundError(msg[0])
+        if msg and isinstance(msg, list):
+            if msg[0].startswith('Couldn\'t resolve'):
+                raise NotFoundError(msg[0])
+            if 'not allowed' in msg[0]:
+                raise InvalidUse(msg[0])
 
         return True
 
@@ -1209,6 +1296,7 @@ class Rt:
                   ``False``
                       Either origin or destination ticket does not
                       exist or user does not have ModifyTicket permission.
+        :raises UnexpectedResponse: If the response from RT is not as expected
         """
         msg = self.__request_put(f'ticket/{ticket_id}', json_data={'MergeInto': into_id})
 
@@ -1228,6 +1316,7 @@ class Rt:
                   ``False``
                       Either the ticket does not exist or user does not
                       have TakeTicket permission.
+        :raises UnexpectedResponse: If the response from RT is not as expected
         """
         msg = self.__request_put(f'ticket/{ticket_id}/take')
 
@@ -1247,6 +1336,7 @@ class Rt:
                   ``False``
                       Either the ticket does not exist or user does not
                       own the ticket.
+        :raises UnexpectedResponse: If the response from RT is not as expected
         """
         msg = self.__request_put(f'ticket/{ticket_id}/untake')
 
@@ -1266,6 +1356,7 @@ class Rt:
                   ``False``
                       Either the ticket does not exist or user does not
                       have StealTicket permission.
+        :raises UnexpectedResponse: If the response from RT is not as expected
         """
         msg = self.__request_put(f'ticket/{ticket_id}/steal')
 
