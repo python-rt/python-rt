@@ -63,7 +63,7 @@ class Attachment:
 
 
 class Rt:
-    """ :term:`API` for Request Tracker according to
+    r""" :term:`API` for Request Tracker according to
     https://docs.bestpractical.com/rt/5.0.2/RT/REST2.html. Interface is based on
     :term:`REST` architecture, which is based on HTTP/1.1 protocol. This module
     is therefore mainly sending and parsing special HTTP messages.
