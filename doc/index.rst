@@ -13,6 +13,8 @@ Contents:
 
    rest1
    rest2
+   usage
+   changelog
    exceptions
    glossary
 
