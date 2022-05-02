@@ -7,6 +7,7 @@ https://docs.bestpractical.com/rt/5.0.2/RT/REST2.html
 import base64
 import dataclasses
 import datetime
+import json
 import logging
 import re
 import typing
@@ -316,10 +317,22 @@ class Rt:
         """ Search general errors in server response and raise exceptions when found.
 
         :param response: Response from HTTP request.
-        :raises AuthorizationError: Credentials are invalid or missing
+        :raises BadRequest: If the server returned a HTTP/400 error.
+        :raises AuthorizationError: Credentials are invalid or missing.
         :raises NotFoundError: Resource was not found.
         :raises UnexpectedResponse: Server returned an unexpected status code.
         """
+        if response.status_code == 400:  # pragma: no cover
+            try:
+                ret = response.json()
+            except json.JSONDecodeError:
+                ret = 'Bad request'
+
+            if isinstance(ret, dict):
+                raise rt.exceptions.BadRequest(ret['message'])
+
+            raise rt.exceptions.BadRequest(ret)
+
         if response.status_code == 401:  # pragma: no cover
             raise AuthorizationError(
                 'Server could not verify that you are authorized to access the requested document.')
@@ -597,8 +610,11 @@ class Rt:
 
         self.logger.debug(msg)
 
-        if not (isinstance(msg, list) and len(msg) >= 1):  # pragma: no cover
+        if not isinstance(msg, list):  # pragma: no cover
             raise UnexpectedResponse(str(msg))
+
+        if not msg:
+            return True
 
         return bool(msg[0])
 
