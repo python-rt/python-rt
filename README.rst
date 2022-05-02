@@ -18,7 +18,7 @@ Python implementation of REST API described here:
  - https://rt-wiki.bestpractical.com/wiki/REST
  - https://docs.bestpractical.com/rt/5.0.2/RT/REST2.html
 
-.. csv-table:: Python version compatibility
+.. csv-table:: Python version compatibility:
    :header: "Python", "rt"
    :widths: 15, 15
 
