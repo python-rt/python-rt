@@ -326,7 +326,7 @@ class Rt:
         if response.status_code == 404:
             raise NotFoundError('No such resource found.')
         if response.status_code not in (200, 201):
-            raise UnexpectedResponse('Received status code {:d} instead of 200.'.format(response.status_code),
+            raise UnexpectedResponse(f'Received status code {response.status_code} instead of 200.',
                                      status_code=response.status_code,
                                      response_message=response.text)
 
@@ -461,7 +461,7 @@ class Rt:
                 if key[:3] != 'CF_':
                     query.append(f'{key}{op}\'{value}\'')
                 else:
-                    query.append("'CF.{{{}}}'{}\'{}\'".format(key[3:], op, value))
+                    query.append(f'''CF.{{{key[3:]}}}'{op}'{value}\'''')
         else:
             query.append(raw_query)
         get_params['query'] = ' AND '.join('(' + part + ')' for part in query)
