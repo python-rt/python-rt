@@ -26,11 +26,11 @@ Python implementation of REST API described here:
    ">= 3.5, <3.7", ">= 2.0.0, < 3.0.0"
    ">= 3.7", ">= 3.0.0"
 
-.. NOTE::
+ℹ️ **Note**:
     Please note that starting with the major release of v3.0.0, this library requires Python version >= 3.7.
     See the *Python version compatibility* table above for more detailed information.
 
-.. WARNING::
+⚠️ **Warning**:
     Though version 3.x still supports RT REST API version 1, it contains minor breaking changes. Please see the changelog
     in the documentation for details.
 
