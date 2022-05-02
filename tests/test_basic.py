@@ -70,7 +70,7 @@ def test_ticket_operations(rt_connection: rt.rest2.Rt):
     assert search_result[0]['id'] == str(ticket_id)
     assert search_result[0]['Status'] == 'new'
 
-    # # raw search
+    # raw search
     search_result = rt_connection.search(raw_query=f'Subject="{ticket_subject}"')
     assert len(search_result) == 1
     assert search_result[0]['id'] == str(ticket_id)
