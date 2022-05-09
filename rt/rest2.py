@@ -62,6 +62,13 @@ class Attachment:
                 'FileContent': base64.b64encode(self.file_content).decode('utf-8')
                 }
 
+    def multipart_form_element(self) -> typing.Tuple[str, bytes, str]:
+        """Convert to a tuple as required for multipart-form-data submission."""
+        return (self.file_name,
+                self.file_content,
+                self.file_type,
+                )
+
 
 class Rt:
     r""" :term:`API` for Request Tracker according to
@@ -74,7 +81,8 @@ class Rt:
               expected as input for string values.
     """
 
-    def __init__(self, url: str,
+    def __init__(self,
+                 url: str,
                  proxy: typing.Optional[str] = None,
                  verify_cert: typing.Optional[typing.Union[str, bool]] = True,
                  http_auth: typing.Optional[requests.auth.AuthBase] = None,
@@ -171,20 +179,20 @@ class Rt:
 
             try:
                 result = response.json()
-            except LookupError:  # pragma: no cover
-                raise UnexpectedResponse(f'Unknown response encoding: {response.encoding}.')
-            except UnicodeError:  # pragma: no cover
-                raise UnexpectedResponse(f'''Unknown response encoding (UTF-8 does not work) - "{response.content.decode('utf-8', 'replace')}".''')
+            except LookupError as exc:  # pragma: no cover
+                raise UnexpectedResponse(f'Unknown response encoding: {response.encoding}.') from exc
+            except UnicodeError as exc:  # pragma: no cover
+                raise UnexpectedResponse(f'''Unknown response encoding (UTF-8 does not work) - "{response.content.decode('utf-8', 'replace')}".''') from exc
 
             return result
-        except requests.exceptions.ConnectionError as e:  # pragma: no cover
-            raise ConnectionError("Connection error", e)
+        except requests.exceptions.ConnectionError as exc:  # pragma: no cover
+            raise ConnectionError("Connection error", exc) from exc
 
     def __request_put(self,
                       selector: str,
                       json_data: typing.Optional[typing.Dict[str, typing.Any]] = None
                       ) -> typing.List[str]:
-        """ General request for :term:`API`.
+        """ PUT request for :term:`API`.
 
         :param selector: End part of URL which completes self.url parameter
                            set during class initialization.
@@ -207,19 +215,19 @@ class Rt:
 
             try:
                 result = response.json()
-            except LookupError:  # pragma: no cover
-                raise UnexpectedResponse(f'Unknown response encoding: {response.encoding}.')
-            except UnicodeError:  # pragma: no cover
-                raise UnexpectedResponse(f'''Unknown response encoding (UTF-8 does not work) - "{response.content.decode('utf-8', 'replace')}".''')
+            except LookupError as exc:  # pragma: no cover
+                raise UnexpectedResponse(f'Unknown response encoding: {response.encoding}.') from exc
+            except UnicodeError as exc:  # pragma: no cover
+                raise UnexpectedResponse(f'''Unknown response encoding (UTF-8 does not work) - "{response.content.decode('utf-8', 'replace')}".''') from exc
 
             return result
-        except requests.exceptions.ConnectionError as e:  # pragma: no cover
-            raise ConnectionError("Connection error", e)
+        except requests.exceptions.ConnectionError as exc:  # pragma: no cover
+            raise ConnectionError("Connection error", exc) from exc
 
     def __request_delete(self,
                          selector: str,
                          ) -> typing.Dict[str, str]:
-        """ General request for :term:`API`.
+        """ DELETE request for :term:`API`.
 
         :param selector: End part of URL which completes self.url parameter
                            set during class initialization.
@@ -242,14 +250,14 @@ class Rt:
 
             try:
                 result = response.json()
-            except LookupError:  # pragma: no cover
-                raise UnexpectedResponse(f'Unknown response encoding: {response.encoding}.')
-            except UnicodeError:  # pragma: no cover
-                raise UnexpectedResponse(f'''Unknown response encoding (UTF-8 does not work) - "{response.content.decode('utf-8', 'replace')}".''')
+            except LookupError as exc:  # pragma: no cover
+                raise UnexpectedResponse(f'Unknown response encoding: {response.encoding}.') from exc
+            except UnicodeError as exc:  # pragma: no cover
+                raise UnexpectedResponse(f'''Unknown response encoding (UTF-8 does not work) - "{response.content.decode('utf-8', 'replace')}".''') from exc
 
             return result
-        except requests.exceptions.ConnectionError as e:  # pragma: no cover
-            raise ConnectionError("Connection error", e)
+        except requests.exceptions.ConnectionError as exc:  # pragma: no cover
+            raise ConnectionError("Connection error", exc) from exc
 
     def __paged_request(self,
                         selector: str,
@@ -259,7 +267,7 @@ class Rt:
                         per_page: int = 10,
                         recurse: bool = True
                         ) -> typing.Iterator[typing.Dict[str, typing.Any]]:
-        """ General request for :term:`API`.
+        """ Request using pagination for :term:`API`.
 
         :param selector: End part of URL which completes self.url parameter
                            set during class initialization.
@@ -293,8 +301,8 @@ class Rt:
 
             try:
                 result = response.json()
-            except LookupError:  # pragma: no cover
-                raise UnexpectedResponse(f'Unknown response encoding: {response.encoding}.')
+            except LookupError as exc:  # pragma: no cover
+                raise UnexpectedResponse(f'Unknown response encoding: {response.encoding}.') from exc
             except UnicodeError:  # pragma: no cover
                 # replace errors - we need decoded content just to check for error codes in __check_response
                 result = response.content.decode('utf-8', 'replace')
@@ -309,15 +317,15 @@ class Rt:
                     yield from self.__paged_request(selector, json_data=json_data, page=_page,
                                                     per_page=result['per_page'], params=params, recurse=False)
 
-        except requests.exceptions.ConnectionError as e:  # pragma: no cover
-            raise ConnectionError("Connection error", e)
+        except requests.exceptions.ConnectionError as exc:  # pragma: no cover
+            raise ConnectionError("Connection error", exc) from exc
 
     @staticmethod
     def __check_response(response: requests.Response) -> None:
         """ Search general errors in server response and raise exceptions when found.
 
         :param response: Response from HTTP request.
-        :raises BadRequest: If the server returned a HTTP/400 error.
+        :raises BadRequest: If the server returned an HTTP/400 error.
         :raises AuthorizationError: Credentials are invalid or missing.
         :raises NotFoundError: Resource was not found.
         :raises UnexpectedResponse: Server returned an unexpected status code.
@@ -547,8 +555,6 @@ class Rt:
               "CustomFields": {"Severity": "Low"}
             }
 
-        + list of some key, value pairs, probably default values.
-
         :param queue: Queue where to create ticket
         :param content_type: Content-type of the Content parameter; can be either text/plain or text/html.
         :param subject: Optional subject for the ticket.
@@ -556,10 +562,9 @@ class Rt:
         :param attachments: Optional list of Attachment objects
         :param kwargs: Other arguments possible to set:
 
-                         Requestors, Subject, Cc, AdminCc, Owner, Status,
+                         Requestors, Cc, AdminCc, Owner, Status,
                          Priority, InitialPriority, FinalPriority,
-                         TimeEstimated, Starts, Due, Content (according to RT
-                         fields)
+                         TimeEstimated, Starts, Due
 
         :returns: ID of new ticket
         :raises ValueError: If the `content_type` is not of a supported format.
@@ -580,9 +585,10 @@ class Rt:
             ticket_data[k] = v
 
         if attachments:
-            ticket_data['Attachments'] = [attachment.to_dict() for attachment in attachments]
-
-        res = self.__request('ticket', json_data=ticket_data)
+            _attachments = [('Attachments', attachment.multipart_form_element()) for attachment in attachments]
+            res = self.__request('ticket', post_data={'JSON': json.dumps(ticket_data)}, files=_attachments)
+        else:
+            res = self.__request('ticket', json_data=ticket_data)
 
         return int(res['id'])
 
@@ -675,16 +681,17 @@ class Rt:
         #     post_data['Bcc'] = bcc
 
         if attachments:
-            post_data['Attachments'] = [attachment.to_dict() for attachment in attachments]
+            _attachments = [('Attachments', attachment.multipart_form_element()) for attachment in attachments]
+            res = self.__request(f'ticket/{ticket_id}/{action}', post_data={'JSON': json.dumps(post_data)}, files=_attachments)
+        else:
+            res = self.__request(f'ticket/{ticket_id}/{action}', json_data=post_data)
 
-        msg = self.__request(f'ticket/{ticket_id}/{action}', json_data=post_data)
+        if not isinstance(res, list):  # pragma: no cover
+            raise UnexpectedResponse(str(res))
 
-        if not isinstance(msg, list):  # pragma: no cover
-            raise UnexpectedResponse(str(msg))
+        self.logger.debug(res)
 
-        self.logger.debug(msg)
-
-        return msg
+        return res
 
     def reply(self,
               ticket_id: typing.Union[str, int],
@@ -835,7 +842,6 @@ class Rt:
                   Set of headers available depends on mailservers sending
                   emails not on Request Tracker!
 
-                  Returns None if ticket or attachment does not exist.
         :raises UnexpectedMessageFormat: Unexpected format of returned message.
         :raises NotFoundError: If attachment with specified ID does not exist.
         """
@@ -859,7 +865,7 @@ class Rt:
                       * id
                       * Name
 
-                  Or these keys for external users (e.g. Requestors replying
+                  Or these keys for external users (e.g. Requestors) replying
                   to email from RT:
 
                       * RealName
@@ -895,7 +901,7 @@ class Rt:
     def create_user(self, user_name: str, email_address: str, **kwargs: typing.Any) -> str:
         """ Create user.
 
-        :param user_name: User name (login for privileged, required)
+        :param user_name: Username (login for privileged, required)
         :param email_address: Email address (required)
         :param kwargs: Optional fields to set (see edit_user)
         :returns: ID of new user or False when create fails
@@ -937,7 +943,7 @@ class Rt:
         return ret['id']
 
     def edit_user(self, user_id: typing.Union[str, int], **kwargs: typing.Any) -> typing.List[str]:
-        """ Edit user profile (undocumented API feature).
+        """ Edit user profile.
 
         :param user_id: Identification of user by username (str) or user ID
                         (int)
@@ -1127,7 +1133,7 @@ class Rt:
         return list(queues)
 
     def edit_queue(self, queue_id: typing.Union[str, int], **kwargs: typing.Any) -> typing.List[str]:
-        """ Edit queue (undocumented API feature).
+        """ Edit queue.
 
         :param queue_id: Identification of queue by name (str) or ID (int)
         :param kwargs: Other fields to edit from the following list:
@@ -1174,7 +1180,7 @@ class Rt:
         return ret
 
     def create_queue(self, name: str, **kwargs: typing.Any) -> int:
-        """ Create queue (undocumented API feature).
+        """ Create queue.
 
         :param name: Queue name (required)
         :param kwargs: Optional fields to set (see edit_queue)
@@ -1269,7 +1275,7 @@ class Rt:
 
     def edit_link(self, ticket_id: typing.Union[str, int], link_name: str, link_value: typing.Union[str, int],
                   delete: bool = False) -> bool:
-        """ Creates or deletes a link between the specified tickets (undocumented API feature).
+        """ Creates or deletes a link between the specified tickets.
 
         :param ticket_id: ID of ticket to edit
         :param link_name: Name of link to edit ('Parent', 'Child', 'RefersTo',
@@ -1281,8 +1287,8 @@ class Rt:
                   ``False``
                       Ticket with given ID does not exist or link to delete is
                       not found
-        :raises InvalidUse: When none or more then one links are specified. Also
-                            when wrong link name is used or when trying to link to a deleted ticket.
+        :raises InvalidUse: When none or more than one link is specified. Also,
+                            when a wrong link name is used or when trying to link to a deleted ticket.
         """
         if link_name not in VALID_TICKET_LINK_NAMES:
             raise InvalidUse(f'Unsupported link name. Use one of "{", ".join(VALID_TICKET_LINK_NAMES)}".')
@@ -1303,7 +1309,7 @@ class Rt:
         return True
 
     def merge_ticket(self, ticket_id: typing.Union[str, int], into_id: typing.Union[str, int]) -> bool:
-        """ Merge ticket into another (undocumented API feature).
+        """ Merge ticket into another.
 
         :param ticket_id: ID of ticket to be merged
         :param into_id: ID of destination ticket
