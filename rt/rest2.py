@@ -15,6 +15,7 @@ from urllib.parse import urljoin
 
 import requests
 import requests.auth
+import requests_toolbelt
 
 import rt.exceptions
 from .exceptions import AuthorizationError, UnexpectedResponse, NotFoundError, InvalidUse
@@ -144,7 +145,7 @@ class Rt:
                   get_params: typing.Optional[typing.Dict[str, typing.Any]] = None,
                   json_data: typing.Optional[typing.Union[typing.Dict[str, typing.Any], typing.List[typing.Any]]] = None,
                   post_data: typing.Optional[typing.Dict[str, typing.Any]] = None,
-                  files: typing.Optional[typing.Dict[str, str]] = None,
+                  attachments: typing.Optional[typing.Sequence[Attachment]] = None,
                   ) -> typing.Dict[str, typing.Any]:
         """ General request for :term:`API`.
 
@@ -154,9 +155,8 @@ class Rt:
         :param get_params: Parameters to add for a GET request.
         :param json_data: JSON request to send to the API.
         :param post_data: Dictionary with POST method fields
-        :param files: List of pairs (filename, file-like object) describing
-                        files to attach as multipart/form-data
-                        (list is necessary to keep files ordered)
+        :param attachments: Optional list of :py:class:`~rt.rest2.Attachment` objects
+
         :returns: dict
         :raises AuthorizationError: In case that request is called without previous
                                     login or login attempt failed.
@@ -164,7 +164,7 @@ class Rt:
         """
         try:
             url = str(urljoin(self.url, selector))
-            if not files:
+            if not attachments:
                 if json_data:
                     response = self.session.post(url, json=json_data, timeout=self.http_timeout)
                 elif post_data:
@@ -172,7 +172,15 @@ class Rt:
                 else:
                     response = self.session.get(url, params=get_params, timeout=self.http_timeout)
             else:
-                response = self.session.post(url, data=post_data, files=files, timeout=self.http_timeout)
+                fields: typing.List[typing.Tuple[str, typing.Any]] = [('Attachments', attachment.multipart_form_element()) for attachment in attachments]
+                fields.append(('JSON', json.dumps(json_data)))
+
+                multipart_data = requests_toolbelt.MultipartEncoder(fields=fields)
+
+                _headers = dict(self.session.headers)
+                _headers['content-type'] = multipart_data.content_type
+
+                response = self.session.post(url, data=multipart_data, headers=_headers, timeout=self.http_timeout)
 
             self.__debug_response(response)
             self.__check_response(response)
@@ -559,7 +567,7 @@ class Rt:
         :param content_type: Content-type of the Content parameter; can be either text/plain or text/html.
         :param subject: Optional subject for the ticket.
         :param content: Optional content of the ticket. Must be specified unless attachments are specified.
-        :param attachments: Optional list of Attachment objects
+        :param attachments: Optional list of :py:class:`~rt.rest2.Attachment` objects
         :param kwargs: Other arguments possible to set:
 
                          Requestors, Cc, AdminCc, Owner, Status,
@@ -584,11 +592,7 @@ class Rt:
         for k, v in kwargs.items():
             ticket_data[k] = v
 
-        if attachments:
-            _attachments = [('Attachments', attachment.multipart_form_element()) for attachment in attachments]
-            res = self.__request('ticket', post_data={'JSON': json.dumps(ticket_data)}, files=_attachments)
-        else:
-            res = self.__request('ticket', json_data=ticket_data)
+        res = self.__request('ticket', json_data=ticket_data, attachments=attachments)
 
         return int(res['id'])
 
@@ -680,11 +684,7 @@ class Rt:
         # if bcc:
         #     post_data['Bcc'] = bcc
 
-        if attachments:
-            _attachments = [('Attachments', attachment.multipart_form_element()) for attachment in attachments]
-            res = self.__request(f'ticket/{ticket_id}/{action}', post_data={'JSON': json.dumps(post_data)}, files=_attachments)
-        else:
-            res = self.__request(f'ticket/{ticket_id}/{action}', json_data=post_data)
+        res = self.__request(f'ticket/{ticket_id}/{action}', json_data=post_data, attachments=attachments)
 
         if not isinstance(res, list):  # pragma: no cover
             raise UnexpectedResponse(str(res))

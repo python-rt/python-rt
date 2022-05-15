@@ -181,6 +181,110 @@ def test_ticket_operations(rt_connection: rt.rest2.Rt):
     assert rt_connection.edit_ticket(ticket_id, Status='deleted')
 
 
+def test_attachments_create(rt_connection: rt.rest2.Rt):
+    """Create a ticket with a random (>= 2) number of attachments and verify that they have been successfully added to the ticket."""
+    ticket_subject = f'Testing issue {random_string()}'
+    ticket_text = 'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'
+
+    attachment_count = random.randint(2, 10)
+    attachments = []
+    for i in range(attachment_count):
+        attachment_content = random_string(length=100).encode()
+        attachment_name = f'attachment-{random_string(length=10)}.txt'
+        attachments.append(rt.rest2.Attachment(attachment_name, 'text/plain', attachment_content))
+
+    # create
+    ticket_id = rt_connection.create_ticket(subject=ticket_subject, content=ticket_text, queue=RT_QUEUE, attachments=attachments)
+    assert ticket_id > -1
+
+    # get ticket
+    ticket = rt_connection.get_ticket(ticket_id)
+    assert int(ticket['id']) == ticket_id
+
+    # attachments list
+    at_list = rt_connection.get_attachments(ticket_id)
+    assert at_list
+    assert len(at_list) == len(attachments)
+    at_names = [at['Filename'] for at in at_list]
+    for k in attachments:
+        assert k.file_name in at_names
+
+        # get the attachment and compare it's content
+        at_id = at_list[at_names.index(k.file_name)]['id']
+        at_content = base64.b64decode(rt_connection.get_attachment(at_id)['Content'])
+        assert at_content == k.file_content
+
+
+def test_attachments_comment(rt_connection: rt.rest2.Rt):
+    """Create a ticket and comment to it with a random (>= 2) number of attachments and verify that they have been successfully added to the ticket."""
+    ticket_subject = f'Testing issue {random_string()}'
+    ticket_text = 'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'
+
+    # create
+    ticket_id = rt_connection.create_ticket(subject=ticket_subject, content=ticket_text, queue=RT_QUEUE)
+    assert ticket_id > -1
+
+    attachment_count = random.randint(2, 10)
+    attachments = []
+    for i in range(attachment_count):
+        attachment_content = random_string(length=100).encode()
+        attachment_name = f'attachment-{random_string(length=10)}.txt'
+        attachments.append(rt.rest2.Attachment(attachment_name, 'text/plain', attachment_content))
+
+    # comment with attachments
+    ticket_text = 'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'
+    comment_success = rt_connection.comment(ticket_id=ticket_id, content=ticket_text, attachments=attachments)
+    assert comment_success
+
+    # attachments list
+    at_list = rt_connection.get_attachments(ticket_id)
+    assert at_list
+    assert len(at_list) == len(attachments)
+    at_names = [at['Filename'] for at in at_list]
+    for k in attachments:
+        assert k.file_name in at_names
+
+        # get the attachment and compare it's content
+        at_id = at_list[at_names.index(k.file_name)]['id']
+        at_content = base64.b64decode(rt_connection.get_attachment(at_id)['Content'])
+        assert at_content == k.file_content
+
+
+def test_attachments_reply(rt_connection: rt.rest2.Rt):
+    """Create a ticket and reply to it with a random (>= 2) number of attachments and verify that they have been successfully added to the ticket."""
+    ticket_subject = f'Testing issue {random_string()}'
+    ticket_text = 'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'
+
+    # create
+    ticket_id = rt_connection.create_ticket(subject=ticket_subject, content=ticket_text, queue=RT_QUEUE)
+    assert ticket_id > -1
+
+    attachment_count = random.randint(2, 10)
+    attachments = []
+    for i in range(attachment_count):
+        attachment_content = random_string(length=100).encode()
+        attachment_name = f'attachment-{random_string(length=10)}.txt'
+        attachments.append(rt.rest2.Attachment(attachment_name, 'text/plain', attachment_content))
+
+    # comment with attachments
+    ticket_text = 'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'
+    comment_success = rt_connection.reply(ticket_id=ticket_id, content=ticket_text, attachments=attachments)
+    assert comment_success
+
+    # attachments list
+    at_list = rt_connection.get_attachments(ticket_id)
+    assert at_list
+    assert len(at_list) == len(attachments)
+    at_names = [at['Filename'] for at in at_list]
+    for k in attachments:
+        assert k.file_name in at_names
+
+        # get the attachment and compare it's content
+        at_id = at_list[at_names.index(k.file_name)]['id']
+        at_content = base64.b64decode(rt_connection.get_attachment(at_id)['Content'])
+        assert at_content == k.file_content
+
+
 def test_ticket_operations_admincc_cc(rt_connection: rt.rest2.Rt):
     ticket_subject = f'Testing issue {random_string()}'
     ticket_text = 'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'
