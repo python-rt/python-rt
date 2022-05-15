@@ -77,6 +77,8 @@ class Rt:
     :term:`REST` architecture, which is based on HTTP/1.1 protocol. This module
     is therefore mainly sending and parsing special HTTP messages.
 
+    .. warning:: You need at least version 5.0.2 of RT.
+
     .. note:: Use only ASCII LF as newline (``\\n``). Time is returned in UTC.
               All strings returned are encoded in UTF-8 and the same is
               expected as input for string values.
@@ -428,19 +430,20 @@ class Rt:
             >>> tickets = tracker.search(queue='General', order='Status', raw_query="id='1'+OR+id='2'+OR+id='3'")
 
         :param queue:      Queue where to search. If you wish to search across
-                             all of your queues, pass the ALL_QUEUES object as the
-                             argument.
+                           all of your queues, pass the ALL_QUEUES object as the
+                           argument.
         :param order:      Name of field sorting result list, for descending
-                             order put - before the field name. E.g. -Created
-                             will put the newest tickets at the beginning
+                           order put - before the field name. E.g. -Created
+                           will put the newest tickets at the beginning
         :param raw_query:  A raw query to provide to RT if you know what
                              you are doing. You may still pass Queue and order
                              kwargs, so use these instead of including them in
                              the raw query. You can refer to the RT query builder.
-                             If passing raw_query, all other **kwargs will be ignored.
-        :param query_format:     Format of the query:
-                               - i: only `id' fields are populated
-                               - s: only `id' and `subject' fields are populated
+                             If passing raw_query, all other \*\*kwargs will be ignored.
+        :param query_format: Format of the query:
+
+                               - i: only *id* fields are populated
+                               - s: only *id* and *subject* fields are populated
                                - l: multi-line format, all fields are populated
         :param kwargs:     Other arguments possible to set if not passing raw_query:
 

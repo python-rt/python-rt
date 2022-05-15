@@ -21,7 +21,7 @@ Ticket Operations
 
 Fetching a ticket::
 
-    print(json.dumps(c.get_ticket(1), indent=4))
+    c.get_ticket(1)
 
 which gives:
 
@@ -130,7 +130,7 @@ which gives:
 
 Getting ticket links::
 
-    print(json.dumps(c.get_links(1), indent=4))
+    c.get_links(1)
 
 for a ticket with #1 having ticket #7 as parent, this would have as result:
 
@@ -147,7 +147,7 @@ for a ticket with #1 having ticket #7 as parent, this would have as result:
 
 Editing ticket links. Adding a dependency on another ticket::
 
-    print(json.dumps(c.edit_link(1, 'DependsOn', 7, delete=False)))
+    c.edit_link(1, 'DependsOn', 7, delete=False)
 
 Creating a ticket::
 
