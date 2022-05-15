@@ -199,7 +199,7 @@ class Rt:
                 files_data = {}
                 for i, file_pair in enumerate(files):
                     files_data[f'attachment_{i + 1}'] = file_pair
-                response = self.session.post(url, data=post_data, files=files_data)
+                response = self.session.post(url, data=post_data, files=files_data)  # type: ignore
 
             method = "GET"
             if post_data or files:
