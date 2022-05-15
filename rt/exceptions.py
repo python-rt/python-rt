@@ -12,12 +12,12 @@ class AuthorizationError(RtError):
     or missing credentials. """
 
 
-class NotAllowed(RtError):
+class NotAllowedError(RtError):
     """ Exception raised when request cannot be finished due to
     insufficient privileges. """
 
 
-class UnexpectedResponse(RtError):
+class UnexpectedResponseError(RtError):
     """ Exception raised when unexpected HTTP code is received. """
 
     def __init__(self, message: str, status_code: typing.Optional[int] = None, response_message: typing.Optional[str] = None) -> None:
@@ -27,7 +27,7 @@ class UnexpectedResponse(RtError):
         self.response_message = response_message
 
 
-class UnexpectedMessageFormat(RtError):
+class UnexpectedMessageFormatError(RtError):
     """ Exception raised when response has bad status code (not the HTTP code,
     but code in the first line of the body as 200 in `RT/4.0.7 200 Ok`)
     or message parsing fails because of unexpected format. """
@@ -41,11 +41,11 @@ class APISyntaxError(RtError):
     """ Exception raised when syntax error is received. """
 
 
-class InvalidUse(RtError):
+class InvalidUseError(RtError):
     """ Exception raised when API method is not used correctly. """
 
 
-class BadRequest(RtError):
+class BadRequestError(RtError):
     """ Exception raised when HTTP code 400 (Bad Request) is received. """
 
 

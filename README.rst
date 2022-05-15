@@ -39,7 +39,12 @@ Requirements
 
 This module uses following Python modules:
  - requests (http://docs.python-requests.org/)
+ - requests-toolbelt (https://pypi.org/project/requests-toolbelt/)
+ - typing-extensions (depending on python version)
 
+Documentation
+=============
+https://python-rt.readthedocs.io/en/latest/
 
 Installation
 ============

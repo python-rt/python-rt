@@ -95,7 +95,7 @@ class RtTestCase(unittest.TestCase):
             self.assertRaises(rt.exceptions.AuthorizationError, lambda: tracker.login())
         for name, params in self.RT_BAD_URL.items():
             tracker = rt.rest1.Rt(**params)
-            self.assertRaises(rt.exceptions.UnexpectedResponse, lambda: tracker.login())
+            self.assertRaises(rt.exceptions.UnexpectedResponseError, lambda: tracker.login())
 
     @unittest.skipUnless(_have_creds(RT_VALID_CREDENTIALS),
                          "missing credentials required to run test")

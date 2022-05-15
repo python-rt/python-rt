@@ -9,6 +9,8 @@ Please note that this release contains breaking changes and requires adaptations
 sticking to version 1 of the API.
 These changes were necessary in order to properly support both API versions.
 
+Importing
+^^^^^^^^^
 Previously doing:
 
     .. code-block:: python
@@ -36,3 +38,17 @@ Everything else is the same as with version 2 of the library.
 
 .. WARNING::
     The minimum supported version of python has been raised to 3.7.
+
+Exception classes
+^^^^^^^^^^^^^^^^^^
+Some exception classes were renamed to follow proper naming scheme (https://peps.python.org/pep-0008/#exception-names):
+
+.. csv-table::
+   :header: "<3.0.0", ">=3.0.0"
+   :widths: 15, 15
+
+    "NotAllowed", "NotAllowedError"
+    "UnexpectedResponse", "UnexpectedResponseError"
+    "UnexpectedMessageFormat", "UnexpectedMessageFormatError"
+    "InvalidUseError", "InvalidUseError"
+    "BadRequestError", "BadRequestError"
