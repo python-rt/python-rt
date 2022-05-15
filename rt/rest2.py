@@ -146,7 +146,7 @@ class Rt:
                   json_data: typing.Optional[typing.Union[typing.Dict[str, typing.Any], typing.List[typing.Any]]] = None,
                   post_data: typing.Optional[typing.Dict[str, typing.Any]] = None,
                   attachments: typing.Optional[typing.Sequence[Attachment]] = None,
-                  ) -> typing.Dict[str, typing.Any]:
+                  ) -> typing.Union[typing.Dict[str, typing.Any], typing.List[str]]:
         """ General request for :term:`API`.
 
         :param selector: End part of URL which completes self.url parameter
@@ -157,7 +157,7 @@ class Rt:
         :param post_data: Dictionary with POST method fields
         :param attachments: Optional list of :py:class:`~rt.rest2.Attachment` objects
 
-        :returns: dict
+        :returns: dict or list depending on request
         :raises AuthorizationError: In case that request is called without previous
                                     login or login attempt failed.
         :raises ConnectionError: In case of connection error.
@@ -362,7 +362,12 @@ class Rt:
     def __get_url(self, url: str) -> typing.Dict[str, typing.Any]:
         """Call a URL as specified in the returned JSON of an API operation."""
         url_ = url.split('/REST/2.0/', 1)[1]
-        return self.__request(url_)
+        res = self.__request(url_)
+
+        if not isinstance(res, dict):  # pragma: no cover
+            raise UnexpectedResponse(str(res))
+
+        return res
 
     def new_correspondence(self, queue: typing.Optional[typing.Union[str, object]] = None) -> typing.List[dict]:
         """ Obtains tickets changed by other users than the system one.
@@ -503,9 +508,12 @@ class Rt:
         elif query_format == 's':
             get_params['fields'] = 'Subject'
 
-        msgs = self.__request(url, get_params=get_params)
+        res = self.__request(url, get_params=get_params)
 
-        return msgs['items']
+        if not isinstance(res, dict):  # pragma: no cover
+            raise UnexpectedResponse(str(res))
+
+        return res['items']
 
     def get_ticket(self, ticket_id: typing.Union[str, int]) -> dict:
         """ Fetch ticket by its ID.
@@ -540,7 +548,12 @@ class Rt:
         :raises UnexpectedMessageFormat: Unexpected format of returned message.
         :raises NotFoundError: If there is no ticket with the specified ticket_id.
         """
-        return self.__request(f'ticket/{ticket_id}', get_params={'fields[Queue]': 'Name'})
+        res = self.__request(f'ticket/{ticket_id}', get_params={'fields[Queue]': 'Name'})
+
+        if not isinstance(res, dict):  # pragma: no cover
+            raise UnexpectedResponse(str(res))
+
+        return res
 
     def create_ticket(self,
                       queue: str,
@@ -593,6 +606,9 @@ class Rt:
             ticket_data[k] = v
 
         res = self.__request('ticket', json_data=ticket_data, attachments=attachments)
+
+        if not isinstance(res, dict):  # pragma: no cover
+            raise UnexpectedResponse(str(res))
 
         return int(res['id'])
 
@@ -649,7 +665,12 @@ class Rt:
         :param transaction_id: ID of transaction
         :returns: Return a single transaction.
         """
-        return self.__request(f'transaction/{transaction_id}', get_params={'fields': 'Description'})
+        res = self.__request(f'transaction/{transaction_id}', get_params={'fields': 'Description'})
+
+        if not isinstance(res, dict):  # pragma: no cover
+            raise UnexpectedResponse(str(res))
+
+        return res
 
     def __correspond(self,
                      ticket_id: typing.Union[str, int],
@@ -845,7 +866,12 @@ class Rt:
         :raises UnexpectedMessageFormat: Unexpected format of returned message.
         :raises NotFoundError: If attachment with specified ID does not exist.
         """
-        return self.__request(f'attachment/{attachment_id}')
+        res = self.__request(f'attachment/{attachment_id}')
+
+        if not (res is None or isinstance(res, dict)):  # pragma: no cover
+            raise UnexpectedResponse(str(res))
+
+        return res
 
     def get_user(self, user_id: typing.Union[int, str]) -> typing.Dict[str, typing.Any]:
         """ Get user details.
@@ -878,7 +904,12 @@ class Rt:
         :raises UnexpectedMessageFormat: In case that returned status code is not 200
         :raises NotFoundError: If the user does not exist.
         """
-        return self.__request(f'user/{user_id}')
+        res = self.__request(f'user/{user_id}')
+
+        if not isinstance(res, dict):  # pragma: no cover
+            raise UnexpectedResponse(str(res))
+
+        return res
 
     def user_exists(self, user_id: typing.Union[int, str], privileged: bool = True) -> bool:
         """Check if a given user_id exists.
@@ -933,14 +964,17 @@ class Rt:
             raise InvalidUse(f'''Unsupported names of fields: {', '.join(invalid_fields)}.''')
 
         try:
-            ret = self.__request('user', json_data=post_data)
+            res = self.__request('user', json_data=post_data)
         except UnexpectedResponse as exc:  # pragma: no cover
             if exc.status_code == 400:
                 raise rt.exceptions.BadRequest(exc.response_message) from exc
 
             raise
 
-        return ret['id']
+        if not isinstance(res, dict):  # pragma: no cover
+            raise UnexpectedResponse(str(res))
+
+        return res['id']
 
     def edit_user(self, user_id: typing.Union[str, int], **kwargs: typing.Any) -> typing.List[str]:
         """ Edit user profile.
@@ -1095,7 +1129,12 @@ class Rt:
         :raises UnexpectedMessageFormat: In case that returned status code is not 200
         :raises NotFoundError: In case the queue does not exist
         """
-        return self.__request(f'queue/{queue_id}')
+        res = self.__request(f'queue/{queue_id}')
+
+        if not (res is None or isinstance(res, dict)):  # pragma: no cover
+            raise UnexpectedResponse(str(res))
+
+        return res
 
     def get_all_queues(self, include_disabled: bool = False) -> typing.List[typing.Dict[str, typing.Any]]:
         """ Return a list of all queues.
@@ -1207,14 +1246,17 @@ class Rt:
             raise InvalidUse(f'''Unsupported names of fields: {', '.join(invalid_fields)}.''')
 
         try:
-            ret = self.__request('queue', json_data=post_data)
+            res = self.__request('queue', json_data=post_data)
         except UnexpectedResponse as exc:  # pragma: no cover
             if exc.status_code == 400:
                 raise rt.exceptions.BadRequest(exc.response_message) from exc
 
             raise
 
-        return int(ret['id'])
+        if not isinstance(res, dict):  # pragma: no cover
+            raise UnexpectedResponse(str(res))
+
+        return int(res['id'])
 
     def delete_queue(self, queue_id: typing.Union[str, int]) -> None:
         """ Disable a queue.
