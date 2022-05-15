@@ -274,7 +274,7 @@ class Rt:
                         json_data: typing.Optional[typing.Union[typing.List[typing.Dict[str, typing.Any]], typing.Dict[str, typing.Any]]] = None,
                         params: typing.Optional[typing.Dict[str, typing.Any]] = None,
                         page: int = 1,
-                        per_page: int = 10,
+                        per_page: int = 20,
                         recurse: bool = True
                         ) -> typing.Iterator[typing.Dict[str, typing.Any]]:
         """ Request using pagination for :term:`API`.
@@ -371,25 +371,25 @@ class Rt:
 
         return res
 
-    def new_correspondence(self, queue: typing.Optional[typing.Union[str, object]] = None) -> typing.List[dict]:
+    def new_correspondence(self, queue: typing.Optional[typing.Union[str, object]] = None) -> typing.Iterator[dict]:
         """ Obtains tickets changed by other users than the system one.
 
         :param queue: Queue where to search
 
-        :returns: List of tickets which were last updated by another user than
+        :returns: Iterator of tickets which were last updated by another user than
                   the system one, ordered in decreasing order by LastUpdated.
                   Each ticket is dictionary, the same as in
                   :py:meth:`~Rt.get_ticket`.
         """
         return self.search(queue=queue, order='-LastUpdated')
 
-    def last_updated(self, since: str, queue: typing.Optional[str] = None) -> typing.List[dict]:
+    def last_updated(self, since: str, queue: typing.Optional[str] = None) -> typing.Iterator[dict]:
         """ Obtains tickets changed after given date.
 
         :param since: Date as string in form '2011-02-24'
         :param queue: Queue where to search
 
-        :returns: List of tickets with LastUpdated parameter later than
+        :returns: Iterator of tickets with LastUpdated parameter later than
                   *since* ordered in decreasing order by LastUpdated.
                   Each ticket is a dictionary, the same as in
                   :py:meth:`~Rt.get_ticket`.
@@ -420,14 +420,14 @@ class Rt:
         return False
 
     def search(self, queue: typing.Optional[typing.Union[str, object]] = None, order: typing.Optional[str] = None,
-               raw_query: typing.Optional[str] = None, query_format: str = 'l', **kwargs: typing.Any) -> typing.List[dict]:
+               raw_query: typing.Optional[str] = None, query_format: str = 'l', **kwargs: typing.Any) -> typing.Iterator[dict]:
         """ Search arbitrary needles in given fields and queue.
 
         Example::
 
             >>> tracker = Rt('http://tracker.example.com/REST/2.0/', 'rt-username', 'top-secret')
-            >>> tickets = tracker.search(CF_Domain='example.com', Subject__like='warning')
-            >>> tickets = tracker.search(queue='General', order='Status', raw_query="id='1'+OR+id='2'+OR+id='3'")
+            >>> tickets = list(tracker.search(CF_Domain='example.com', Subject__like='warning'))
+            >>> tickets = list(tracker.search(queue='General', order='Status', raw_query="id='1'+OR+id='2'+OR+id='3'"))
 
         :param queue:      Queue where to search. If you wish to search across
                            all of your queues, pass the ALL_QUEUES object as the
@@ -468,7 +468,7 @@ class Rt:
                              Setting values to keywords constrain search
                              result to the tickets satisfying all of them.
 
-        :returns: List of matching tickets. Each ticket is the same dictionary
+        :returns: Iterator over matching tickets. Each ticket is the same dictionary
                   as in :py:meth:`~Rt.get_ticket`.
         :raises:  UnexpectedMessageFormat: Unexpected format of returned message.
                   InvalidQueryError: If raw query is malformed
@@ -511,12 +511,7 @@ class Rt:
         elif query_format == 's':
             get_params['fields'] = 'Subject'
 
-        res = self.__request(url, get_params=get_params)
-
-        if not isinstance(res, dict):  # pragma: no cover
-            raise UnexpectedResponse(str(res))
-
-        return res['items']
+        yield from self.__paged_request(url, params=get_params)
 
     def get_ticket(self, ticket_id: typing.Union[str, int]) -> dict:
         """ Fetch ticket by its ID.

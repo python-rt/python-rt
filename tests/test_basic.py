@@ -57,7 +57,7 @@ def test_ticket_operations(rt_connection: rt.rest2.Rt):
     ticket_text = 'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'
 
     # empty search result
-    search_result = rt_connection.search(Subject=ticket_subject)
+    search_result = list(rt_connection.search(Subject=ticket_subject))
     assert not len(search_result)
 
     # create
@@ -65,13 +65,13 @@ def test_ticket_operations(rt_connection: rt.rest2.Rt):
     assert ticket_id > -1
 
     # search
-    search_result = rt_connection.search(Subject=ticket_subject)
+    search_result = list(rt_connection.search(Subject=ticket_subject))
     assert len(search_result) == 1
     assert search_result[0]['id'] == str(ticket_id)
     assert search_result[0]['Status'] == 'new'
 
     # raw search
-    search_result = rt_connection.search(raw_query=f'Subject="{ticket_subject}"')
+    search_result = list(rt_connection.search(raw_query=f'Subject="{ticket_subject}"'))
     assert len(search_result) == 1
     assert search_result[0]['id'] == str(ticket_id)
     assert search_result[0]['Status'] == 'new'
