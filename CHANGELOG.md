@@ -26,6 +26,7 @@ REST2 is a modern API based on JSON exchanges and thus the complex parsing of re
     `from rt.rest1 import Rt`
 - Importing the `rt` module does no longer import all exceptions but only the core `RtError` exception.
 If you require other exceptions, please import them from `rt.exceptions`.
+- Use pytest instead of nose.
 
 ## [v2.2.2], 2022-04-08
 - Fix bug in the get_ticket would omit certain fields in case they were empty instead of returning an empty list as was the previous behavior (#70).
