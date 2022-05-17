@@ -1,7 +1,7 @@
 Change Log
 ==========
 
-Version 3.x.x (2022-05-xx)
+Version 3.0.0 (2022-05-17)
 ----------------------------
 The following is a major release of the `rt` library.
 There is support for the REST API version 1 as well as version 2.
