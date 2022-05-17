@@ -1,2 +1,5 @@
-from .rt import *
-from .exceptions import *
+"""Module entry point."""
+
+from .exceptions import RtError
+
+__all__ = ['RtError']

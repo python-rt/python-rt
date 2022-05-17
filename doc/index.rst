@@ -9,26 +9,39 @@ Welcome to rt's documentation!
 Contents:
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
+   rest1
+   rest2
+   usage
+   changelog
+   exceptions
    glossary
 
-.. automodule:: rt.rt
-   :members:
+.. csv-table:: Python version compatibility:
+   :header: "Python", "rt"
+   :widths: 15, 15
 
-.. automodule:: rt.exceptions
-   :members:
+   "2.7", "< 2.0.0"
+   ">= 3.5, <3.7", ">= 2.0.0, < 3.0.0"
+   ">= 3.7", ">= 3.0.0"
 
-Get rt module
-=============
+.. note:: Please note that starting with the major release of v3.0.0, this library requires Python version >= 3.7.
+    See the *Python version compatibility* table above for more detailed information.
+
+.. warning:: Although version 3.x still supports RT REST API version 1, it contains minor breaking changes.
+    Please see the :doc:`changelog` in the documentation for details.
+
+Get the rt module
+=================
 
 Using pip::
-    
-    $ pip install rt
+
+    pip install rt
 
 Using project git repository::
     
-    $ git clone https://github.com/python-rt/python-rt
+    git clone https://github.com/python-rt/python-rt
 
 Indices and tables
 ==================

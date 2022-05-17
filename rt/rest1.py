@@ -35,7 +35,7 @@ from urllib.parse import urljoin
 import requests
 import requests.auth
 
-from .exceptions import NotAllowed, UnexpectedResponse, UnexpectedMessageFormat, InvalidUse, BadRequest, AuthorizationError, APISyntaxError, InvalidQueryError
+from .exceptions import NotAllowedError, UnexpectedResponseError, UnexpectedMessageFormatError, InvalidUseError, BadRequestError, AuthorizationError, APISyntaxError, InvalidQueryError
 
 __license__ = """ Copyright (C) 2012 CZ.NIC, z.s.p.o.
     Copyright (c) 2015 Genome Research Ltd.
@@ -68,7 +68,7 @@ ALL_QUEUES = object()
 
 
 class Rt:
-    """ :term:`API` for Request Tracker according to
+    r""" :term:`API` for Request Tracker according to
     http://requesttracker.wikia.com/wiki/REST. Interface is based on
     :term:`REST` architecture, which is based on HTTP/1.1 protocol. This module
     is therefore mainly sending and parsing special HTTP messages.
@@ -166,7 +166,7 @@ class Rt:
                   files: typing.Optional[typing.List[typing.Tuple[str, typing.IO, typing.Optional[str]]]] = None,
                   without_login: bool = False,
                   text_response: bool = True) -> str:
-        """ General request for :term:`API`.
+        r""" General request for :term:`API`.
 
         :keyword selector: End part of URL which completes self.url parameter
                            set during class initialization.
@@ -198,8 +198,8 @@ class Rt:
             else:
                 files_data = {}
                 for i, file_pair in enumerate(files):
-                    files_data['attachment_{:d}'.format(i + 1)] = file_pair
-                response = self.session.post(url, data=post_data, files=files_data)
+                    files_data[f'attachment_{i + 1}'] = file_pair
+                response = self.session.post(url, data=post_data, files=files_data)  # type: ignore
 
             method = "GET"
             if post_data or files:
@@ -214,7 +214,7 @@ class Rt:
             if response.status_code == 401:
                 raise AuthorizationError('Server could not verify that you are authorized to access the requested document.')
             if response.status_code != 200:
-                raise UnexpectedResponse('Received status code {:d} instead of 200.'.format(response.status_code))
+                raise UnexpectedResponseError(f'Received status code {response.status_code} instead of 200.')
             try:
                 if response.encoding:
                     result = response.content.decode(response.encoding.lower())
@@ -222,10 +222,10 @@ class Rt:
                     # try utf-8 if encoding is not filled
                     result = response.content.decode('utf-8')
             except LookupError as exc:
-                raise UnexpectedResponse('Unknown response encoding: {}.'.format(response.encoding)) from exc
+                raise UnexpectedResponseError(f'Unknown response encoding: {response.encoding}.') from exc
             except UnicodeError as exc:
                 if text_response:
-                    raise UnexpectedResponse('Unknown response encoding (UTF-8 does not work).') from exc
+                    raise UnexpectedResponseError('Unknown response encoding (UTF-8 does not work).') from exc
 
                 # replace errors - we need decoded content just to check for error codes in __check_response
                 result = response.content.decode('utf-8', 'replace')
@@ -246,14 +246,14 @@ class Rt:
         """
         try:
             return int(msg.split('\n')[0].split(' ')[1])
-        except Exception:
+        except (ValueError, AttributeError, LookupError):
             return None
 
     def __check_response(self, msg: typing.Union[str, list]) -> None:
         """ Search general errors in server response and raise exceptions when found.
 
         :keyword msg: Result message
-        :raises NotAllowed: Exception raised when operation was called with
+        :raises NotAllowedError: Exception raised when operation was called with
                             insufficient privileges
         :raises AuthorizationError: Credentials are invalid or missing
         :raises APISyntaxError: Syntax error
@@ -261,13 +261,13 @@ class Rt:
         if not isinstance(msg, list):
             msg = msg.split("\n")
         if (len(msg) > 2) and self.RE_PATTERNS['not_allowed_pattern'].match(msg[2]):
-            raise NotAllowed(msg[2][2:])
+            raise NotAllowedError(msg[2][2:])
         if self.RE_PATTERNS['credentials_required_pattern'].match(msg[0]):
             raise AuthorizationError('Credentials required.')
         if self.RE_PATTERNS['syntax_error_pattern'].match(msg[0]):
             raise APISyntaxError(msg[2][2:] if len(msg) > 2 else 'Syntax error.')
         if self.RE_PATTERNS['bad_request_pattern'].match(msg[0]):
-            raise BadRequest(msg[3] if len(msg) > 2 else 'Bad request.')
+            raise BadRequestError(msg[3] if len(msg) > 2 else 'Bad request.')
 
     @staticmethod
     def __normalize_list(msg: typing.Union[str, typing.Sequence[str]]) -> typing.Sequence[str]:
@@ -296,7 +296,7 @@ class Rt:
           the RT API response body.
         :keyword expect_keys: An iterable of strings. If any of these strings
           do not appear in the response, raise an error.
-        :raises UnexpectedMessageFormat: The body did not follow the expected format,
+        :raises UnexpectedMessageFormatError: The body did not follow the expected format,
           or an expected key was missing
         :returns: Dictionary mapping field names to value strings
         :rtype: Dictionary with string keys and string values
@@ -315,7 +315,7 @@ class Rt:
                 try:
                     fields[key].append(line.lstrip())
                 except KeyError:
-                    raise UnexpectedMessageFormat(
+                    raise UnexpectedMessageFormatError(
                             "Response has a continuation line with no field to continue",
                     ) from None
             else:
@@ -331,14 +331,10 @@ class Rt:
                     key = line[:-1]
                     fields[key] = []
                 else:
-                    raise UnexpectedMessageFormat(
-                            "Response has a line without a field name: {!r}".format(line),
-                    )
+                    raise UnexpectedMessageFormatError(f"Response has a line without a field name: {line}")
         for key in expect_keys:
             if key not in fields:
-                raise UnexpectedMessageFormat(
-                        "Missing line starting with `{}:`.".format(key),
-                )
+                raise UnexpectedMessageFormatError(f"Missing line starting with `{key}:`.")
         return {key: '\n'.join(lines) for key, lines in fields.items()}
 
     @classmethod
@@ -352,7 +348,7 @@ class Rt:
 
         :keyword msg: A multiline string, or an iterable of string lines, with
           the RT API response body.
-        :raises UnexpectedMessageFormat: The body did not follow the expected format
+        :raises UnexpectedMessageFormatError: The body did not follow the expected format
         :returns: List of 2-tuples with ids and descriptions
         :rtype: List of 2-tuples (int, str)
         """
@@ -367,7 +363,7 @@ class Rt:
 
         :keyword msg: A multiline string, or an iterable of string lines, with
           the RT API response body.
-        :raises UnexpectedMessageFormat: The body did not follow the expected format
+        :raises UnexpectedMessageFormatError: The body did not follow the expected format
         :returns: Dictionary mapping field names to value strings, or lists of
           strings for the People fields Requestors, Cc, and AdminCc
         :rtype: Dictionary with string keys and values that are strings or lists
@@ -375,7 +371,7 @@ class Rt:
         """
         pairs = cls.__parse_response_dict(msg, ['Requestors'])
         if not pairs.get('id', '').startswith('ticket/'):
-            raise UnexpectedMessageFormat('Response from RT didn\'t contain a valid ticket_id')
+            raise UnexpectedMessageFormatError('Response from RT didn\'t contain a valid ticket_id')
         _, _, numerical_id = pairs['id'].partition('/')
         ticket = typing.cast(typing.Dict[str, typing.Sequence[str]], pairs)
         ticket['numerical_id'] = numerical_id
@@ -471,7 +467,7 @@ class Rt:
     def search(self, Queue: typing.Optional[typing.Union[str, object]] = None, order: typing.Optional[str] = None,
                raw_query: typing.Optional[str] = None, Format: str = 'l', Fields: typing.Optional[typing.List[str]] = None,
                **kwargs: typing.Any) -> typing.List[dict]:
-        """ Search arbitrary needles in given fields and queue.
+        r""" Search arbitrary needles in given fields and queue.
 
         Example::
 
@@ -523,14 +519,14 @@ class Rt:
 
         :returns: List of matching tickets. Each ticket is the same dictionary
                   as in :py:meth:`~Rt.get_ticket`\\.
-        :raises:  UnexpectedMessageFormat: Unexpected format of returned message.
+        :raises:  UnexpectedMessageFormatError: Unexpected format of returned message.
                   InvalidQueryError: If raw query is malformed
         """
         get_params = {}
         query = []
         url = 'search/ticket'
         if Queue is not ALL_QUEUES:
-            query.append("Queue=\'{}\'".format(Queue or self.default_queue))
+            query.append(f"Queue=\'{Queue or self.default_queue}\'")
         if not raw_query:
             operators_map = {
                 'gt': '>',
@@ -550,9 +546,9 @@ class Rt:
                     key = '__'.join(key_parts[:-1])
                     op = operators_map.get(key_parts[-1], '=')
                 if key[:3] != 'CF_':
-                    query.append("{}{}\'{}\'".format(key, op, value))
+                    query.append(f"{key}{op}\'{value}\'")
                 else:
-                    query.append("'CF.{{{}}}'{}\'{}\'".format(key[3:], op, value))
+                    query.append(f"'CF.{{{key[3:]}}}'{op}\'{value}\'")
         else:
             query.append(raw_query)
         get_params['query'] = ' AND '.join('(' + part + ')' for part in query)
@@ -623,9 +619,9 @@ class Rt:
                       * TimeEstimated
                       * TimeWorked
                       * TimeLeft
-        :raises UnexpectedMessageFormat: Unexpected format of returned message.
+        :raises UnexpectedMessageFormatError: Unexpected format of returned message.
         """
-        _msg = self.__request('ticket/{}/show'.format(str(ticket_id), ))
+        _msg = self.__request(f'ticket/{ticket_id}/show')
         status_code = self.__get_status_code(_msg)
         if status_code is not None and status_code == 200:
             msg = _msg.split('\n')
@@ -639,7 +635,7 @@ class Rt:
 
             return self.__parse_response_ticket(msg)
 
-        raise UnexpectedMessageFormat('Received status code is {} instead of 200.'.format(status_code))
+        raise UnexpectedMessageFormatError(f'Received status code is {status_code} instead of 200.')
 
     @staticmethod
     def __ticket_post_data(data_source: dict) -> str:
@@ -652,14 +648,14 @@ class Rt:
         post_data = []
         for key in data_source:
             if key.startswith('CF_'):
-                rt_key = 'CF.{{{}}}'.format(key[3:])
+                rt_key = f'CF.{{{key[3:]}}}'
             else:
                 rt_key = key
             value = data_source[key]
             if isinstance(value, (list, tuple)):
                 value = ', '.join(value)
             value_lines = iter(value.splitlines())
-            post_data.append('{}: {}'.format(rt_key, next(value_lines, '')))
+            post_data.append(f'''{rt_key}: {next(value_lines, '')}''')
             post_data.extend(' ' + line for line in value_lines)
         return '\n'.join(post_data)
 
@@ -712,7 +708,7 @@ class Rt:
 
         if files:
             for file_info in files:
-                post_data += "\nAttachment: {}".format(file_info[0], )
+                post_data += f"\nAttachment: {file_info[0]}"
 
         msg = self.__request('ticket/new', post_data={'content': post_data}, files=files)
         for line in msg.split('\n')[2:-1]:
@@ -742,7 +738,7 @@ class Rt:
                       was set (in this case all other valid fields are changed)
         """
         post_data = self.__ticket_post_data(kwargs)
-        msg = self.__request('ticket/{}/edit'.format(str(ticket_id)), post_data={'content': post_data})
+        msg = self.__request(f'ticket/{ticket_id}/edit', post_data={'content': post_data})
         if "" == msg:  # Ticket not modified
             return True
         state = msg.split('\n')[2]
@@ -767,14 +763,14 @@ class Rt:
                   of pairs (attachment_id,filename_with_size).
 
                   Returns None if ticket or transaction does not exist.
-        :raises UnexpectedMessageFormat: Unexpected format of returned message.
+        :raises UnexpectedMessageFormatError: Unexpected format of returned message.
         """
         if transaction_id is None:
             # We are using "long" format to get all history items at once.
             # Each history item is then separated by double dash.
-            msgs = self.__request('ticket/{}/history?format=l'.format(str(ticket_id), ))
+            msgs = self.__request(f'ticket/{ticket_id}/history?format=l')
         else:
-            msgs = self.__request('ticket/{}/history/id/{}'.format(str(ticket_id), str(transaction_id)))
+            msgs = self.__request(f'ticket/{ticket_id}/history/id/{transaction_id}')
         lines = msgs.split('\n')
         if (len(lines) > 2) and (
                 self.RE_PATTERNS['does_not_exist_pattern'].match(lines[2]) or self.RE_PATTERNS['not_related_pattern'].match(
@@ -798,7 +794,7 @@ class Rt:
                   Each history item is a tuple containing (id, Description).
                   Returns None if ticket does not exist.
         """
-        msg = self.__request('ticket/{}/history'.format(str(ticket_id), ))
+        msg = self.__request(f'ticket/{ticket_id}/history')
         lines = msg.split('\n')
         if self.__get_status_code(lines[0]) == 200:
             if (len(lines) > 2) and self.RE_PATTERNS['does_not_exist_pattern'].match(lines[2]):
@@ -828,7 +824,7 @@ class Rt:
                       Operation was successful
                   ``False``
                       Sending failed (status code != 200)
-        :raises BadRequest: When ticket does not exist
+        :raises BadRequestError: When ticket does not exist
         """
         post_data = {'content': """id: {}
 Action: {}
@@ -839,8 +835,8 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
 
         if files:
             for file_info in files:
-                post_data['content'] += "\nAttachment: {}".format(file_info[0], )
-        msg = self.__request('ticket/{}/comment'.format(str(ticket_id), ),
+                post_data['content'] += f"\nAttachment: {file_info[0]}"
+        msg = self.__request(f'ticket/{ticket_id}/comment',
                              post_data=post_data, files=files)
         return self.__get_status_code(msg) == 200
 
@@ -872,7 +868,7 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
                       Operation was successful
                   ``False``
                       Sending failed (status code != 200)
-        :raises BadRequest: When ticket does not exist
+        :raises BadRequestError: When ticket does not exist
         """
         return self.__correspond(ticket_id, text, 'correspond', cc, bcc, content_type, files)
 
@@ -909,7 +905,7 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
                       Operation was successful
                   ``False``
                       Sending failed (status code != 200)
-        :raises BadRequest: When ticket does not exist
+        :raises BadRequestError: When ticket does not exist
         """
         return self.__correspond(ticket_id, text, 'comment', cc, bcc, content_type, files)
 
@@ -921,7 +917,7 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
                   Tuple format: (id, name, content_type, size)
                   Returns None if ticket does not exist.
         """
-        msg = self.__request('ticket/{}/attachments'.format(str(ticket_id), ))
+        msg = self.__request(f'ticket/{ticket_id}/attachments')
         lines = msg.split('\n')
         if (len(lines) > 2) and self.RE_PATTERNS['does_not_exist_pattern'].match(lines[2]):
             return None
@@ -997,9 +993,9 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
                   emails not on Request Tracker!
 
                   Returns None if ticket or attachment does not exist.
-        :raises UnexpectedMessageFormat: Unexpected format of returned message.
+        :raises UnexpectedMessageFormatError: Unexpected format of returned message.
         """
-        _msg = self.__request('ticket/{}/attachments/{}'.format(str(ticket_id), str(attachment_id)),
+        _msg = self.__request(f'ticket/{ticket_id}/attachments/{attachment_id}',
                               text_response=False)
         msg = typing.cast(bytes, _msg).split(b'\n')
         if (len(msg) > 2) and (
@@ -1009,15 +1005,15 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
         head_matching = [i for i, m in enumerate(msg) if self.RE_PATTERNS['headers_pattern_bytes'].match(m)]
         head_id = head_matching[0] if head_matching else None
         if not head_id:
-            raise UnexpectedMessageFormat('Unexpected headers part of attachment entry. \
+            raise UnexpectedMessageFormatError('Unexpected headers part of attachment entry. \
                                            Missing line starting with `Headers:`.')
         msg[head_id] = re.sub(b'^Headers: (.*)$', rb'\1', msg[head_id])
         cont_matching = [i for i, m in enumerate(msg) if self.RE_PATTERNS['content_pattern_bytes'].match(m)]
         if not cont_matching:
-            raise UnexpectedMessageFormat('Unexpected content part of attachment entry. \
+            raise UnexpectedMessageFormatError('Unexpected content part of attachment entry. \
                                            Missing line starting with `Content:`.')
         cont_id = cont_matching[0]
-        pairs = {}  # type: typing.Dict[str, typing.Any]
+        pairs: typing.Dict[str, typing.Any] = {}
         for i in range(head_id):
             if b': ' in msg[i]:
                 header, content = msg[i].split(b': ', 1)
@@ -1037,7 +1033,7 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
 
     def get_attachment_content(self, ticket_id: typing.Union[str, int], attachment_id: typing.Union[str, int]) -> \
             typing.Optional[bytes]:
-        """ Get content of attachment without headers.
+        r""" Get content of attachment without headers.
 
         This function is necessary to use for binary attachment,
         as it can contain ``\\n`` chars, which would disrupt parsing
@@ -1053,8 +1049,7 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
         Returns: Bytes with content of attachment or None if ticket or
                  attachment does not exist.
         """
-        msg = typing.cast(bytes, self.__request('ticket/{}/attachments/{}/content'.format
-                                                (str(ticket_id), str(attachment_id)),
+        msg = typing.cast(bytes, self.__request(f'ticket/{ticket_id}/attachments/{attachment_id}/content',
                                                 text_response=False))
         lines = msg.split(b'\n', 3)
         if (len(lines) == 4) and (
@@ -1091,9 +1086,9 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
                       * Name
 
                   None is returned if user does not exist.
-        :raises UnexpectedMessageFormat: In case that returned status code is not 200
+        :raises UnexpectedMessageFormatError: In case that returned status code is not 200
         """
-        msg = self.__request('user/{}'.format(str(user_id), ))
+        msg = self.__request(f'user/{user_id}')
         lines = msg.split('\n')
         status_code = self.__get_status_code(lines[0])
         if status_code is not None and status_code == 200:
@@ -1101,7 +1096,7 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
                 return None
             return self.__parse_response_dict(lines)
 
-        raise UnexpectedMessageFormat('Received status code is {} instead of 200.'.format(status_code))
+        raise UnexpectedMessageFormatError(f'Received status code is {status_code} instead of 200.')
 
     def create_user(self, Name: str, EmailAddress: str, **kwargs: typing.Any) -> typing.Union[int, bool]:
         """ Create user (undocumented API feature).
@@ -1110,8 +1105,8 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
         :param EmailAddress: Email address (required)
         :param kwargs: Optional fields to set (see edit_user)
         :returns: ID of new user or False when create fails
-        :raises BadRequest: When user already exists
-        :raises InvalidUse: When invalid fields are set
+        :raises BadRequestError: When user already exists
+        :raises InvalidUseError: When invalid fields are set
         """
         return self.edit_user('new', Name=Name, EmailAddress=EmailAddress, **kwargs)
 
@@ -1153,8 +1148,8 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
                           * Disabled
 
         :returns: ID of edited user or False when edit fails
-        :raises BadRequest: When user does not exist
-        :raises InvalidUse: When invalid fields are set
+        :raises BadRequestError: When user does not exist
+        :raises InvalidUseError: When invalid fields are set
         """
         valid_fields = {'name', 'password', 'emailaddress', 'realname',
                         'nickname', 'gecos', 'organization', 'address1', 'address2',
@@ -1167,10 +1162,10 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
 
         if not used_fields <= valid_fields:
             invalid_fields = ", ".join(list(used_fields - valid_fields))
-            raise InvalidUse("Unsupported names of fields: {}.".format(invalid_fields))
-        post_data = 'id: user/{}\n'.format(str(user_id))
+            raise InvalidUseError(f"Unsupported names of fields: {invalid_fields}.")
+        post_data = f'id: user/{user_id}\n'
         for key, val in kwargs.items():
-            post_data += '{}: {}\n'.format(key, val)
+            post_data += f'{key}: {val}\n'
         msg = self.__request('edit', post_data={'content': post_data})
         msgs = msg.split('\n')
         if (self.__get_status_code(msg) == 200) and (len(msgs) > 2):
@@ -1196,9 +1191,9 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
                       * FinalPriority
                       * DefaultDueIn
 
-        :raises UnexpectedMessageFormat: In case that returned status code is not 200
+        :raises UnexpectedMessageFormatError: In case that returned status code is not 200
         """
-        msg = self.__request('queue/{}'.format(str(queue_id)))
+        msg = self.__request(f'queue/{queue_id}')
         lines = msg.split('\n')
         status_code = self.__get_status_code(lines[0])
         if status_code is not None and status_code == 200:
@@ -1206,7 +1201,7 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
                 return None
             return self.__parse_response_dict(lines)
 
-        raise UnexpectedMessageFormat('Received status code is {} instead of 200.'.format(status_code))
+        raise UnexpectedMessageFormatError(f'Received status code is {status_code} instead of 200.')
 
     def edit_queue(self, queue_id: typing.Union[str, int], **kwargs: typing.Any) -> typing.Union[str, bool]:
         """ Edit queue (undocumented API feature).
@@ -1223,8 +1218,8 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
                           * DefaultDueIn
 
         :returns: ID or name of edited queue or False when edit fails
-        :raises BadRequest: When queue does not exist
-        :raises InvalidUse: When invalid fields are set
+        :raises BadRequestError: When queue does not exist
+        :raises InvalidUseError: When invalid fields are set
         """
         valid_fields = {'name', 'description', 'correspondaddress', 'commentaddress', 'initialpriority',
                         'finalpriority',
@@ -1233,10 +1228,10 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
 
         if not used_fields <= valid_fields:
             invalid_fields = ", ".join(list(used_fields - valid_fields))
-            raise InvalidUse("Unsupported names of fields: {}.".format(invalid_fields))
-        post_data = 'id: queue/{}\n'.format(str(queue_id))
+            raise InvalidUseError(f"Unsupported names of fields: {invalid_fields}.")
+        post_data = f'id: queue/{queue_id}\n'
         for key, val in kwargs.items():
-            post_data += '{}: {}\n'.format(key, val)
+            post_data += f'{key}: {val}\n'
         msg = self.__request('edit', post_data={'content': post_data})
         msgs = msg.split('\n')
         if (self.__get_status_code(msg) == 200) and (len(msgs) > 2):
@@ -1251,8 +1246,8 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
         :param Name: Queue name (required)
         :param kwargs: Optional fields to set (see edit_queue)
         :returns: ID of new queue or False when create fails
-        :raises BadRequest: When queue already exists
-        :raises InvalidUse: When invalid fields are set
+        :raises BadRequestError: When queue already exists
+        :raises InvalidUseError: When invalid fields are set
         """
         return int(self.edit_queue('new', Name=Name, **kwargs))
 
@@ -1272,9 +1267,9 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
                       * DependedOnBy
 
                   None is returned if ticket does not exist.
-        :raises UnexpectedMessageFormat: In case that returned status code is not 200
+        :raises UnexpectedMessageFormatError: In case that returned status code is not 200
         """
-        msg = self.__request('ticket/{}/links/show'.format(str(ticket_id), ))
+        msg = self.__request(f'ticket/{ticket_id}/links/show')
         lines = msg.split('\n')
         status_code = self.__get_status_code(lines[0])
         if status_code is not None and status_code == 200:
@@ -1284,7 +1279,7 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
             return {key: [link.rstrip(',') for link in links.split()]
                     for key, links in pairs.items()}
 
-        raise UnexpectedMessageFormat('Received status code is {} instead of 200.'.format(status_code))
+        raise UnexpectedMessageFormatError(f'Received status code is {status_code} instead of 200.')
 
     def edit_ticket_links(self, ticket_id: typing.Union[str, int], **kwargs: typing.Any) -> bool:
         """ Edit ticket links.
@@ -1308,8 +1303,8 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
         """
         post_data = ''
         for key, value in kwargs.items():
-            post_data += "{}: {}\n".format(key, str(value))
-        msg = self.__request('ticket/{}/links'.format(str(ticket_id), ),
+            post_data += f"{key}: {value}\n"
+        msg = self.__request(f'ticket/{ticket_id}/links',
                              post_data={'content': post_data})
         state = msg.split('\n')[2]
         return self.RE_PATTERNS['links_updated_pattern'].match(state) is not None
@@ -1328,13 +1323,13 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
                   ``False``
                       Ticket with given ID does not exist or link to delete is
                       not found
-        :raises InvalidUse: When none or more then one links are specified. Also
+        :raises InvalidUseError: When none or more then one links are specified. Also
                             when wrong link name is used.
         """
         valid_link_names = {'dependson', 'dependedonby', 'refersto',
                             'referredtoby', 'hasmember', 'memberof'}
         if not link_name.lower() in valid_link_names:
-            raise InvalidUse("Unsupported name of link.")
+            raise InvalidUseError("Unsupported name of link.")
         post_data = {'rel': link_name.lower(),
                      'to': link_value,
                      'id': ticket_id,
@@ -1351,15 +1346,14 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
         """ Merge ticket into another (undocumented API feature).
 
         :param ticket_id: ID of ticket to be merged
-        :param into: ID of destination ticket
+        :param into_id: ID of destination ticket
         :returns: ``True``
                       Operation was successful
                   ``False``
                       Either origin or destination ticket does not
                       exist or user does not have ModifyTicket permission.
         """
-        msg = self.__request('ticket/{}/merge/{}'.format(str(ticket_id),
-                                                         str(into_id)))
+        msg = self.__request(f'ticket/{ticket_id}/merge/{into_id}')
         state = msg.split('\n')[2]
         return self.RE_PATTERNS['merge_successful_pattern'].match(state) is not None
 
@@ -1373,8 +1367,8 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
                       Either the ticket does not exist or user does not
                       have TakeTicket permission.
         """
-        post_data = {'content': "Ticket: {}\nAction: take".format(str(ticket_id))}
-        msg = self.__request('ticket/{}/take'.format(str(ticket_id)), post_data=post_data)
+        post_data = {'content': f"Ticket: {ticket_id}\nAction: take"}
+        msg = self.__request(f'ticket/{ticket_id}/take', post_data=post_data)
         return self.__get_status_code(msg) == 200
 
     def steal(self, ticket_id: typing.Union[str, int]) -> bool:
@@ -1387,8 +1381,8 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
                       Either the ticket does not exist or user does not
                       have StealTicket permission.
         """
-        post_data = {'content': "Ticket: {}\nAction: steal".format(str(ticket_id))}
-        msg = self.__request('ticket/{}/take'.format(str(ticket_id)), post_data=post_data)
+        post_data = {'content': f"Ticket: {ticket_id}\nAction: steal"}
+        msg = self.__request(f'ticket/{ticket_id}/take', post_data=post_data)
         return self.__get_status_code(msg) == 200
 
     def untake(self, ticket_id: typing.Union[str, int]) -> bool:
@@ -1401,8 +1395,8 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
                       Either the ticket does not exist or user does not
                       own the ticket.
         """
-        post_data = {'content': "Ticket: {}\nAction: untake".format(str(ticket_id))}
-        msg = self.__request('ticket/{}/take'.format(str(ticket_id)), post_data=post_data)
+        post_data = {'content': f"Ticket: {ticket_id}\nAction: untake"}
+        msg = self.__request(f'ticket/{ticket_id}/take', post_data=post_data)
         return self.__get_status_code(msg) == 200
 
     @staticmethod

@@ -8,5 +8,6 @@ rt.egg-info
 .idea
 .vscode
 .mypy_cache
+.pytest_cache
 doc/_build/
 venv
