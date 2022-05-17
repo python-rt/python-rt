@@ -4,8 +4,8 @@
 .. image:: https://github.com/python-rt/python-rt/actions/workflows/test_lint.yml/badge.svg
     :target: https://github.com/python-rt/python-rt/actions/workflows/test_lint.yml
     :alt: tests
-.. image:: https://readthedocs.org/projects/python-rt/badge/?version=latest
-    :target: https://python-rt.readthedocs.io/en/latest/?badge=latest
+.. image:: https://readthedocs.org/projects/python-rt/badge/?version=stable
+    :target: https://python-rt.readthedocs.io/en/stable/?badge=stable
     :alt: Documentation Status
 .. image:: https://badge.fury.io/py/rt.svg
     :target: https://badge.fury.io/py/rt
