@@ -659,7 +659,7 @@ class Rt:
                   Each history item is a tuple containing (id, Description).
                   Returns None if ticket does not exist.
         """
-        transactions = self.__paged_request(f'ticket/{ticket_id}/history', params={'fields': 'Type,Creator,Created,Description',
+        transactions = self.__paged_request(f'ticket/{ticket_id}/history', params={'fields': 'Type,Creator,Created,Description,_hyperlinks',
                                                                                    'fields[Creator]': 'id,Name,RealName,EmailAddress'
                                                                                    }
                                             )
