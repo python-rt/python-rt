@@ -56,7 +56,7 @@ TYPE_VALID_TICKET_LINK_NAMES = Literal['Parent', 'Child', 'RefersTo',
                                        'ReferredToBy', 'DependsOn', 'DependedOnBy']
 TYPE_CONTENT_TYPE = Literal['text/plain', 'text/html']
 
-REGEX_PATTERNS = {'does_not_exist': re.compile(r'''(user|queue)(?: [^does]+)? does not exist''', re.I)}
+REGEX_PATTERNS = {'does_not_exist': re.compile(r'''(user|queue|resource)(?: [^does]+)? does not exist''', re.I)}
 
 
 @dataclasses.dataclass

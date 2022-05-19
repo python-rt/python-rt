@@ -182,6 +182,10 @@ def test_ticket_operations(rt_connection: rt.rest2.Rt):
     with pytest.raises(rt.exceptions.NotFoundError):
         rt_connection.edit_ticket(ticket_id, Queue='invalid_queue')
 
+    # edit invalid ticket
+    with pytest.raises(rt.exceptions.NotFoundError):
+        rt_connection.edit_ticket(999999999, Owner='Nobody')
+
     # merge tickets
     assert rt_connection.merge_ticket(ticket2_id, ticket_id)
 
