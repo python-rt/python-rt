@@ -652,7 +652,7 @@ class Rt:
             return True
 
         for k in msg:
-            if re.search(REGEX_PATTERNS['does_not_exist'], k):
+            if REGEX_PATTERNS['does_not_exist'].search(k):
                 raise rt.exceptions.NotFoundError(k)
 
         return bool(msg[0])
@@ -764,7 +764,7 @@ class Rt:
         :raises UnexpectedResponseError: If the response from RT is not as expected
         """
         try:
-            _ = self.__request_delete(f'ticket/{ticket_id}')
+            self.__request_delete(f'ticket/{ticket_id}')
         except UnexpectedResponseError as exc:
             if exc.status_code == 400:  # pragma: no cover
                 raise rt.exceptions.BadRequestError(exc.response_message) from exc
