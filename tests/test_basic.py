@@ -174,11 +174,27 @@ def test_ticket_operations(rt_connection: rt.rest2.Rt):
     at_content = base64.b64decode(rt_connection.get_attachment(at_id)['Content'])
     assert at_content == attachment_content
 
+    # set invalid user
+    with pytest.raises(rt.exceptions.NotFoundError):
+        rt_connection.edit_ticket(ticket_id, Owner='invalid_user')
+
+    # set invalid queue
+    with pytest.raises(rt.exceptions.NotFoundError):
+        rt_connection.edit_ticket(ticket_id, Queue='invalid_queue')
+
+    # edit invalid ticket
+    with pytest.raises(rt.exceptions.NotFoundError):
+        rt_connection.edit_ticket(999999999, Owner='Nobody')
+
     # merge tickets
     assert rt_connection.merge_ticket(ticket2_id, ticket_id)
 
     # delete ticket
-    assert rt_connection.edit_ticket(ticket_id, Status='deleted')
+    assert rt_connection.delete_ticket(ticket_id) is None
+
+    # delete invalid ticket
+    with pytest.raises(rt.exceptions.NotFoundError):
+        assert rt_connection.delete_ticket(999999999)
 
 
 def test_attachments_create(rt_connection: rt.rest2.Rt):

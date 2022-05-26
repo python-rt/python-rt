@@ -56,6 +56,8 @@ TYPE_VALID_TICKET_LINK_NAMES = Literal['Parent', 'Child', 'RefersTo',
                                        'ReferredToBy', 'DependsOn', 'DependedOnBy']
 TYPE_CONTENT_TYPE = Literal['text/plain', 'text/html']
 
+REGEX_PATTERNS = {'does_not_exist': re.compile(r'''(user|queue|resource)(?: [^does]+)? does not exist''', re.I)}
+
 
 @dataclasses.dataclass
 class Attachment:
@@ -649,6 +651,10 @@ class Rt:
         if not msg:
             return True
 
+        for k in msg:
+            if REGEX_PATTERNS['does_not_exist'].search(k):
+                raise rt.exceptions.NotFoundError(k)
+
         return bool(msg[0])
 
     def get_ticket_history(self, ticket_id: typing.Union[str, int]) -> typing.Optional[typing.List[typing.Dict[str, typing.Any]]]:
@@ -659,7 +665,7 @@ class Rt:
                   Each history item is a tuple containing (id, Description).
                   Returns None if ticket does not exist.
         """
-        transactions = self.__paged_request(f'ticket/{ticket_id}/history', params={'fields': 'Type,Creator,Created,Description',
+        transactions = self.__paged_request(f'ticket/{ticket_id}/history', params={'fields': 'Type,Creator,Created,Description,_hyperlinks',
                                                                                    'fields[Creator]': 'id,Name,RealName,EmailAddress'
                                                                                    }
                                             )
@@ -747,6 +753,26 @@ class Rt:
             raise UnexpectedResponseError(str(msg))
 
         return bool(msg[0])
+
+    def delete_ticket(self, ticket_id: typing.Union[str, int]) -> None:
+        """ Mark a ticket as deleted.
+
+        :param ticket_id: ID of ticket
+
+        :raises BadRequestError: When user does not exist
+        :raises NotFoundError: If the user does not exist
+        :raises UnexpectedResponseError: If the response from RT is not as expected
+        """
+        try:
+            self.__request_delete(f'ticket/{ticket_id}')
+        except UnexpectedResponseError as exc:
+            if exc.status_code == 400:  # pragma: no cover
+                raise rt.exceptions.BadRequestError(exc.response_message) from exc
+
+            if exc.status_code == 204:
+                return
+
+            raise  # pragma: no cover
 
     def comment(self,
                 ticket_id: typing.Union[str, int],
