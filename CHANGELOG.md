@@ -3,6 +3,15 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v3.0.1], 2022-05-26
+### Fixes
+- Make sure to include _hyperlinks in history items
+- On edit ticket, raise exception if user/queue does not exist
+
+### Added
+- Add helper method for deleting tickets
+- Add tests
+
 ## [v3.0.0], 2022-05-17
 The following is a major release of the `rt` library.
 There is support for the REST API version 1 as well as version 2.
