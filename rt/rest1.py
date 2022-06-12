@@ -35,7 +35,8 @@ from urllib.parse import urljoin
 import requests
 import requests.auth
 
-from .exceptions import NotAllowedError, UnexpectedResponseError, UnexpectedMessageFormatError, InvalidUseError, BadRequestError, AuthorizationError, APISyntaxError, InvalidQueryError
+from .exceptions import NotAllowedError, UnexpectedResponseError, UnexpectedMessageFormatError, InvalidUseError, \
+    BadRequestError, AuthorizationError, APISyntaxError, InvalidQueryError, NotFoundError
 
 __license__ = """ Copyright (C) 2012 CZ.NIC, z.s.p.o.
     Copyright (c) 2015 Genome Research Ltd.
@@ -1163,6 +1164,15 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
         if not used_fields <= valid_fields:
             invalid_fields = ", ".join(list(used_fields - valid_fields))
             raise InvalidUseError(f"Unsupported names of fields: {invalid_fields}.")
+
+        if isinstance(user_id, str) and not user_id.isnumeric():
+            _user = self.get_user(user_id)
+
+            if _user is None:
+                raise NotFoundError(f'User "{user_id}" does not exist.')
+
+            user_id = _user['id'].split('/', 1)[1]
+
         post_data = f'id: user/{user_id}\n'
         for key, val in kwargs.items():
             post_data += f'{key}: {val}\n'

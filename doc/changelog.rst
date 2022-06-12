@@ -1,6 +1,12 @@
 Change Log
 ==========
 
+Version 3.0.2 (2022-06-12)
+----------------------------
+Fixes
+^^^^^
+- Fix edit_user() response handling in case a user_id name (str) was passed instead of a number.
+
 Version 3.0.1 (2022-05-26)
 ----------------------------
 Fixes
