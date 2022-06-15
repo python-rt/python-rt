@@ -5,7 +5,7 @@ Version 3.0.3 (2022-06-16)
 ----------------------------
 Changes
 ^^^^^^^
-- Move package metadata and configuration from setup.py/setup.cfg to pyproject.toml.
+- Move package metadata and configuration from setup.cfg to pyproject.toml.
 
 Version 3.0.2 (2022-06-12)
 ----------------------------
