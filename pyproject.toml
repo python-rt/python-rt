@@ -2,6 +2,74 @@
 requires = ["setuptools>=45", "setuptools_scm[toml]>=6.2"]
 build-backend = "setuptools.build_meta"
 
+[project]
+name = "rt"
+description = "Python interface to Request Tracker API"
+readme = "README.rst"
+license = { text = "GNU General Public License v3 (GPLv3)" }
+authors = [{ name = "Georges Toth", email = "georges.toth@govcert.etat.lu" }]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Operating System :: POSIX",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+requires-python = ">= 3.7"
+dependencies = [
+    "requests",
+    "requests_toolbelt",
+    'typing-extensions ; python_version < "3.8"',
+]
+dynamic = ["version"]
+
+[project.urls]
+Homepage = "https://github.com/python-rt/python-rt"
+Documentation = "https://python-rt.readthedocs.io/"
+Source = "https://github.com/python-rt/python-rt"
+Tracker = "https://github.com/python-rt/python-rt/issues"
+Changelog = "https://github.com/python-rt/python-rt/blob/master/CHANGELOG.md"
+
+[project.optional-dependencies]
+docs = [
+    "sphinx",
+    "sphinx-autodoc-typehints",
+    "sphinx-rtd-theme",
+    "furo",
+    "sphinx-copybutton",
+]
+dev = [
+    "pycodestyle",
+    "pylint",
+    "mypy",
+    "flake8",
+    "flake8-bandit",
+    "flake8-comprehensions",
+    "flake8-docstrings",
+    "pep8-naming",
+    "types-requests",
+    "codespell",
+]
+test = [
+    "pytest",
+    "coverage",
+]
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+exclude = ["tests"]
+namespaces = false
+
+[tool.pycodestyle]
+filename = "rt/rt.py"
+ignore = "E501, W503, E124, E126"
+
 [tool.setuptools_scm]
 
 [tool.mypy]

@@ -3,6 +3,10 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v3.0.3], 2022-06-16
+### Changes
+- Move package metadata and configuration from setup.py/setup.cfg to pyproject.toml.
+
 ## [v3.0.2], 2022-06-12
 ### Fixes
 - Fix edit_user() response handling in case a user_id name (str) was passed instead of a number.
