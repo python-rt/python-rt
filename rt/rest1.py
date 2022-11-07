@@ -208,7 +208,7 @@ class Rt:
             self.logger.debug("### %s", datetime.datetime.now().isoformat())
             self.logger.debug("Request URL: %s", url)
             self.logger.debug("Request method: %s", method)
-            self.logger.debug("Respone status code: %s", str(response.status_code))
+            self.logger.debug("Response status code: %s", str(response.status_code))
             self.logger.debug("Response content:")
             self.logger.debug(response.content.decode(errors='ignore'))
 
