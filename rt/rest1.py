@@ -924,7 +924,13 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
             return None
         attachment_infos = []
         if (self.__get_status_code(lines[0]) == 200) and (len(lines) >= 4):
-            for line in lines[4:]:
+            # The format of tickets with 1 attachments varies from those with >=2.
+            # *Attachments: ...* starts at line 3 with single attachment tickets, whereas
+            # with >=2 attachment tickets, it starts at line 4. As in the latter case,
+            # line 3 is just an empty line, we changed this to "3:" in order to work with
+            # single attachment tickets.
+            # -> Bug in RT
+            for line in lines[3:]:
                 info = self.RE_PATTERNS['attachments_list_pattern'].match(line)
                 if info:
                     attachment_infos.append(info.groups())
