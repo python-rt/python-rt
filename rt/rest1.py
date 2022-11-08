@@ -113,7 +113,7 @@ class Rt:
                  default_queue: str = DEFAULT_QUEUE,
                  skip_login: bool = False,
                  verify_cert: typing.Optional[typing.Union[str, bool]] = True,
-                 http_auth: requests.auth.AuthBase = None) -> None:
+                 http_auth: typing.Optional[requests.auth.AuthBase] = None) -> None:
         """ API initialization.
 
         :keyword url: Base URL for Request Tracker API.
@@ -162,8 +162,8 @@ class Rt:
 
     def __request(self,
                   selector: str,
-                  get_params: typing.Dict[str, typing.Any] = None,
-                  post_data: typing.Dict[str, typing.Any] = None,
+                  get_params: typing.Optional[typing.Dict[str, typing.Any]] = None,
+                  post_data: typing.Optional[typing.Dict[str, typing.Any]] = None,
                   files: typing.Optional[typing.List[typing.Tuple[str, typing.IO, typing.Optional[str]]]] = None,
                   without_login: bool = False,
                   text_response: bool = True) -> str:
@@ -208,7 +208,7 @@ class Rt:
             self.logger.debug("### %s", datetime.datetime.now().isoformat())
             self.logger.debug("Request URL: %s", url)
             self.logger.debug("Request method: %s", method)
-            self.logger.debug("Respone status code: %s", str(response.status_code))
+            self.logger.debug("Response status code: %s", str(response.status_code))
             self.logger.debug("Response content:")
             self.logger.debug(response.content.decode(errors='ignore'))
 
@@ -924,7 +924,13 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
             return None
         attachment_infos = []
         if (self.__get_status_code(lines[0]) == 200) and (len(lines) >= 4):
-            for line in lines[4:]:
+            # The format of tickets with 1 attachments varies from those with >=2.
+            # *Attachments: ...* starts at line 3 with single attachment tickets, whereas
+            # with >=2 attachment tickets, it starts at line 4. As in the latter case,
+            # line 3 is just an empty line, we changed this to "3:" in order to work with
+            # single attachment tickets.
+            # -> Bug in RT
+            for line in lines[3:]:
                 info = self.RE_PATTERNS['attachments_list_pattern'].match(line)
                 if info:
                     attachment_infos.append(info.groups())
