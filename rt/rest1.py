@@ -113,7 +113,7 @@ class Rt:
                  default_queue: str = DEFAULT_QUEUE,
                  skip_login: bool = False,
                  verify_cert: typing.Optional[typing.Union[str, bool]] = True,
-                 http_auth: requests.auth.AuthBase = None) -> None:
+                 http_auth: typing.Optional[requests.auth.AuthBase] = None) -> None:
         """ API initialization.
 
         :keyword url: Base URL for Request Tracker API.
@@ -162,8 +162,8 @@ class Rt:
 
     def __request(self,
                   selector: str,
-                  get_params: typing.Dict[str, typing.Any] = None,
-                  post_data: typing.Dict[str, typing.Any] = None,
+                  get_params: typing.Optional[typing.Dict[str, typing.Any]] = None,
+                  post_data: typing.Optional[typing.Dict[str, typing.Any]] = None,
                   files: typing.Optional[typing.List[typing.Tuple[str, typing.IO, typing.Optional[str]]]] = None,
                   without_login: bool = False,
                   text_response: bool = True) -> str:
