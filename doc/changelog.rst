@@ -1,6 +1,12 @@
 Change Log
 ==========
 
+Version 3.0.4 (2022-11-08)
+----------------------------
+Fixes
+^^^^^
+- Workaround for parsing issues with tickets with only 1 attachment (#80), due to probably an upstream bug.
+
 Version 3.0.3 (2022-06-16)
 ----------------------------
 Changes
