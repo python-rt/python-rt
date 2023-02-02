@@ -423,8 +423,8 @@ class Rt:
             # we will not raise the error but just return False to indicate
             # invalid credentials
             return False
-        else:
-            return bool(self.login_result)
+
+        return bool(self.login_result)
 
     def logout(self) -> bool:
         """ Logout of user.
