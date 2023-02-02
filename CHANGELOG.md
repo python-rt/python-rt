@@ -3,6 +3,10 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v3.0.5], 2023-02-02
+### Added
+- Added support for specifying custom fields on user creation/edit (#82).
+
 ## [v3.0.4], 2022-11-08
 ### Fixes
 - Workaround for parsing issues with tickets with only 1 attachment (#80), due to probably an upstream bug.
