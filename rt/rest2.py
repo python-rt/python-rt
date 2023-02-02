@@ -979,7 +979,7 @@ class Rt:
                         'MobilePhone', 'PagerPhone', 'ContactInfo', 'Comments',
                         'Signature', 'Lang', 'EmailEncoding', 'WebEncoding',
                         'ExternalContactInfoId', 'ContactInfoSystem', 'ExternalAuthId',
-                        'AuthSystem', 'Privileged', 'Disabled'}
+                        'AuthSystem', 'Privileged', 'Disabled', 'CustomFields'}
         invalid_fields = []
 
         post_data = {'Name': user_name,
@@ -1057,7 +1057,7 @@ class Rt:
                         'MobilePhone', 'PagerPhone', 'ContactInfo', 'Comments',
                         'Signature', 'Lang', 'EmailEncoding', 'WebEncoding',
                         'ExternalContactInfoId', 'ContactInfoSystem', 'ExternalAuthId',
-                        'AuthSystem', 'Privileged', 'Disabled'}
+                        'AuthSystem', 'Privileged', 'Disabled', 'CustomFields'}
         invalid_fields = []
 
         post_data = {}
