@@ -268,7 +268,7 @@ class Rt:
         if self.RE_PATTERNS['syntax_error_pattern'].match(msg[0]):
             raise APISyntaxError(msg[2][2:] if len(msg) > 2 else 'Syntax error.')
         if self.RE_PATTERNS['bad_request_pattern'].match(msg[0]):
-            raise BadRequestError(msg[3] if len(msg) > 2 else 'Bad request.')
+            raise BadRequestError(msg[2] if len(msg) > 2 else 'Bad request.')
 
     @staticmethod
     def __normalize_list(msg: typing.Union[str, typing.Sequence[str]]) -> typing.Sequence[str]:
