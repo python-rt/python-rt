@@ -24,6 +24,8 @@ import random
 import string
 import unittest
 
+import requests.utils
+
 import rt.rest1
 
 
@@ -76,6 +78,17 @@ class RtTestCase(unittest.TestCase):
     def _have_creds(*creds_seq):
         return all(creds[name].get('url') for creds in creds_seq for name in creds)
 
+    @staticmethod
+    def _fix_unsecure_cookie(tracker: rt.rest1.Rt) -> None:
+        """As of RT 5.0.4, cookies returned by the REST API are marked as secure by default.
+
+        This breaks tests though as we are connecting via HTTP. This method fixes these cookies
+        for the tests to work.
+        """
+        cookies = requests.utils.dict_from_cookiejar(tracker.session.cookies)
+        tracker.session.cookies.clear()
+        tracker.session.cookies.update(cookies)
+
     @unittest.skipUnless(_have_creds(RT_VALID_CREDENTIALS,
                                      RT_INVALID_CREDENTIALS,
                                      RT_MISSING_CREDENTIALS,
@@ -85,6 +98,8 @@ class RtTestCase(unittest.TestCase):
         for name in self.RT_VALID_CREDENTIALS:
             tracker = rt.rest1.Rt(self.RT_VALID_CREDENTIALS[name]['url'], **self.RT_VALID_CREDENTIALS[name]['support'])
             self.assertTrue(tracker.login(), 'Invalid login to RT demo site ' + name)
+            # unsecure cookie
+            self._fix_unsecure_cookie(tracker)
             self.assertTrue(tracker.logout(), 'Invalid logout from RT demo site ' + name)
         for name, params in self.RT_INVALID_CREDENTIALS.items():
             tracker = rt.rest1.Rt(**params)
@@ -108,6 +123,8 @@ class RtTestCase(unittest.TestCase):
             default_password = self.RT_VALID_CREDENTIALS[name]['support']['default_password']
             tracker = rt.rest1.Rt(url, default_login=default_login, default_password=default_password)
             self.assertTrue(tracker.login(), 'Invalid login to RT demo site ' + name)
+            # unsecure cookie
+            self._fix_unsecure_cookie(tracker)
             # empty search result
             search_result = tracker.search(Subject=ticket_subject)
             self.assertEqual(search_result, [], 'Search for ticket with random subject returned non empty list.')
@@ -197,6 +214,9 @@ class RtTestCase(unittest.TestCase):
             default_password = self.RT_VALID_CREDENTIALS[name]['support']['default_password']
             tracker = rt.rest1.Rt(url, default_login=default_login, default_password=default_password)
             self.assertTrue(tracker.login(), 'Invalid login to RT demo site ' + name)
+
+            # unsecure cookie
+            self._fix_unsecure_cookie(tracker)
 
             ticket_id = tracker.create_ticket(Subject=ticket_subject, Text=ticket_text)
             self.assertTrue(ticket_id > -1, 'Creating ticket failed.')
