@@ -94,4 +94,4 @@ jobs:
         run: bandit -r rt
 
       - name: codespell
-        run: codespell rt
+        run: codespell --ignore-words=.codespell_ignore rt
