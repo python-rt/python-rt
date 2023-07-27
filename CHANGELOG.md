@@ -3,8 +3,12 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v3.0.7], 2023-07-27
+### Fixes
+- Fix sorting when using search() method (#90)
+
 ## [v3.0.6], 2023-06-21
-### Added
+### Fixes
 - Fixed bug in rest1 (#86)
 
 ## [v3.0.5], 2023-02-02

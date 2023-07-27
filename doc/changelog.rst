@@ -1,6 +1,24 @@
 Change Log
 ==========
 
+Version 3.0.7 (2023-07-27)
+----------------------------
+Fixes
+^^^^^
+- Fix sorting when using search() method (#90)
+
+Version 3.0.6 (2023-06-21)
+----------------------------
+Fixes
+^^^^^
+- Fixed bug in rest1 (#86)
+
+Version 3.0.5 (2023-02-02)
+----------------------------
+Fixes
+^^^^^
+- Added support for specifying custom fields on user creation/edit (#82).
+
 Version 3.0.4 (2022-11-08)
 ----------------------------
 Fixes
