@@ -514,7 +514,11 @@ class Rt:
             query.append(raw_query)
         get_params['query'] = ' AND '.join('(' + part + ')' for part in query)
         if order:
-            get_params['orderby'] = order
+            if order.startswith("-"):
+                get_params['orderby'] = order[1:]
+                get_params['order'] = "DESC"
+            else:
+                get_params['orderby'] = order
 
         if query_format == 'l':
             get_params['fields'] = 'Owner,Status,Created,Subject,Queue,CustomFields,Requestor,Cc,AdminCc,Started,Created,TimeEstimated,Due,Type,InitialPriority,Priority,TimeLeft,LastUpdated'
