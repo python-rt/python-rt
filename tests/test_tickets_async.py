@@ -1,6 +1,6 @@
 """Tests for python-rt / REST2 - Python interface to Request Tracker :term:`API`."""
 
-# ruff: noqa: S101, S105, S311
+# ruff: noqa: S101
 
 __license__ = ''' Copyright (C) 2013 CZ.NIC, z.s.p.o.
     Copyright (c) 2021 CERT Gouvernemental (GOVCERT.LU)
@@ -26,13 +26,16 @@ __authors__ = [
 
 import base64
 
+import pytest
+
 import rt.rest2
 
 from . import random_string
 from .conftest import RT_QUEUE
 
 
-def test_ticket_attachments(rt_connection: rt.rest2.Rt):
+@pytest.mark.asyncio
+async def test_ticket_attachments(async_rt_connection: rt.rest2.AsyncRt):
     """Test various ticket attachment operations."""
     ticket_subject = f'Testing issue {random_string()}'
     ticket_text = 'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'
@@ -40,13 +43,13 @@ def test_ticket_attachments(rt_connection: rt.rest2.Rt):
     attachment_name = 'attachment-name.txt'
 
     attachment = rt.rest2.Attachment(attachment_name, 'text/plain', attachment_content)
-    ticket_id = rt_connection.create_ticket(subject=ticket_subject, content=ticket_text, queue=RT_QUEUE, attachments=[attachment])
+    ticket_id = await async_rt_connection.create_ticket(subject=ticket_subject, content=ticket_text, queue=RT_QUEUE, attachments=[attachment])
     assert ticket_id
 
-    att_ids = rt_connection.get_attachments_ids(ticket_id)
+    att_ids = await async_rt_connection.get_attachments_ids(ticket_id)
     assert len(att_ids) == 1
 
-    att_list = rt_connection.get_attachments(ticket_id)
+    att_list = await async_rt_connection.get_attachments(ticket_id)
     assert len(att_list) == 1
 
     att_names = [att['Filename'] for att in att_list]
@@ -54,17 +57,18 @@ def test_ticket_attachments(rt_connection: rt.rest2.Rt):
 
     # get the attachment and compare it's content
     att_id = att_list[att_names.index(attachment_name)]['id']
-    att_content = base64.b64decode(rt_connection.get_attachment(att_id)['Content'])
+    att_content = base64.b64decode((await async_rt_connection.get_attachment(att_id))['Content'])
     assert att_content == attachment_content
 
 
-def test_ticket_take(rt_connection: rt.rest2.Rt):
+@pytest.mark.asyncio
+async def test_ticket_take(async_rt_connection: rt.rest2.AsyncRt):
     """Test take/untake."""
     ticket_subject = f'Testing issue {random_string()}'
     ticket_text = 'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'
 
-    ticket_id = rt_connection.create_ticket(subject=ticket_subject, content=ticket_text, queue=RT_QUEUE)
+    ticket_id = await async_rt_connection.create_ticket(subject=ticket_subject, content=ticket_text, queue=RT_QUEUE)
     assert ticket_id
 
-    assert rt_connection.take(ticket_id)
-    assert rt_connection.untake(ticket_id)
+    assert await async_rt_connection.take(ticket_id)
+    assert await async_rt_connection.untake(ticket_id)

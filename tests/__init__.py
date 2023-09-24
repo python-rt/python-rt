@@ -1,3 +1,5 @@
+# ruff: noqa: S311
+
 import random
 import string
 

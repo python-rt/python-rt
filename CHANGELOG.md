@@ -3,6 +3,14 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v3.1.0], 2023-09-25
+### Changes
+- Replace *requests* with *httpx* for the REST2 part.
+
+### Added
+- Add a new *AsyncRt* class which implements the RT REST2 API in asnyc.
+- Adapt tests to include thew new async parts of this library.
+
 ## [v3.0.7], 2023-07-27
 ### Fixes
 - Fix sorting when using search() method (#90)

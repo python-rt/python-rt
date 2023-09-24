@@ -24,11 +24,21 @@ Python implementation of REST API described here:
 
    "2.7", "< 2.0.0"
    ">= 3.5, <3.7", ">= 2.0.0, < 3.0.0"
-   ">= 3.7", ">= 3.0.0"
+   ">= 3.7", ">= 3.0.0, < 3.1.0"
+   ">= 3.8", ">= 3.0.0"
 
 ℹ️ **Note**:
-    Please note that starting with the major release of v3.0.0, this library requires Python version >= 3.7.
+    Please note that starting with the major release of v3.0.0, this library requires Python version >= 3.8.
     See the *Python version compatibility* table above for more detailed information.
+
+⚡ **Note**:
+    As of version 3.1.0, this library is async compatible.
+    Usage::
+
+      import rt.rest2
+      import httpx
+
+      tracker = rt.rest2.AsyncRt('http://localhost/rt/REST/2.0/', http_auth=httpx.BasicAuth('root', 'password'))
 
 ⚠️ **Warning**:
     Though version 3.x still supports RT REST API version 1, it contains minor breaking changes. Please see the changelog
@@ -68,8 +78,8 @@ Usage
 An example is worth a thousand words::
 
     >>> import rt.rest2
-    >>> import requests.auth
-    >>> tracker = rt.rest2.Rt('http://localhost/rt/REST/2.0/', http_auth=requests.auth.HTTPBasicAuth('root', 'password'))
+    >>> import httpx
+    >>> tracker = rt.rest2.Rt('http://localhost/rt/REST/2.0/', http_auth=httpx.BasicAuth('root', 'password'))
     >>> map(lambda x: x['id'], tracker.search(Queue='helpdesk', Status='open'))
     ['1', '2', '10', '15']
     >>> tracker.create_ticket(queue='helpdesk', \
@@ -85,8 +95,8 @@ Get the last important updates from a specific queue that have been updated rece
     >>> import datetime
     >>> import base64
     >>> import rt.rest2
-    >>> import requests.auth
-    >>> tracker = rt.rest2.Rt('http://localhost/rt/REST/2.0/', http_auth=requests.auth.HTTPBasicAuth('root', 'password'))
+    >>> import httpx
+    >>> tracker = rt.rest2.Rt('http://localhost/rt/REST/2.0/', http_auth=httpx.BasicAuth('root', 'password'))
     >>> fifteen_minutes_ago = str(datetime.datetime.now() - datetime.timedelta(minutes=15))
     >>> tickets = tracker.last_updated(since=fifteen_minutes_ago)
     >>> for ticket in tickets:

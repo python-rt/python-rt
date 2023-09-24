@@ -22,8 +22,6 @@ classifiers = [
 requires-python = ">= 3.8"
 dependencies = [
     "requests",
-    "requests_toolbelt",
-    'typing-extensions ; python_version < "3.8"',
     "httpx",
 ]
 dynamic = ["version"]
@@ -55,6 +53,7 @@ dev = [
     "types-requests",
     "codespell",
     "ruff",
+    "pytest-asyncio",
 ]
 test = [
     "pytest",

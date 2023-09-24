@@ -11,3 +11,4 @@ rt.egg-info
 .pytest_cache
 doc/_build/
 venv
+.ruff_cache
