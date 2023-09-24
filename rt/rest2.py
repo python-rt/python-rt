@@ -19,14 +19,15 @@ import requests.auth
 import requests_toolbelt
 
 import rt.exceptions
-from .exceptions import AuthorizationError, UnexpectedResponseError, NotFoundError, InvalidUseError
+
+from .exceptions import AuthorizationError, InvalidUseError, NotFoundError, UnexpectedResponseError
 
 if sys.version_info >= (3, 8):
     from typing import Literal
 else:
     from typing_extensions import Literal
 
-__license__ = """ Copyright (C) 2012 CZ.NIC, z.s.p.o.
+__license__ = ''' Copyright (C) 2012 CZ.NIC, z.s.p.o.
     Copyright (c) 2015 Genome Research Ltd.
     Copyright (c) 2017 CERT Gouvernemental (GOVCERT.LU)
 
@@ -42,8 +43,8 @@ __license__ = """ Copyright (C) 2012 CZ.NIC, z.s.p.o.
 
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-"""
-__docformat__ = "reStructuredText en"
+'''
+__docformat__ = 'reStructuredText en'
 __authors__ = [
     '"Jiri Machalek" <jiri.machalek@nic.cz>',
     '"Joshua C. randall" <jcrandall@alum.mit.edu>',
@@ -71,7 +72,7 @@ class Attachment:
         """Convert to a dictionary for submitting to the REST API."""
         return {'FileName': self.file_name,
                 'FileType': self.file_type,
-                'FileContent': base64.b64encode(self.file_content).decode('utf-8')
+                'FileContent': base64.b64encode(self.file_content).decode('utf-8'),
                 }
 
     def multipart_form_element(self) -> typing.Tuple[str, bytes, str]:
@@ -131,10 +132,10 @@ class Rt:
         self.session.verify = verify_cert
 
         if proxy is not None:  # pragma: no cover
-            if url.lower().startswith("https://"):
-                self.session.proxies = {"https": proxy}
+            if url.lower().startswith('https://'):
+                self.session.proxies = {'https': proxy}
             else:
-                self.session.proxies = {"http": proxy}
+                self.session.proxies = {'http': proxy}
         if http_auth is not None:
             self.session.auth = http_auth
         if token is not None:  # pragma: no cover  # no way to add tests for this with the current docker image
@@ -144,13 +145,13 @@ class Rt:
 
     def __debug_response(self, response: requests.Response) -> None:
         """Output debug information for a given HTTP response."""
-        self.logger.debug("### %s", datetime.datetime.now().isoformat())
-        self.logger.debug("Request URL: %s", response.request.url)
-        self.logger.debug("Request method: %s", response.request.method)
-        self.logger.debug("Request headers: %s", response.request.headers)
-        self.logger.debug("Request body: %s", str(response.request.body))
-        self.logger.debug("Response status code: %s", str(response.status_code))
-        self.logger.debug("Response content:")
+        self.logger.debug('### %s', datetime.datetime.now().isoformat())
+        self.logger.debug('Request URL: %s', response.request.url)
+        self.logger.debug('Request method: %s', response.request.method)
+        self.logger.debug('Request headers: %s', response.request.headers)
+        self.logger.debug('Request body: %s', str(response.request.body))
+        self.logger.debug('Response status code: %s', str(response.status_code))
+        self.logger.debug('Response content:')
         self.logger.debug(response.content.decode())
 
     def __request(self,
@@ -207,11 +208,11 @@ class Rt:
 
             return result
         except requests.exceptions.ConnectionError as exc:  # pragma: no cover
-            raise ConnectionError("Connection error", exc) from exc
+            raise ConnectionError('Connection error', exc) from exc
 
     def __request_put(self,
                       selector: str,
-                      json_data: typing.Optional[typing.Dict[str, typing.Any]] = None
+                      json_data: typing.Optional[typing.Dict[str, typing.Any]] = None,
                       ) -> typing.List[str]:
         """ PUT request for :term:`API`.
 
@@ -243,7 +244,7 @@ class Rt:
 
             return result
         except requests.exceptions.ConnectionError as exc:  # pragma: no cover
-            raise ConnectionError("Connection error", exc) from exc
+            raise ConnectionError('Connection error', exc) from exc
 
     def __request_delete(self,
                          selector: str,
@@ -278,7 +279,7 @@ class Rt:
 
             return result
         except requests.exceptions.ConnectionError as exc:  # pragma: no cover
-            raise ConnectionError("Connection error", exc) from exc
+            raise ConnectionError('Connection error', exc) from exc
 
     def __paged_request(self,
                         selector: str,
@@ -286,7 +287,7 @@ class Rt:
                         params: typing.Optional[typing.Dict[str, typing.Any]] = None,
                         page: int = 1,
                         per_page: int = 20,
-                        recurse: bool = True
+                        recurse: bool = True,
                         ) -> typing.Iterator[typing.Dict[str, typing.Any]]:
         """ Request using pagination for :term:`API`.
 
@@ -339,7 +340,7 @@ class Rt:
                                                     per_page=result['per_page'], params=params, recurse=False)
 
         except requests.exceptions.ConnectionError as exc:  # pragma: no cover
-            raise ConnectionError("Connection error", exc) from exc
+            raise ConnectionError('Connection error', exc) from exc
 
     @staticmethod
     def __check_response(response: requests.Response) -> None:
@@ -489,7 +490,7 @@ class Rt:
         url = 'tickets'
 
         if queue is not None:
-            query.append(f'Queue=\'{queue}\'')
+            query.append(f"Queue='{queue}'")
         if not raw_query:
             operators_map = {
                 'gt': '>',
@@ -497,7 +498,7 @@ class Rt:
                 'exact': '=',
                 'notexact': '!=',
                 'like': ' LIKE ',
-                'notlike': ' NOT LIKE '
+                'notlike': ' NOT LIKE ',
             }
 
             for key, value in kwargs.items():
@@ -507,16 +508,16 @@ class Rt:
                     key = '__'.join(key_parts[:-1])
                     op = operators_map.get(key_parts[-1], '=')
                 if key[:3] != 'CF_':
-                    query.append(f'{key}{op}\'{value}\'')
+                    query.append(f"{key}{op}'{value}'")
                 else:
                     query.append(f'''CF.{{{key[3:]}}}'{op}'{value}\'''')
         else:
             query.append(raw_query)
         get_params['query'] = ' AND '.join('(' + part + ')' for part in query)
         if order:
-            if order.startswith("-"):
+            if order.startswith('-'):
                 get_params['orderby'] = order[1:]
-                get_params['order'] = "DESC"
+                get_params['order'] = 'DESC'
             else:
                 get_params['orderby'] = order
 
@@ -670,8 +671,8 @@ class Rt:
                   Returns None if ticket does not exist.
         """
         transactions = self.__paged_request(f'ticket/{ticket_id}/history', params={'fields': 'Type,Creator,Created,Description,_hyperlinks',
-                                                                                   'fields[Creator]': 'id,Name,RealName,EmailAddress'
-                                                                                   }
+                                                                                   'fields[Creator]': 'id,Name,RealName,EmailAddress',
+                                                                                   },
                                             )
 
         return list(transactions)
@@ -830,7 +831,7 @@ class Rt:
         attachments = []
 
         for item in self.__paged_request(f'ticket/{ticket_id}/attachments',
-                                         json_data=[{"field": "Filename", "operator": "IS NOT", "value": ""}],
+                                         json_data=[{'field': 'Filename', 'operator': 'IS NOT', 'value': ''}],
                                          params={'fields': 'Filename,ContentType,ContentLength'}):
             attachments.append(item)
 
@@ -846,7 +847,7 @@ class Rt:
         attachments = []
 
         for item in self.__paged_request(f'ticket/{ticket_id}/attachments',
-                                         json_data=[{"field": "Filename", "operator": "IS NOT", "value": ""}]
+                                         json_data=[{'field': 'Filename', 'operator': 'IS NOT', 'value': ''}],
                                          ):
             attachments.append(int(item['id']))
 
@@ -987,7 +988,7 @@ class Rt:
         invalid_fields = []
 
         post_data = {'Name': user_name,
-                     'EmailAddress': email_address
+                     'EmailAddress': email_address,
                      }
 
         for k, v in kwargs.items():
@@ -1202,7 +1203,7 @@ class Rt:
         :raises UnexpectedMessageFormatError: In case that returned status code is not 200
         """
         params = {'fields': 'Name,Description,CorrespondAddress,CommentAddress,InitialPriority,FinalPriority,DefaultDueIn',
-                  'find_disabled_rows': int(include_disabled)
+                  'find_disabled_rows': int(include_disabled),
                   }
         queues = self.__paged_request('queues/all', params=params)
 
@@ -1229,7 +1230,7 @@ class Rt:
         :raises UnexpectedResponseError: If the response from RT is not as expected
         """
         valid_fields = {'Name', 'Description', 'CorrespondAddress', 'CommentAddress',
-                        'Disabled', 'SLADisabled', 'Lifecycle', 'SortOrder'
+                        'Disabled', 'SLADisabled', 'Lifecycle', 'SortOrder',
                         }
         invalid_fields = []
 
@@ -1266,7 +1267,7 @@ class Rt:
         :raises UnexpectedResponseError: If the response from RT is not as expected
         """
         valid_fields = {'Name', 'Description', 'CorrespondAddress', 'CommentAddress',
-                        'Disabled', 'SLADisabled', 'Lifecycle', 'SortOrder'
+                        'Disabled', 'SLADisabled', 'Lifecycle', 'SortOrder',
                         }
         invalid_fields = []
 
@@ -1348,9 +1349,8 @@ class Rt:
         """
         ticket = self.get_ticket(ticket_id)
 
-        links = [link for link in ticket['_hyperlinks'] if link.get('type', '') == 'ticket' and link['ref'] != 'self']
+        return [link for link in ticket['_hyperlinks'] if link.get('type', '') == 'ticket' and link['ref'] != 'self']
 
-        return links
 
     def edit_link(self, ticket_id: typing.Union[str, int], link_name: TYPE_VALID_TICKET_LINK_NAMES, link_value: typing.Union[str, int],
                   delete: bool = False) -> bool:
@@ -1380,7 +1380,7 @@ class Rt:
         msg = self.__request_put(f'ticket/{ticket_id}', json_data=json_data)
 
         if msg and isinstance(msg, list):
-            if msg[0].startswith('Couldn\'t resolve'):
+            if msg[0].startswith("Couldn't resolve"):
                 raise NotFoundError(msg[0])
             if 'not allowed' in msg[0]:
                 raise InvalidUseError(msg[0])
