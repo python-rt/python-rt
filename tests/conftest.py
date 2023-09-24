@@ -1,6 +1,9 @@
-import pytest
-import requests.auth
+# ruff: noqa: S105
+
 import typing
+
+import httpx
+import pytest
 
 if typing.TYPE_CHECKING:
     import rt.rest2
@@ -16,4 +19,11 @@ RT_QUEUE = 'General'
 def rt_connection() -> 'rt.rest2.Rt':
     """Setup a generic connection."""
     import rt.rest2
-    return rt.rest2.Rt(url=RT_URL, http_auth=requests.auth.HTTPBasicAuth(RT_USER, RT_PASSWORD), http_timeout=None)
+    return rt.rest2.Rt(url=RT_URL, http_auth=httpx.BasicAuth(RT_USER, RT_PASSWORD), http_timeout=None)
+
+
+@pytest.fixture(scope='session')
+def async_rt_connection() -> 'rt.rest2.AsyncRt':
+    """Setup a generic connection."""
+    import rt.rest2
+    return rt.rest2.AsyncRt(url=RT_URL, http_auth=httpx.BasicAuth(RT_USER, RT_PASSWORD), http_timeout=None)

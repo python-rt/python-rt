@@ -1,6 +1,8 @@
 """Tests for Rt - Python interface to Request Tracker :term:`API`"""
 
-__license__ = """ Copyright (C) 2013 CZ.NIC, z.s.p.o.
+# ruff: noqa: S101, S105, S311
+
+__license__ = ''' Copyright (C) 2013 CZ.NIC, z.s.p.o.
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -14,10 +16,10 @@ __license__ = """ Copyright (C) 2013 CZ.NIC, z.s.p.o.
 
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-"""
-__docformat__ = "reStructuredText en"
+'''
+__docformat__ = 'reStructuredText en'
 __authors__ = [
-    '"Jiri Machalek" <jiri.machalek@nic.cz>'
+    '"Jiri Machalek" <jiri.machalek@nic.cz>',
 ]
 
 import random
@@ -33,7 +35,7 @@ class RtTestCase(unittest.TestCase):
     rt.DEBUG_MODE = True
     RT_VALID_CREDENTIALS = {
         'RT4.4 stable': {
-            'url': "http://localhost:8080/REST/1.0/",
+            'url': 'http://localhost:8080/REST/1.0/',
             'support': {
                 'default_login': 'root',
                 'default_password': 'password',
@@ -55,7 +57,7 @@ class RtTestCase(unittest.TestCase):
 
     RT_INVALID_CREDENTIALS = {
         'RT4.4 stable (bad credentials)': {
-            'url': "http://localhost:8080/REST/1.0/",
+            'url': 'http://localhost:8080/REST/1.0/',
             'default_login': 'idontexist',
             'default_password': 'idonthavepassword',
         },
@@ -63,7 +65,7 @@ class RtTestCase(unittest.TestCase):
 
     RT_MISSING_CREDENTIALS = {
         'RT4.4 stable (missing credentials)': {
-            'url': "http://localhost:8080/REST/1.0/",
+            'url': 'http://localhost:8080/REST/1.0/',
         },
     }
 
@@ -93,7 +95,7 @@ class RtTestCase(unittest.TestCase):
                                      RT_INVALID_CREDENTIALS,
                                      RT_MISSING_CREDENTIALS,
                                      RT_BAD_URL),
-                         "missing credentials required to run test")
+                         'missing credentials required to run test')
     def test_login_and_logout(self):
         for name in self.RT_VALID_CREDENTIALS:
             tracker = rt.rest1.Rt(self.RT_VALID_CREDENTIALS[name]['url'], **self.RT_VALID_CREDENTIALS[name]['support'])
@@ -113,9 +115,9 @@ class RtTestCase(unittest.TestCase):
             self.assertRaises(rt.exceptions.UnexpectedResponseError, lambda: tracker.login())
 
     @unittest.skipUnless(_have_creds(RT_VALID_CREDENTIALS),
-                         "missing credentials required to run test")
+                         'missing credentials required to run test')
     def test_ticket_operations(self):
-        ticket_subject = 'Testing issue ' + "".join([random.choice(string.ascii_letters) for i in range(15)])
+        ticket_subject = 'Testing issue ' + ''.join([random.choice(string.ascii_letters) for i in range(15)])
         ticket_text = 'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'
         for name in ('RT4.4 stable',):
             url = self.RT_VALID_CREDENTIALS[name]['url']
@@ -140,12 +142,12 @@ class RtTestCase(unittest.TestCase):
             search_result = tracker.search(Queue=rt.rest1.ALL_QUEUES, Subject=ticket_subject)
             self.assertEqual(search_result[0]['id'], 'ticket/' + str(ticket_id), 'Bad id in search result of just created ticket.')
             # raw search
-            search_result = tracker.search(raw_query='Subject="{}"'.format(ticket_subject))
+            search_result = tracker.search(raw_query=f'Subject="{ticket_subject}"')
             self.assertEqual(len(search_result), 1, 'Created ticket is not found by the subject.')
             self.assertEqual(search_result[0]['id'], 'ticket/' + str(ticket_id), 'Bad id in search result of just created ticket.')
             self.assertEqual(search_result[0]['Status'], 'new', 'Bad status in search result of just created ticket.')
             # raw search all queues
-            search_result = tracker.search(Queue=rt.rest1.ALL_QUEUES, raw_query='Subject="{}"'.format(ticket_subject))
+            search_result = tracker.search(Queue=rt.rest1.ALL_QUEUES, raw_query=f'Subject="{ticket_subject}"')
             self.assertEqual(search_result[0]['id'], 'ticket/' + str(ticket_id), 'Bad id in search result of just created ticket.')
             # get ticket
             ticket = tracker.get_ticket(ticket_id)
@@ -166,7 +168,7 @@ class RtTestCase(unittest.TestCase):
             self.assertTrue(len(short_hist) > 0, 'Empty ticket short history.')
             self.assertEqual(short_hist[0][1], 'Ticket created by %s' % default_login)
             # create 2nd ticket
-            ticket2_subject = 'Testing issue ' + "".join([random.choice(string.ascii_letters) for i in range(15)])
+            ticket2_subject = 'Testing issue ' + ''.join([random.choice(string.ascii_letters) for i in range(15)])
             ticket2_id = tracker.create_ticket(Subject=ticket2_subject)
             self.assertTrue(ticket2_id > -1, 'Creating 2nd ticket failed.')
             # edit link
@@ -204,9 +206,9 @@ class RtTestCase(unittest.TestCase):
             self.assertIn('@', tracker.get_user(default_login)['EmailAddress'])
 
     @unittest.skipUnless(_have_creds(RT_VALID_CREDENTIALS),
-                         "missing credentials required to run test")
+                         'missing credentials required to run test')
     def test_ticket_operations_admincc_cc(self):
-        ticket_subject = 'Testing issue ' + "".join([random.choice(string.ascii_letters) for i in range(15)])
+        ticket_subject = 'Testing issue ' + ''.join([random.choice(string.ascii_letters) for i in range(15)])
         ticket_text = 'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'
         for name in ('RT4.4 stable',):
             url = self.RT_VALID_CREDENTIALS[name]['url']
