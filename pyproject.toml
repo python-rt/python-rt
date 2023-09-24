@@ -53,10 +53,10 @@ dev = [
     "types-requests",
     "codespell",
     "ruff",
-    "pytest-asyncio",
 ]
 test = [
     "pytest",
+    "pytest-asyncio",
     "coverage",
 ]
 
