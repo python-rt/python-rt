@@ -1,6 +1,12 @@
 Change Log
 ==========
 
+Version 3.1.1 (2023-09-25)
+----------------------------
+Fixes
+^^^^^
+- In AsyncRt, instead of returning sequences, return AsyncIterators.
+
 Version 3.1.0 (2023-09-25)
 ----------------------------
 Changes

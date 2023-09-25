@@ -46,10 +46,10 @@ async def test_ticket_attachments(async_rt_connection: rt.rest2.AsyncRt):
     ticket_id = await async_rt_connection.create_ticket(subject=ticket_subject, content=ticket_text, queue=RT_QUEUE, attachments=[attachment])
     assert ticket_id
 
-    att_ids = await async_rt_connection.get_attachments_ids(ticket_id)
+    att_ids = [item async for item in async_rt_connection.get_attachments_ids(ticket_id)]
     assert len(att_ids) == 1
 
-    att_list = await async_rt_connection.get_attachments(ticket_id)
+    att_list = [item async for item in async_rt_connection.get_attachments(ticket_id)]
     assert len(att_list) == 1
 
     att_names = [att['Filename'] for att in att_list]

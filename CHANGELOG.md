@@ -3,6 +3,10 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v3.1.1], 2023-09-25
+### Fixes
+- In AsyncRt, instead of returning sequences, return AsyncIterators.
+
 ## [v3.1.0], 2023-09-25
 ### Changes
 - Replace *requests* with *httpx* for the REST2 part.

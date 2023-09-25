@@ -5,6 +5,7 @@ https://docs.bestpractical.com/rt/5.0.2/RT/REST2.html
 """
 
 import base64
+import collections
 import dataclasses
 import datetime
 import json
@@ -17,6 +18,7 @@ from urllib.parse import urljoin
 import httpx
 
 import rt.exceptions
+
 from .exceptions import AuthorizationError, InvalidUseError, NotFoundError, UnexpectedResponseError
 
 __license__ = ''' Copyright (C) 2012 CZ.NIC, z.s.p.o.
@@ -1630,7 +1632,7 @@ class AsyncRt:
                               page: int = 1,
                               per_page: int = 20,
                               recurse: bool = True,
-                              ) -> typing.AsyncIterator[typing.Dict[str, typing.Any]]:
+                              ) -> collections.abc.AsyncIterator[typing.Dict[str, typing.Any]]:
         """ Request using pagination for :term:`API`.
 
         :param selector: End part of URL which completes self.url parameter
@@ -1731,7 +1733,7 @@ class AsyncRt:
 
         return res
 
-    async def new_correspondence(self, queue: typing.Optional[typing.Union[str, object]] = None) -> typing.AsyncIterator[dict]:
+    async def new_correspondence(self, queue: typing.Optional[typing.Union[str, object]] = None) -> collections.abc.AsyncIterator[dict]:
         """ Obtains tickets changed by other users than the system one.
 
         :param queue: Queue where to search
@@ -1743,7 +1745,7 @@ class AsyncRt:
         """
         return self.search(queue=queue, order='-LastUpdated')
 
-    async def last_updated(self, since: str, queue: typing.Optional[str] = None) -> typing.AsyncIterator[dict]:
+    async def last_updated(self, since: str, queue: typing.Optional[str] = None) -> collections.abc.AsyncIterator[dict]:
         """ Obtains tickets changed after given date.
 
         :param since: Date as string in form '2011-02-24'
@@ -1779,7 +1781,7 @@ class AsyncRt:
         return False
 
     async def search(self, queue: typing.Optional[typing.Union[str, object]] = None, order: typing.Optional[str] = None,
-                     raw_query: typing.Optional[str] = None, query_format: str = 'l', **kwargs: typing.Any) -> typing.AsyncIterator[dict]:
+                     raw_query: typing.Optional[str] = None, query_format: str = 'l', **kwargs: typing.Any) -> collections.abc.AsyncIterator[dict]:
         r""" Search arbitrary needles in given fields and queue.
 
         Example::
@@ -2010,21 +2012,19 @@ class AsyncRt:
 
         return bool(msg[0])
 
-    async def get_ticket_history(self, ticket_id: typing.Union[str, int]) -> typing.Optional[typing.List[typing.Dict[str, typing.Any]]]:
+    async def get_ticket_history(self, ticket_id: typing.Union[str, int]) -> collections.abc.AsyncIterator[typing.Dict[str, typing.Any]]:
         """ Get set of short history items
 
         :param ticket_id: ID of ticket
-        :returns: List of history items ordered increasingly by time of event.
+        :returns: Iterator of history items ordered increasingly by time of event.
                   Each history item is a tuple containing (id, Description).
-                  Returns None if ticket does not exist.
         """
-        transactions = [transaction async for transaction in self.__paged_request(f'ticket/{ticket_id}/history',
-                                                                                  params={'fields': 'Type,Creator,Created,Description,_hyperlinks',
-                                                                                          'fields[Creator]': 'id,Name,RealName,EmailAddress',
-                                                                                          },
-                                                                                  )]
-
-        return list(transactions)
+        async for transaction in self.__paged_request(f'ticket/{ticket_id}/history',
+                                                      params={'fields': 'Type,Creator,Created,Description,_hyperlinks',
+                                                              'fields[Creator]': 'id,Name,RealName,EmailAddress',
+                                                              },
+                                                      ):
+            yield transaction
 
     async def get_transaction(self, transaction_id: typing.Union[str, int]) -> typing.Dict[str, typing.Any]:
         """Get a transaction
@@ -2154,7 +2154,7 @@ class AsyncRt:
 
         return bool(msg[0])
 
-    async def get_attachments(self, ticket_id: typing.Union[str, int]) -> typing.Sequence[typing.Dict[str, str]]:
+    async def get_attachments(self, ticket_id: typing.Union[str, int]) -> collections.abc.AsyncIterator[typing.Dict[str, str]]:
         """ Get attachment list for a given ticket
 
         Example of a return result:
@@ -2173,29 +2173,24 @@ class AsyncRt:
             ]
 
         :param ticket_id: ID of ticket
-        :returns: List of tuples for attachments belonging to given ticket.
-                  Tuple format: (id, name, content_type, size)
-                  Returns None if ticket does not exist.
+        :returns: Iterator of attachments belonging to given ticket.
         """
-        return [item async for item in self.__paged_request(f'ticket/{ticket_id}/attachments',
-                                                            json_data=[{'field': 'Filename', 'operator': 'IS NOT', 'value': ''}],
-                                                            params={'fields': 'Filename,ContentType,ContentLength'})]
+        async for item in self.__paged_request(f'ticket/{ticket_id}/attachments',
+                                               json_data=[{'field': 'Filename', 'operator': 'IS NOT', 'value': ''}],
+                                               params={'fields': 'Filename,ContentType,ContentLength'}):
+            yield item
 
-    async def get_attachments_ids(self, ticket_id: typing.Union[str, int]) -> typing.Optional[typing.List[int]]:
+    async def get_attachments_ids(self, ticket_id: typing.Union[str, int]) -> collections.abc.AsyncIterator[int]:
         """ Get IDs of attachments for given ticket.
 
         :param ticket_id: ID of ticket
-        :returns: List of IDs (type int) of attachments belonging to given
-                  ticket. Returns None if ticket does not exist.
+        :returns: Iterator of IDs (type int) of attachments belonging to given
+                  ticket.
         """
-        attachments = []
-
         async for item in self.__paged_request(f'ticket/{ticket_id}/attachments',
                                                json_data=[{'field': 'Filename', 'operator': 'IS NOT', 'value': ''}],
                                                ):
-            attachments.append(int(item['id']))
-
-        return attachments
+            yield int(item['id'])
 
     async def get_attachment(self, attachment_id: typing.Union[str, int]) -> typing.Optional[dict]:
         """ Get attachment.
@@ -2518,7 +2513,7 @@ class AsyncRt:
 
         return res
 
-    async def get_all_queues(self, include_disabled: bool = False) -> typing.List[typing.Dict[str, typing.Any]]:
+    async def get_all_queues(self, include_disabled: bool = False) -> collections.abc.AsyncIterator[typing.Dict[str, typing.Any]]:
         """ Return a list of all queues.
 
         Example of a return result:
@@ -2542,14 +2537,15 @@ class AsyncRt:
 
         :param include_disabled: Set to True to also return disabled queues.
 
-        :returns: Returns a list of dictionaries containing basic information on all queues.
+        :returns: Iterator of dictionaries containing basic information on all queues.
 
         :raises UnexpectedMessageFormatError: In case that returned status code is not 200
         """
         params = {'fields': 'Name,Description,CorrespondAddress,CommentAddress,InitialPriority,FinalPriority,DefaultDueIn',
                   'find_disabled_rows': int(include_disabled),
                   }
-        return [item async for item in self.__paged_request('queues/all', params=params)]
+        async for item in self.__paged_request('queues/all', params=params):
+            yield item
 
     async def edit_queue(self, queue_id: typing.Union[str, int], **kwargs: typing.Any) -> typing.List[str]:
         """ Edit queue.
@@ -2659,7 +2655,7 @@ class AsyncRt:
 
             raise  # pragma: no cover
 
-    async def get_links(self, ticket_id: typing.Union[str, int]) -> typing.Optional[typing.List[typing.Dict[str, str]]]:
+    async def get_links(self, ticket_id: typing.Union[str, int]) -> typing.List[typing.Dict[str, str]]:
         """ Gets the ticket links for a single ticket.
 
         Example of a return result:

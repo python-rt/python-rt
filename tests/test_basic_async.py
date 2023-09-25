@@ -112,7 +112,7 @@ async def test_ticket_operations(async_rt_connection: rt.rest2.AsyncRt):
         assert found
 
     # get history
-    hist = await async_rt_connection.get_ticket_history(ticket_id)
+    hist = [item async for item in async_rt_connection.get_ticket_history(ticket_id)]
     assert len(hist) > 0
     transaction = await async_rt_connection.get_transaction(hist[0]['id'])
     found = False
@@ -127,7 +127,7 @@ async def test_ticket_operations(async_rt_connection: rt.rest2.AsyncRt):
     assert found
 
     # get_short_history
-    short_hist = await async_rt_connection.get_ticket_history(ticket_id)
+    short_hist = [item async for item in async_rt_connection.get_ticket_history(ticket_id)]
     assert len(short_hist) > 0
     assert short_hist[0]['Type'] == 'Create'
     assert short_hist[0]['Creator']['Name'] == RT_USER
@@ -171,7 +171,7 @@ async def test_ticket_operations(async_rt_connection: rt.rest2.AsyncRt):
     assert await async_rt_connection.reply(ticket_id, content=reply_text, content_type='text/html')
 
     # attachments list
-    at_list = await async_rt_connection.get_attachments(ticket_id)
+    at_list = [item async for item in async_rt_connection.get_attachments(ticket_id)]
     assert at_list
     at_names = [at['Filename'] for at in at_list]
     assert attachment_name in at_names
@@ -225,7 +225,7 @@ async def test_attachments_create(async_rt_connection: rt.rest2.AsyncRt):
     assert int(ticket['id']) == ticket_id
 
     # attachments list
-    at_list = await async_rt_connection.get_attachments(ticket_id)
+    at_list = [item async for item in async_rt_connection.get_attachments(ticket_id)]
     assert at_list
     assert len(at_list) == len(attachments)
     at_names = [at['Filename'] for at in at_list]
@@ -261,7 +261,7 @@ async def test_attachments_comment(async_rt_connection: rt.rest2.AsyncRt):
     assert comment_success
 
     # attachments list
-    at_list = await async_rt_connection.get_attachments(ticket_id)
+    at_list = [item async for item in async_rt_connection.get_attachments(ticket_id)]
     assert at_list
     assert len(at_list) == len(attachments)
     at_names = [at['Filename'] for at in at_list]
@@ -297,7 +297,7 @@ async def test_attachments_reply(async_rt_connection: rt.rest2.AsyncRt):
     assert comment_success
 
     # attachments list
-    at_list = await async_rt_connection.get_attachments(ticket_id)
+    at_list = [item async for item in async_rt_connection.get_attachments(ticket_id)]
     assert at_list
     assert len(at_list) == len(attachments)
     at_names = [at['Filename'] for at in at_list]
@@ -396,7 +396,7 @@ async def test_queues(async_rt_connection: rt.rest2.AsyncRt):
     queue = await async_rt_connection.get_queue(RT_QUEUE)
     assert queue['Name'] == RT_QUEUE
 
-    queues = await async_rt_connection.get_all_queues()
+    queues = [item async for item in async_rt_connection.get_all_queues()]
     assert len(queues) >= 1
 
     found = False
@@ -409,7 +409,7 @@ async def test_queues(async_rt_connection: rt.rest2.AsyncRt):
     random_queue_email = f'q-{random_string()}@example.com'
 
     await async_rt_connection.create_queue(random_queue_name, CorrespondAddress=random_queue_email, Description='test queue')
-    queues = await async_rt_connection.get_all_queues()
+    queues = [item async for item in async_rt_connection.get_all_queues()]
     found = False
     for q in queues:
         if q['Name'] == random_queue_name:
