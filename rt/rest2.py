@@ -5,7 +5,7 @@ https://docs.bestpractical.com/rt/5.0.2/RT/REST2.html
 """
 
 import base64
-import collections
+import collections.abc
 import dataclasses
 import datetime
 import json
@@ -1632,7 +1632,7 @@ class AsyncRt:
                               page: int = 1,
                               per_page: int = 20,
                               recurse: bool = True,
-                              ) -> collections.abc.AsyncIterator[typing.Dict[str, typing.Any]]:
+                              ) -> collections.abc.AsyncIterator:
         """ Request using pagination for :term:`API`.
 
         :param selector: End part of URL which completes self.url parameter
@@ -1643,7 +1643,7 @@ class AsyncRt:
         :param per_page: Number of results per page to get.
         :param recurse: Set on the initial call in order to retrieve all pages recursively.
 
-        :returns: dict
+        :returns: collections.abc.AsyncIterator[typing.Dict[str, typing.Any]]
         :raises AuthorizationError: In case that request is called without previous
                                     login or login attempt failed.
         :raises ConnectionError: In case of connection error.
@@ -1733,7 +1733,7 @@ class AsyncRt:
 
         return res
 
-    async def new_correspondence(self, queue: typing.Optional[typing.Union[str, object]] = None) -> collections.abc.AsyncIterator[dict]:
+    async def new_correspondence(self, queue: typing.Optional[typing.Union[str, object]] = None) -> collections.abc.AsyncIterator:
         """ Obtains tickets changed by other users than the system one.
 
         :param queue: Queue where to search
@@ -1742,10 +1742,11 @@ class AsyncRt:
                   the system one, ordered in decreasing order by LastUpdated.
                   Each ticket is dictionary, the same as in
                   :py:meth:`~Rt.get_ticket`.
+                  collections.abc.AsyncIterator[dict]
         """
         return self.search(queue=queue, order='-LastUpdated')
 
-    async def last_updated(self, since: str, queue: typing.Optional[str] = None) -> collections.abc.AsyncIterator[dict]:
+    async def last_updated(self, since: str, queue: typing.Optional[str] = None) -> collections.abc.AsyncIterator:
         """ Obtains tickets changed after given date.
 
         :param since: Date as string in form '2011-02-24'
@@ -1755,6 +1756,7 @@ class AsyncRt:
                   *since* ordered in decreasing order by LastUpdated.
                   Each ticket is a dictionary, the same as in
                   :py:meth:`~Rt.get_ticket`.
+                  collections.abc.AsyncIterator[dict]
 
         :raises InvalidUseError: If the specified date is of an unsupported format.
         """
@@ -1781,7 +1783,7 @@ class AsyncRt:
         return False
 
     async def search(self, queue: typing.Optional[typing.Union[str, object]] = None, order: typing.Optional[str] = None,
-                     raw_query: typing.Optional[str] = None, query_format: str = 'l', **kwargs: typing.Any) -> collections.abc.AsyncIterator[dict]:
+                     raw_query: typing.Optional[str] = None, query_format: str = 'l', **kwargs: typing.Any) -> collections.abc.AsyncIterator:
         r""" Search arbitrary needles in given fields and queue.
 
         Example::
@@ -1831,6 +1833,7 @@ class AsyncRt:
 
         :returns: Iterator over matching tickets. Each ticket is the same dictionary
                   as in :py:meth:`~Rt.get_ticket`.
+                  collections.abc.AsyncIterator[dict]
         :raises:  UnexpectedMessageFormatError: Unexpected format of returned message.
                   InvalidQueryError: If raw query is malformed
         """
@@ -2012,12 +2015,13 @@ class AsyncRt:
 
         return bool(msg[0])
 
-    async def get_ticket_history(self, ticket_id: typing.Union[str, int]) -> collections.abc.AsyncIterator[typing.Dict[str, typing.Any]]:
+    async def get_ticket_history(self, ticket_id: typing.Union[str, int]) -> collections.abc.AsyncIterator:
         """ Get set of short history items
 
         :param ticket_id: ID of ticket
         :returns: Iterator of history items ordered increasingly by time of event.
                   Each history item is a tuple containing (id, Description).
+                  collections.abc.AsyncIterator[typing.Dict[str, typing.Any]]
         """
         async for transaction in self.__paged_request(f'ticket/{ticket_id}/history',
                                                       params={'fields': 'Type,Creator,Created,Description,_hyperlinks',
@@ -2154,7 +2158,7 @@ class AsyncRt:
 
         return bool(msg[0])
 
-    async def get_attachments(self, ticket_id: typing.Union[str, int]) -> collections.abc.AsyncIterator[typing.Dict[str, str]]:
+    async def get_attachments(self, ticket_id: typing.Union[str, int]) -> collections.abc.AsyncIterator:
         """ Get attachment list for a given ticket
 
         Example of a return result:
@@ -2173,19 +2177,20 @@ class AsyncRt:
             ]
 
         :param ticket_id: ID of ticket
-        :returns: Iterator of attachments belonging to given ticket.
+        :returns: Iterator of attachments belonging to given ticket. collections.abc.AsyncIterator[typing.Dict[str, str]]
         """
         async for item in self.__paged_request(f'ticket/{ticket_id}/attachments',
                                                json_data=[{'field': 'Filename', 'operator': 'IS NOT', 'value': ''}],
                                                params={'fields': 'Filename,ContentType,ContentLength'}):
             yield item
 
-    async def get_attachments_ids(self, ticket_id: typing.Union[str, int]) -> collections.abc.AsyncIterator[int]:
+    async def get_attachments_ids(self, ticket_id: typing.Union[str, int]) -> collections.abc.AsyncIterator:
         """ Get IDs of attachments for given ticket.
 
         :param ticket_id: ID of ticket
         :returns: Iterator of IDs (type int) of attachments belonging to given
                   ticket.
+                  collections.abc.AsyncIterator[int]
         """
         async for item in self.__paged_request(f'ticket/{ticket_id}/attachments',
                                                json_data=[{'field': 'Filename', 'operator': 'IS NOT', 'value': ''}],
@@ -2513,7 +2518,7 @@ class AsyncRt:
 
         return res
 
-    async def get_all_queues(self, include_disabled: bool = False) -> collections.abc.AsyncIterator[typing.Dict[str, typing.Any]]:
+    async def get_all_queues(self, include_disabled: bool = False) -> collections.abc.AsyncIterator:
         """ Return a list of all queues.
 
         Example of a return result:
@@ -2538,6 +2543,7 @@ class AsyncRt:
         :param include_disabled: Set to True to also return disabled queues.
 
         :returns: Iterator of dictionaries containing basic information on all queues.
+                  collections.abc.AsyncIterator[typing.Dict[str, typing.Any]]
 
         :raises UnexpectedMessageFormatError: In case that returned status code is not 200
         """

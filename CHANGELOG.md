@@ -3,6 +3,10 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v3.1.2], 2023-09-25
+### Fixes
+- Revert breaking change for python3.8 (collections.abc.AsyncIterator is not subscriptable).
+
 ## [v3.1.1], 2023-09-25
 ### Fixes
 - In AsyncRt, instead of returning sequences, return AsyncIterators.

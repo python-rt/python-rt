@@ -1,6 +1,12 @@
 Change Log
 ==========
 
+Version 3.1.2 (2023-09-25)
+----------------------------
+Fixes
+^^^^^
+- Revert breaking change for python3.8 (collections.abc.AsyncIterator is not subscriptable).
+
 Version 3.1.1 (2023-09-25)
 ----------------------------
 Fixes
