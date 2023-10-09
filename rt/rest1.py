@@ -670,7 +670,7 @@ class Rt:
             content=id: ticket/new
             Queue: General
             Owner: Nobody
-            Requestors: somebody@example.com
+            Requestor: somebody@example.com
             Subject: Ticket created through REST API
             Text: Lorem Ipsum
 
@@ -694,7 +694,7 @@ class Rt:
                         List of 2/3 tuples: (filename, file-like object, [content type])
         :keyword kwargs: Other arguments possible to set:
 
-                         Requestors, Subject, Cc, AdminCc, Owner, Status,
+                         Requestor, Subject, Cc, AdminCc, Owner, Status,
                          Priority, InitialPriority, FinalPriority,
                          TimeEstimated, Starts, Due, Text,... (according to RT
                          fields)
