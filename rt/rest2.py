@@ -574,7 +574,7 @@ class Rt:
         :param attachments: Optional list of :py:class:`~rt.rest2.Attachment` objects
         :param kwargs: Other arguments possible to set:
 
-                         Requestors, Cc, AdminCc, Owner, Status,
+                         Requestor, Cc, AdminCc, Owner, Status,
                          Priority, InitialPriority, FinalPriority,
                          TimeEstimated, Starts, Due
 
