@@ -3,6 +3,10 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v3.1.3], 2023-10-10
+### Fixes
+- Fix an issue where no e-mail was sent on ticket creation due to suggesting to use **Requestors** instead of **Requestor** (https://github.com/python-rt/python-rt/pull/92).
+
 ## [v3.1.2], 2023-09-25
 ### Fixes
 - Revert breaking change for python3.8 (collections.abc.AsyncIterator is not subscriptable).

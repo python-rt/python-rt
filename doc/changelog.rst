@@ -1,6 +1,12 @@
 Change Log
 ==========
 
+Version 3.1.3 (2023-10-10)
+----------------------------
+Fixes
+^^^^^
+- Fix an issue where no e-mail was sent on ticket creation due to suggesting to use *Requestors* instead of *Requestor* (https://github.com/python-rt/python-rt/pull/92).
+
 Version 3.1.2 (2023-09-25)
 ----------------------------
 Fixes
