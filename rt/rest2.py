@@ -312,8 +312,8 @@ class Rt:
 
             yield from result['items']
 
-            if recurse and result['pages'] > result['page']:
-                for _page in range(2, result['pages'] + 1):
+            if recurse and result['count'] > result['page']:
+                for _page in range(2, result['count'] + 1):
                     yield from self.__paged_request(selector, json_data=json_data, page=_page,
                                                     per_page=result['per_page'], params=params, recurse=False)
 
@@ -1679,8 +1679,8 @@ class AsyncRt:
             for item in result['items']:
                 yield item
 
-            if recurse and result['pages'] > result['page']:
-                for _page in range(2, result['pages'] + 1):
+            if recurse and result['count'] > result['page']:
+                for _page in range(2, result['count'] + 1):
                     async for item in self.__paged_request(selector,
                                                            json_data=json_data,
                                                            page=_page,
