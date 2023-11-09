@@ -310,12 +310,29 @@ class Rt:
             if not isinstance(result, dict) and 'items' in result:
                 raise UnexpectedResponseError('Server returned an unexpected result')
 
+            if result.get('pages', None) is None and result['count'] == 0:
+                # no more results found, exit here
+                # (workaround for the >=RT5.0.5 undefined pages variable for non-superusers)
+                raise NotFoundError
+
             yield from result['items']
 
-            if recurse and result['pages'] > result['page']:
+            if recurse and result.get('pages', None) is not None and result['pages'] > result['page']:
                 for _page in range(2, result['pages'] + 1):
                     yield from self.__paged_request(selector, json_data=json_data, page=_page,
                                                     per_page=result['per_page'], params=params, recurse=False)
+            elif recurse and result.get('pages', None) is None:
+                # no more results found, exit here
+                # (workaround for the >=RT5.0.5 undefined pages variable for non-superusers)
+                _page = result['page']
+                while True:
+                    _page += 1
+                    try:
+                        yield from self.__paged_request(selector, json_data=json_data, page=_page,
+                                                        per_page=result['per_page'], params=params, recurse=False)
+                    except NotFoundError:
+                        break
+
 
         except httpx.ConnectError as exc:  # pragma: no cover
             raise ConnectionError('Connection error', exc) from exc
@@ -1676,10 +1693,15 @@ class AsyncRt:
             if not isinstance(result, dict) and 'items' in result:
                 raise UnexpectedResponseError('Server returned an unexpected result')
 
+            if result.get('pages', None) is None and result['count'] == 0:
+                # no more results found, exit here
+                # (workaround for the >=RT5.0.5 undefined pages variable for non-superusers)
+                raise NotFoundError
+
             for item in result['items']:
                 yield item
 
-            if recurse and result['pages'] > result['page']:
+            if recurse and result.get('pages', None) is not None and result['pages'] > result['page']:
                 for _page in range(2, result['pages'] + 1):
                     async for item in self.__paged_request(selector,
                                                            json_data=json_data,
@@ -1688,6 +1710,22 @@ class AsyncRt:
                                                            params=params,
                                                            recurse=False):
                         yield item
+            elif recurse and result.get('pages', None) is None:
+                # no more results found, exit here
+                # (workaround for the >=RT5.0.5 undefined pages variable for non-superusers)
+                _page = result['page']
+                while True:
+                    _page += 1
+                    try:
+                        async for item in self.__paged_request(selector,
+                                                               json_data=json_data,
+                                                               page=_page,
+                                                               per_page=result['per_page'],
+                                                               params=params,
+                                                               recurse=False):
+                            yield item
+                    except NotFoundError:
+                        break
 
         except httpx.ConnectError as exc:  # pragma: no cover
             raise ConnectionError('Connection error', exc) from exc
