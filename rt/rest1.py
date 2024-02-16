@@ -295,7 +295,7 @@ class Rt:
             raise ValueError('Invalid parameter type.')
         if not _msg:
             return []
-        return list(map(lambda x: x.strip(), _msg.split(',')))
+        return [x.strip() for x in _msg.split(',')]
 
     @classmethod
     def __parse_response_dict(
@@ -1222,7 +1222,7 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
             'privileged',
             'disabled',
         }
-        used_fields = set(map(lambda x: x.lower(), kwargs.keys()))
+        used_fields = {x.lower() for x in kwargs.keys()}
 
         if not used_fields <= valid_fields:
             invalid_fields = ', '.join(list(used_fields - valid_fields))
@@ -1295,7 +1295,7 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
         :raises InvalidUseError: When invalid fields are set
         """
         valid_fields = {'name', 'description', 'correspondaddress', 'commentaddress', 'initialpriority', 'finalpriority', 'defaultduein'}
-        used_fields = set(map(lambda x: x.lower(), kwargs.keys()))
+        used_fields = {x.lower() for x in kwargs.keys()}
 
         if not used_fields <= valid_fields:
             invalid_fields = ', '.join(list(used_fields - valid_fields))
