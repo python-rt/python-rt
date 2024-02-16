@@ -4,17 +4,19 @@ import typing
 
 
 class RtError(Exception):
-    """Super class of all Rt Errors"""
+    """Super class of all Rt Errors."""
 
 
 class AuthorizationError(RtError):
     """Exception raised when module cannot access :term:`API` due to invalid
-    or missing credentials."""
+    or missing credentials.
+    """
 
 
 class NotAllowedError(RtError):
     """Exception raised when request cannot be finished due to
-    insufficient privileges."""
+    insufficient privileges.
+    """
 
 
 class UnexpectedResponseError(RtError):
@@ -30,7 +32,8 @@ class UnexpectedResponseError(RtError):
 class UnexpectedMessageFormatError(RtError):
     """Exception raised when response has bad status code (not the HTTP code,
     but code in the first line of the body as 200 in `RT/4.0.7 200 Ok`)
-    or message parsing fails because of unexpected format."""
+    or message parsing fails because of unexpected format.
+    """
 
 
 class NotFoundError(RtError):

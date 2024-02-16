@@ -1,4 +1,4 @@
-"""Python interface to Request Tracker :term:`API`
+"""Python interface to Request Tracker :term:`API`.
 
 Description of Request Tracker :term:`REST` :term:`API`:
 https://docs.bestpractical.com/rt/5.0.2/RT/REST2.html
@@ -681,7 +681,7 @@ class Rt:
         return bool(msg[0])
 
     def get_ticket_history(self, ticket_id: typing.Union[str, int]) -> typing.Optional[typing.List[typing.Dict[str, typing.Any]]]:
-        """Get set of short history items
+        """Get set of short history items.
 
         :param ticket_id: ID of ticket
         :returns: List of history items ordered increasingly by time of event.
@@ -699,7 +699,7 @@ class Rt:
         return list(transactions)
 
     def get_transaction(self, transaction_id: typing.Union[str, int]) -> typing.Dict[str, typing.Any]:
-        """Get a transaction
+        """Get a transaction.
 
         :param transaction_id: ID of transaction
         :returns: Return a single transaction.
@@ -719,7 +719,7 @@ class Rt:
         content_type: TYPE_CONTENT_TYPE = 'text/plain',
         attachments: typing.Optional[typing.Sequence[Attachment]] = None,
     ) -> typing.List[str]:
-        """Sends out the correspondence
+        """Sends out the correspondence.
 
         :param ticket_id: ID of ticket to which message belongs
         :param content: Content of email message
@@ -831,7 +831,7 @@ class Rt:
         return bool(msg[0])
 
     def get_attachments(self, ticket_id: typing.Union[str, int]) -> typing.Sequence[typing.Dict[str, str]]:
-        """Get attachment list for a given ticket
+        """Get attachment list for a given ticket.
 
         Example of a return result:
 
@@ -1507,7 +1507,7 @@ class Rt:
         return msg[0].lower() == 'merge successful'
 
     def take(self, ticket_id: typing.Union[str, int]) -> bool:
-        """Take ticket
+        """Take ticket.
 
         :param ticket_id: ID of ticket to be merged
         :returns: ``True``
@@ -1527,7 +1527,7 @@ class Rt:
         return msg[0].lower().startswith('owner changed')
 
     def untake(self, ticket_id: typing.Union[str, int]) -> bool:
-        """Untake ticket
+        """Untake ticket.
 
         :param ticket_id: ID of ticket to be merged
         :returns: ``True``
@@ -1547,7 +1547,7 @@ class Rt:
         return msg[0].lower().startswith('owner changed')
 
     def steal(self, ticket_id: typing.Union[str, int]) -> bool:
-        """Steal ticket
+        """Steal ticket.
 
         :param ticket_id: ID of ticket to be merged
         :returns: ``True``
@@ -2175,7 +2175,7 @@ class AsyncRt:
         return bool(msg[0])
 
     async def get_ticket_history(self, ticket_id: typing.Union[str, int]) -> collections.abc.AsyncIterator:
-        """Get set of short history items
+        """Get set of short history items.
 
         :param ticket_id: ID of ticket
         :returns: Iterator of history items ordered increasingly by time of event.
@@ -2192,7 +2192,7 @@ class AsyncRt:
             yield transaction
 
     async def get_transaction(self, transaction_id: typing.Union[str, int]) -> typing.Dict[str, typing.Any]:
-        """Get a transaction
+        """Get a transaction.
 
         :param transaction_id: ID of transaction
         :returns: Return a single transaction.
@@ -2212,7 +2212,7 @@ class AsyncRt:
         content_type: TYPE_CONTENT_TYPE = 'text/plain',
         attachments: typing.Optional[typing.Sequence[Attachment]] = None,
     ) -> typing.List[str]:
-        """Sends out the correspondence
+        """Sends out the correspondence.
 
         :param ticket_id: ID of ticket to which message belongs
         :param content: Content of email message
@@ -2324,7 +2324,7 @@ class AsyncRt:
         return bool(msg[0])
 
     async def get_attachments(self, ticket_id: typing.Union[str, int]) -> collections.abc.AsyncIterator:
-        """Get attachment list for a given ticket
+        """Get attachment list for a given ticket.
 
         Example of a return result:
 
@@ -2991,7 +2991,7 @@ class AsyncRt:
         return msg[0].lower() == 'merge successful'
 
     async def take(self, ticket_id: typing.Union[str, int]) -> bool:
-        """Take ticket
+        """Take ticket.
 
         :param ticket_id: ID of ticket to be merged
         :returns: ``True``
@@ -3011,7 +3011,7 @@ class AsyncRt:
         return msg[0].lower().startswith('owner changed')
 
     async def untake(self, ticket_id: typing.Union[str, int]) -> bool:
-        """Untake ticket
+        """Untake ticket.
 
         :param ticket_id: ID of ticket to be merged
         :returns: ``True``
@@ -3031,7 +3031,7 @@ class AsyncRt:
         return msg[0].lower().startswith('owner changed')
 
     async def steal(self, ticket_id: typing.Union[str, int]) -> bool:
-        """Steal ticket
+        """Steal ticket.
 
         :param ticket_id: ID of ticket to be merged
         :returns: ``True``

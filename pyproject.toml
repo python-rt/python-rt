@@ -172,6 +172,11 @@ ignore = [
     "RET504", # Unnecessary assignment before `return` statement
 ]
 
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = [
+    "ANN", # Missing return type annotation
+]
+
 [tool.ruff.format]
 quote-style = "single"
 

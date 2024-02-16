@@ -1,6 +1,6 @@
 """
 ======================================================
- Rt - Python interface to Request Tracker :term:`API`
+ Rt - Python interface to Request Tracker :term:`API`.
 ======================================================
 
 Description of Request Tracker :term:`REST` :term:`API`:
@@ -36,15 +36,15 @@ import requests
 import requests.auth
 
 from .exceptions import (
-    NotAllowedError,
-    UnexpectedResponseError,
-    UnexpectedMessageFormatError,
-    InvalidUseError,
-    BadRequestError,
-    AuthorizationError,
     APISyntaxError,
+    AuthorizationError,
+    BadRequestError,
     InvalidQueryError,
+    InvalidUseError,
+    NotAllowedError,
     NotFoundError,
+    UnexpectedMessageFormatError,
+    UnexpectedResponseError,
 )
 
 __license__ = """ Copyright (C) 2012 CZ.NIC, z.s.p.o.
@@ -303,7 +303,7 @@ class Rt:
         msg: typing.Iterable[str],
         expect_keys: typing.Iterable[str] = (),
     ) -> typing.Dict[str, str]:
-        """Parse an RT API response body into a Python dictionary
+        """Parse an RT API response body into a Python dictionary.
 
         This method knows the general format for key-value RT API responses,
         and parses them into a Python dictionary as plain string values.
@@ -355,7 +355,7 @@ class Rt:
         cls,
         msg: typing.Iterable[str],
     ) -> typing.List[typing.Tuple[int, str]]:
-        """Parse an RT API response body into a numbered list
+        """Parse an RT API response body into a numbered list.
 
         The RT API for transactions and attachments returns a numbered list of
         items. This method returns 2-tuples to represent them, where the first
@@ -371,7 +371,7 @@ class Rt:
 
     @classmethod
     def __parse_response_ticket(cls, msg: typing.Iterable[str]) -> typing.Dict[str, typing.Union[str, typing.Sequence[str]]]:
-        """Parse an RT API ticket response into a Python dictionary
+        """Parse an RT API ticket response into a Python dictionary.
 
         :keyword msg: A multiline string, or an iterable of string lines, with
           the RT API response body.
@@ -802,7 +802,7 @@ class Rt:
         return items
 
     def get_short_history(self, ticket_id: typing.Union[str, int]) -> typing.Optional[typing.List[typing.Tuple[int, str]]]:
-        """Get set of short history items
+        """Get set of short history items.
 
         :param ticket_id: ID of ticket
         :returns: List of history items ordered increasingly by time of event.
@@ -827,7 +827,7 @@ class Rt:
         content_type: str = 'text/plain',
         files: typing.Optional[typing.List[typing.Tuple[str, typing.IO, typing.Optional[str]]]] = None,
     ) -> bool:
-        """Sends out the correspondence
+        """Sends out the correspondence.
 
         :param ticket_id: ID of ticket to which message belongs
         :keyword text: Content of email message
@@ -940,7 +940,7 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
         return self.__correspond(ticket_id, text, 'comment', cc, bcc, content_type, files)
 
     def get_attachments(self, ticket_id: typing.Union[str, int]) -> typing.Optional[typing.List[typing.Tuple[str, str, str, str]]]:
-        """Get attachment list for a given ticket
+        """Get attachment list for a given ticket.
 
         :param ticket_id: ID of ticket
         :returns: List of tuples for attachments belonging to given ticket.
@@ -1397,7 +1397,7 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
                             when wrong link name is used.
         """
         valid_link_names = {'dependson', 'dependedonby', 'refersto', 'referredtoby', 'hasmember', 'memberof'}
-        if not link_name.lower() in valid_link_names:
+        if link_name.lower() not in valid_link_names:
             raise InvalidUseError('Unsupported name of link.')
         post_data = {'rel': link_name.lower(), 'to': link_value, 'id': ticket_id, 'del': 1 if delete else 0}
         msg = self.__request('ticket/link', post_data=post_data)
@@ -1423,7 +1423,7 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
         return self.RE_PATTERNS['merge_successful_pattern'].match(state) is not None
 
     def take(self, ticket_id: typing.Union[str, int]) -> bool:
-        """Take ticket
+        """Take ticket.
 
         :param ticket_id: ID of ticket to be merged
         :returns: ``True``
@@ -1437,7 +1437,7 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
         return self.__get_status_code(msg) == 200
 
     def steal(self, ticket_id: typing.Union[str, int]) -> bool:
-        """Steal ticket
+        """Steal ticket.
 
         :param ticket_id: ID of ticket to be merged
         :returns: ``True``
@@ -1451,7 +1451,7 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
         return self.__get_status_code(msg) == 200
 
     def untake(self, ticket_id: typing.Union[str, int]) -> bool:
-        """Untake ticket
+        """Untake ticket.
 
         :param ticket_id: ID of ticket to be merged
         :returns: ``True``
