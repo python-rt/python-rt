@@ -132,7 +132,7 @@ class Rt:
     def __debug_response(self, response: httpx.Response) -> None:
         """Output debug information for a given HTTP response."""
         response.request.read()
-        self.logger.debug('### %s', datetime.datetime.now(tz=datetime.UTC).isoformat())
+        self.logger.debug('### %s', datetime.datetime.now(tz=datetime.timezone.utc).isoformat())
         self.logger.debug('Request URL: %s', response.request.url)
         self.logger.debug('Request method: %s', response.request.method)
         self.logger.debug('Request headers: %s', response.request.headers)
@@ -1622,7 +1622,7 @@ class AsyncRt:
     def __debug_response(self, response: httpx.Response) -> None:
         """Output debug information for a given HTTP response."""
         response.request.read()
-        self.logger.debug('### %s', datetime.datetime.now(tz=datetime.UTC).isoformat())
+        self.logger.debug('### %s', datetime.datetime.now(tz=datetime.timezone.utc).isoformat())
         self.logger.debug('Request URL: %s', response.request.url)
         self.logger.debug('Request method: %s', response.request.method)
         self.logger.debug('Request headers: %s', response.request.headers)

@@ -217,7 +217,7 @@ class Rt:
             method = 'GET'
             if post_data or files:
                 method = 'POST'
-            self.logger.debug('### %s', datetime.datetime.now(tz=datetime.UTC).isoformat())
+            self.logger.debug('### %s', datetime.datetime.now(tz=datetime.timezone.utc).isoformat())
             self.logger.debug('Request URL: %s', url)
             self.logger.debug('Request method: %s', method)
             self.logger.debug('Response status code: %s', str(response.status_code))
