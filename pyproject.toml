@@ -170,11 +170,16 @@ ignore = [
     "ISC001", # single-line-implicit-string-concatenation
     "Q001", # bad-quotes-multiline-string
     "RET504", # Unnecessary assignment before `return` statement
+    "D401", # First line of docstring should be in imperative mood
+    "D205", # 1 blank line required between summary line and description
 ]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = [
     "ANN", # Missing return type annotation
+]
+"rt/rest1.py" = [
+    "N803", # Argument name should be lowercase
 ]
 
 [tool.ruff.format]

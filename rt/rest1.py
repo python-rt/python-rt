@@ -1,7 +1,4 @@
-"""
-======================================================
- Rt - Python interface to Request Tracker :term:`API`.
-======================================================
+"""Rt - Python interface to Request Tracker :term:`API`.
 
 Description of Request Tracker :term:`REST` :term:`API`:
 http://requesttracker.wikia.com/wiki/REST
@@ -78,8 +75,9 @@ ALL_QUEUES = object()
 
 
 class Rt:
-    r""":term:`API` for Request Tracker according to
-    http://requesttracker.wikia.com/wiki/REST. Interface is based on
+    r""":term:`API` for Request Tracker according to http://requesttracker.wikia.com/wiki/REST.
+
+    Interface is based on
     :term:`REST` architecture, which is based on HTTP/1.1 protocol. This module
     is therefore mainly sending and parsing special HTTP messages.
 
@@ -219,7 +217,7 @@ class Rt:
             method = 'GET'
             if post_data or files:
                 method = 'POST'
-            self.logger.debug('### %s', datetime.datetime.now().isoformat())
+            self.logger.debug('### %s', datetime.datetime.now(tz=datetime.UTC).isoformat())
             self.logger.debug('Request URL: %s', url)
             self.logger.debug('Request method: %s', method)
             self.logger.debug('Response status code: %s', str(response.status_code))
@@ -730,7 +728,7 @@ class Rt:
             res = self.RE_PATTERNS['ticket_created_pattern'].match(line)
             if res is not None:
                 return int(res.group(1))
-            warnings.warn(line[2:])
+            warnings.warn(line[2:], stacklevel=2)
         return -1
 
     def edit_ticket(self, ticket_id: typing.Union[str, int], **kwargs: typing.Any) -> bool:

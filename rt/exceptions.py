@@ -8,15 +8,11 @@ class RtError(Exception):
 
 
 class AuthorizationError(RtError):
-    """Exception raised when module cannot access :term:`API` due to invalid
-    or missing credentials.
-    """
+    """Exception raised when module cannot access :term:`API` due to invalid or missing credentials."""
 
 
 class NotAllowedError(RtError):
-    """Exception raised when request cannot be finished due to
-    insufficient privileges.
-    """
+    """Exception raised when request cannot be finished due to insufficient privileges."""
 
 
 class UnexpectedResponseError(RtError):
