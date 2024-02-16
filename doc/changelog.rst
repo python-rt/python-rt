@@ -1,6 +1,12 @@
 Change Log
 ==========
 
+Version 3.1.4 (2024-02-16)
+----------------------------
+Fixes
+^^^^^
+- Add a workaround for a breaking change introduced in RT5.0.5 which returns undefined pages variable for non-superusers (see #93 #94).
+
 Version 3.1.3 (2023-10-10)
 ----------------------------
 Fixes
