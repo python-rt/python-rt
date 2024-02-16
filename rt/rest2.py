@@ -21,7 +21,7 @@ import rt.exceptions
 
 from .exceptions import AuthorizationError, InvalidUseError, NotFoundError, UnexpectedResponseError
 
-__license__ = ''' Copyright (C) 2012 CZ.NIC, z.s.p.o.
+__license__ = """ Copyright (C) 2012 CZ.NIC, z.s.p.o.
     Copyright (c) 2015 Genome Research Ltd.
     Copyright (c) 2017 CERT Gouvernemental (GOVCERT.LU)
 
@@ -37,7 +37,7 @@ __license__ = ''' Copyright (C) 2012 CZ.NIC, z.s.p.o.
 
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
 __docformat__ = 'reStructuredText en'
 __authors__ = [
     '"Jiri Machalek" <jiri.machalek@nic.cz>',
@@ -45,13 +45,11 @@ __authors__ = [
     '"Georges Toth" <georges.toth@govcert.etat.lu>',
 ]
 
-VALID_TICKET_LINK_NAMES = ('Parent', 'Child', 'RefersTo',
-                           'ReferredToBy', 'DependsOn', 'DependedOnBy')
-TYPE_VALID_TICKET_LINK_NAMES = Literal['Parent', 'Child', 'RefersTo',
-'ReferredToBy', 'DependsOn', 'DependedOnBy']
+VALID_TICKET_LINK_NAMES = ('Parent', 'Child', 'RefersTo', 'ReferredToBy', 'DependsOn', 'DependedOnBy')
+TYPE_VALID_TICKET_LINK_NAMES = Literal['Parent', 'Child', 'RefersTo', 'ReferredToBy', 'DependsOn', 'DependedOnBy']
 TYPE_CONTENT_TYPE = Literal['text/plain', 'text/html']
 
-REGEX_PATTERNS = {'does_not_exist': re.compile(r'''(user|queue|resource)(?: [^does]+)? does not exist''', re.I)}
+REGEX_PATTERNS = {'does_not_exist': re.compile(r"""(user|queue|resource)(?: [^does]+)? does not exist""", re.I)}
 
 
 @dataclasses.dataclass
@@ -64,21 +62,23 @@ class Attachment:
 
     def to_dict(self) -> typing.Dict[str, str]:
         """Convert to a dictionary for submitting to the REST API."""
-        return {'FileName': self.file_name,
-                'FileType': self.file_type,
-                'FileContent': base64.b64encode(self.file_content).decode('utf-8'),
-                }
+        return {
+            'FileName': self.file_name,
+            'FileType': self.file_type,
+            'FileContent': base64.b64encode(self.file_content).decode('utf-8'),
+        }
 
     def multipart_form_element(self) -> typing.Tuple[str, bytes, str]:
         """Convert to a tuple as required for multipart-form-data submission."""
-        return (self.file_name,
-                self.file_content,
-                self.file_type,
-                )
+        return (
+            self.file_name,
+            self.file_content,
+            self.file_type,
+        )
 
 
 class Rt:
-    r""" :term:`API` for Request Tracker according to
+    r""":term:`API` for Request Tracker according to
     https://docs.bestpractical.com/rt/5.0.2/RT/REST2.html. Interface is based on
     :term:`REST` architecture, which is based on HTTP/1.1 protocol. This module
     is therefore mainly sending and parsing special HTTP messages.
@@ -90,15 +90,16 @@ class Rt:
               expected as input for string values.
     """
 
-    def __init__(self,
-                 url: str,
-                 proxy: typing.Optional[str] = None,
-                 verify_cert: typing.Union[str, bool] = True,
-                 http_auth: typing.Optional[httpx.Auth] = None,
-                 token: typing.Optional[str] = None,
-                 http_timeout: typing.Optional[int] = 20,
-                 ) -> None:
-        """ API initialization.
+    def __init__(
+        self,
+        url: str,
+        proxy: typing.Optional[str] = None,
+        verify_cert: typing.Union[str, bool] = True,
+        http_auth: typing.Optional[httpx.Auth] = None,
+        token: typing.Optional[str] = None,
+        http_timeout: typing.Optional[int] = 20,
+    ) -> None:
+        """API initialization.
 
         :param url: Base URL for Request Tracker API.
                       E.g.: http://tracker.example.com/REST/2.0/
@@ -139,14 +140,15 @@ class Rt:
         self.logger.debug('Response content:')
         self.logger.debug(response.content.decode())
 
-    def __request(self,
-                  selector: str,
-                  get_params: typing.Optional[typing.Dict[str, typing.Any]] = None,
-                  json_data: typing.Optional[typing.Union[typing.Dict[str, typing.Any], typing.List[typing.Any]]] = None,
-                  post_data: typing.Optional[typing.Dict[str, typing.Any]] = None,
-                  attachments: typing.Optional[typing.Sequence[Attachment]] = None,
-                  ) -> typing.Union[typing.Dict[str, typing.Any], typing.List[str]]:
-        """ General request for :term:`API`.
+    def __request(
+        self,
+        selector: str,
+        get_params: typing.Optional[typing.Dict[str, typing.Any]] = None,
+        json_data: typing.Optional[typing.Union[typing.Dict[str, typing.Any], typing.List[typing.Any]]] = None,
+        post_data: typing.Optional[typing.Dict[str, typing.Any]] = None,
+        attachments: typing.Optional[typing.Sequence[Attachment]] = None,
+    ) -> typing.Union[typing.Dict[str, typing.Any], typing.List[str]]:
+        """General request for :term:`API`.
 
         :param selector: End part of URL which completes self.url parameter
                            set during class initialization.
@@ -171,7 +173,9 @@ class Rt:
                 else:
                     response = self.session.get(url, params=get_params)
             else:
-                fields: typing.List[typing.Tuple[str, typing.Any]] = [('Attachments', attachment.multipart_form_element()) for attachment in attachments]
+                fields: typing.List[typing.Tuple[str, typing.Any]] = [
+                    ('Attachments', attachment.multipart_form_element()) for attachment in attachments
+                ]
                 response = self.session.post(url, files=fields, data={'JSON': json.dumps(json_data)})
 
             self.__debug_response(response)
@@ -182,17 +186,20 @@ class Rt:
             except LookupError as exc:  # pragma: no cover
                 raise UnexpectedResponseError(f'Unknown response encoding: {response.encoding}.') from exc
             except UnicodeError as exc:  # pragma: no cover
-                raise UnexpectedResponseError(f'''Unknown response encoding (UTF-8 does not work) - "{response.content.decode('utf-8', 'replace')}".''') from exc
+                raise UnexpectedResponseError(
+                    f"""Unknown response encoding (UTF-8 does not work) - "{response.content.decode('utf-8', 'replace')}"."""
+                ) from exc
 
             return result
         except httpx.ConnectError as exc:  # pragma: no cover
             raise ConnectionError('Connection error', exc) from exc
 
-    def __request_put(self,
-                      selector: str,
-                      json_data: typing.Optional[typing.Dict[str, typing.Any]] = None,
-                      ) -> typing.List[str]:
-        """ PUT request for :term:`API`.
+    def __request_put(
+        self,
+        selector: str,
+        json_data: typing.Optional[typing.Dict[str, typing.Any]] = None,
+    ) -> typing.List[str]:
+        """PUT request for :term:`API`.
 
         :param selector: End part of URL which completes self.url parameter
                            set during class initialization.
@@ -218,16 +225,19 @@ class Rt:
             except LookupError as exc:  # pragma: no cover
                 raise UnexpectedResponseError(f'Unknown response encoding: {response.encoding}.') from exc
             except UnicodeError as exc:  # pragma: no cover
-                raise UnexpectedResponseError(f'''Unknown response encoding (UTF-8 does not work) - "{response.content.decode('utf-8', 'replace')}".''') from exc
+                raise UnexpectedResponseError(
+                    f"""Unknown response encoding (UTF-8 does not work) - "{response.content.decode('utf-8', 'replace')}"."""
+                ) from exc
 
             return result
         except httpx.ConnectError as exc:  # pragma: no cover
             raise ConnectionError('Connection error', exc) from exc
 
-    def __request_delete(self,
-                         selector: str,
-                         ) -> typing.Dict[str, str]:
-        """ DELETE request for :term:`API`.
+    def __request_delete(
+        self,
+        selector: str,
+    ) -> typing.Dict[str, str]:
+        """DELETE request for :term:`API`.
 
         :param selector: End part of URL which completes self.url parameter
                            set during class initialization.
@@ -253,21 +263,24 @@ class Rt:
             except LookupError as exc:  # pragma: no cover
                 raise UnexpectedResponseError(f'Unknown response encoding: {response.encoding}.') from exc
             except UnicodeError as exc:  # pragma: no cover
-                raise UnexpectedResponseError(f'''Unknown response encoding (UTF-8 does not work) - "{response.content.decode('utf-8', 'replace')}".''') from exc
+                raise UnexpectedResponseError(
+                    f"""Unknown response encoding (UTF-8 does not work) - "{response.content.decode('utf-8', 'replace')}"."""
+                ) from exc
 
             return result
         except httpx.ConnectError as exc:  # pragma: no cover
             raise ConnectionError('Connection error', exc) from exc
 
-    def __paged_request(self,
-                        selector: str,
-                        json_data: typing.Optional[typing.Union[typing.List[typing.Dict[str, typing.Any]], typing.Dict[str, typing.Any]]] = None,
-                        params: typing.Optional[typing.Dict[str, typing.Any]] = None,
-                        page: int = 1,
-                        per_page: int = 20,
-                        recurse: bool = True,
-                        ) -> typing.Iterator[typing.Dict[str, typing.Any]]:
-        """ Request using pagination for :term:`API`.
+    def __paged_request(
+        self,
+        selector: str,
+        json_data: typing.Optional[typing.Union[typing.List[typing.Dict[str, typing.Any]], typing.Dict[str, typing.Any]]] = None,
+        params: typing.Optional[typing.Dict[str, typing.Any]] = None,
+        page: int = 1,
+        per_page: int = 20,
+        recurse: bool = True,
+    ) -> typing.Iterator[typing.Dict[str, typing.Any]]:
+        """Request using pagination for :term:`API`.
 
         :param selector: End part of URL which completes self.url parameter
                            set during class initialization.
@@ -319,8 +332,9 @@ class Rt:
 
             if recurse and result.get('pages', None) is not None and result['pages'] > result['page']:
                 for _page in range(2, result['pages'] + 1):
-                    yield from self.__paged_request(selector, json_data=json_data, page=_page,
-                                                    per_page=result['per_page'], params=params, recurse=False)
+                    yield from self.__paged_request(
+                        selector, json_data=json_data, page=_page, per_page=result['per_page'], params=params, recurse=False
+                    )
             elif recurse and result.get('pages', None) is None:
                 # no more results found, exit here
                 # (workaround for the >=RT5.0.5 undefined pages variable for non-superusers)
@@ -328,18 +342,18 @@ class Rt:
                 while True:
                     _page += 1
                     try:
-                        yield from self.__paged_request(selector, json_data=json_data, page=_page,
-                                                        per_page=result['per_page'], params=params, recurse=False)
+                        yield from self.__paged_request(
+                            selector, json_data=json_data, page=_page, per_page=result['per_page'], params=params, recurse=False
+                        )
                     except NotFoundError:
                         break
-
 
         except httpx.ConnectError as exc:  # pragma: no cover
             raise ConnectionError('Connection error', exc) from exc
 
     @staticmethod
     def __check_response(response: httpx.Response) -> None:
-        """ Search general errors in server response and raise exceptions when found.
+        """Search general errors in server response and raise exceptions when found.
 
         :param response: Response from HTTP request.
         :raises BadRequestError: If the server returned an HTTP/400 error.
@@ -359,14 +373,15 @@ class Rt:
             raise rt.exceptions.BadRequestError(ret)
 
         if response.status_code == 401:  # pragma: no cover
-            raise AuthorizationError(
-                'Server could not verify that you are authorized to access the requested document.')
+            raise AuthorizationError('Server could not verify that you are authorized to access the requested document.')
         if response.status_code == 404:
             raise NotFoundError('No such resource found.')
         if response.status_code not in (200, 201):
-            raise UnexpectedResponseError(f'Received status code {response.status_code} instead of 200.',
-                                          status_code=response.status_code,
-                                          response_message=response.text)
+            raise UnexpectedResponseError(
+                f'Received status code {response.status_code} instead of 200.',
+                status_code=response.status_code,
+                response_message=response.text,
+            )
 
     def __get_url(self, url: str) -> typing.Dict[str, typing.Any]:
         """Call a URL as specified in the returned JSON of an API operation."""
@@ -379,7 +394,7 @@ class Rt:
         return res
 
     def new_correspondence(self, queue: typing.Optional[typing.Union[str, object]] = None) -> typing.Iterator[dict]:
-        """ Obtains tickets changed by other users than the system one.
+        """Obtains tickets changed by other users than the system one.
 
         :param queue: Queue where to search
 
@@ -391,7 +406,7 @@ class Rt:
         return self.search(queue=queue, order='-LastUpdated')
 
     def last_updated(self, since: str, queue: typing.Optional[str] = None) -> typing.Iterator[dict]:
-        """ Obtains tickets changed after given date.
+        """Obtains tickets changed after given date.
 
         :param since: Date as string in form '2011-02-24'
         :param queue: Queue where to search
@@ -406,8 +421,7 @@ class Rt:
         if not self.__validate_date(since):
             raise InvalidUseError(f'Invalid date specified - "{since}"')
 
-        return self.search(queue=queue, order='-LastUpdated',
-                           LastUpdated__gt=since)
+        return self.search(queue=queue, order='-LastUpdated', LastUpdated__gt=since)
 
     @classmethod
     def __validate_date(cls, _date: str) -> bool:
@@ -425,9 +439,15 @@ class Rt:
 
         return False
 
-    def search(self, queue: typing.Optional[typing.Union[str, object]] = None, order: typing.Optional[str] = None,
-               raw_query: typing.Optional[str] = None, query_format: str = 'l', **kwargs: typing.Any) -> typing.Iterator[dict]:
-        r""" Search arbitrary needles in given fields and queue.
+    def search(
+        self,
+        queue: typing.Optional[typing.Union[str, object]] = None,
+        order: typing.Optional[str] = None,
+        raw_query: typing.Optional[str] = None,
+        query_format: str = 'l',
+        **kwargs: typing.Any,
+    ) -> typing.Iterator[dict]:
+        r"""Search arbitrary needles in given fields and queue.
 
         Example::
 
@@ -504,7 +524,7 @@ class Rt:
                 if key[:3] != 'CF_':
                     query.append(f"{key}{op}'{value}'")
                 else:
-                    query.append(f'''CF.{{{key[3:]}}}'{op}'{value}\'''')
+                    query.append(f"""CF.{{{key[3:]}}}'{op}'{value}\'""")
         else:
             query.append(raw_query)
         get_params['query'] = ' AND '.join('(' + part + ')' for part in query)
@@ -516,7 +536,9 @@ class Rt:
                 get_params['orderby'] = order
 
         if query_format == 'l':
-            get_params['fields'] = 'Owner,Status,Created,Subject,Queue,CustomFields,Requestor,Cc,AdminCc,Started,Created,TimeEstimated,Due,Type,InitialPriority,Priority,TimeLeft,LastUpdated'
+            get_params[
+                'fields'
+            ] = 'Owner,Status,Created,Subject,Queue,CustomFields,Requestor,Cc,AdminCc,Started,Created,TimeEstimated,Due,Type,InitialPriority,Priority,TimeLeft,LastUpdated'
             get_params['fields[Queue]'] = 'Name'
         elif query_format == 's':
             get_params['fields'] = 'Subject'
@@ -524,7 +546,7 @@ class Rt:
         yield from self.__paged_request(url, params=get_params)
 
     def get_ticket(self, ticket_id: typing.Union[str, int]) -> dict:
-        """ Fetch ticket by its ID.
+        """Fetch ticket by its ID.
 
         :param ticket_id: ID of demanded ticket
 
@@ -563,14 +585,16 @@ class Rt:
 
         return res
 
-    def create_ticket(self,
-                      queue: str,
-                      content_type: TYPE_CONTENT_TYPE = 'text/plain',
-                      subject: typing.Optional[str] = None,
-                      content: typing.Optional[str] = None,
-                      attachments: typing.Optional[typing.Sequence[Attachment]] = None,
-                      **kwargs: typing.Any) -> int:
-        """ Create new ticket and set given parameters.
+    def create_ticket(
+        self,
+        queue: str,
+        content_type: TYPE_CONTENT_TYPE = 'text/plain',
+        subject: typing.Optional[str] = None,
+        content: typing.Optional[str] = None,
+        attachments: typing.Optional[typing.Sequence[Attachment]] = None,
+        **kwargs: typing.Any,
+    ) -> int:
+        """Create new ticket and set given parameters.
 
         Example of message sent to ``http://tracker.example.com/REST/2.0/ticket/new``::
 
@@ -621,7 +645,7 @@ class Rt:
         return int(res['id'])
 
     def edit_ticket(self, ticket_id: typing.Union[str, int], **kwargs: typing.Any) -> bool:
-        """ Edit ticket values.
+        """Edit ticket values.
 
         :param ticket_id: ID of ticket to edit
         :param kwargs: Other arguments possible to set:
@@ -657,17 +681,20 @@ class Rt:
         return bool(msg[0])
 
     def get_ticket_history(self, ticket_id: typing.Union[str, int]) -> typing.Optional[typing.List[typing.Dict[str, typing.Any]]]:
-        """ Get set of short history items
+        """Get set of short history items
 
         :param ticket_id: ID of ticket
         :returns: List of history items ordered increasingly by time of event.
                   Each history item is a tuple containing (id, Description).
                   Returns None if ticket does not exist.
         """
-        transactions = self.__paged_request(f'ticket/{ticket_id}/history', params={'fields': 'Type,Creator,Created,Description,_hyperlinks',
-                                                                                   'fields[Creator]': 'id,Name,RealName,EmailAddress',
-                                                                                   },
-                                            )
+        transactions = self.__paged_request(
+            f'ticket/{ticket_id}/history',
+            params={
+                'fields': 'Type,Creator,Created,Description,_hyperlinks',
+                'fields[Creator]': 'id,Name,RealName,EmailAddress',
+            },
+        )
 
         return list(transactions)
 
@@ -684,14 +711,15 @@ class Rt:
 
         return res
 
-    def __correspond(self,
-                     ticket_id: typing.Union[str, int],
-                     content: str = '',
-                     action: Literal['correspond', 'comment'] = 'correspond',
-                     content_type: TYPE_CONTENT_TYPE = 'text/plain',
-                     attachments: typing.Optional[typing.Sequence[Attachment]] = None,
-                     ) -> typing.List[str]:
-        """ Sends out the correspondence
+    def __correspond(
+        self,
+        ticket_id: typing.Union[str, int],
+        content: str = '',
+        action: Literal['correspond', 'comment'] = 'correspond',
+        content_type: TYPE_CONTENT_TYPE = 'text/plain',
+        attachments: typing.Optional[typing.Sequence[Attachment]] = None,
+    ) -> typing.List[str]:
+        """Sends out the correspondence
 
         :param ticket_id: ID of ticket to which message belongs
         :param content: Content of email message
@@ -706,9 +734,10 @@ class Rt:
         if action not in ('correspond', 'comment'):  # pragma: no cover
             raise InvalidUseError('action must be either "correspond" or "comment"')
 
-        post_data: typing.Dict[str, typing.Any] = {'Content': content,
-                                                   'ContentType': content_type,
-                                                   }
+        post_data: typing.Dict[str, typing.Any] = {
+            'Content': content,
+            'ContentType': content_type,
+        }
 
         # Adding a one-shot cc/bcc is not supported by RT5.0.2
         # if cc:
@@ -726,13 +755,14 @@ class Rt:
 
         return res
 
-    def reply(self,
-              ticket_id: typing.Union[str, int],
-              content: str = '',
-              content_type: TYPE_CONTENT_TYPE = 'text/plain',
-              attachments: typing.Optional[typing.Sequence[Attachment]] = None,
-              ) -> bool:
-        """ Sends email message to the contacts in ``Requestors`` field of
+    def reply(
+        self,
+        ticket_id: typing.Union[str, int],
+        content: str = '',
+        content_type: TYPE_CONTENT_TYPE = 'text/plain',
+        attachments: typing.Optional[typing.Sequence[Attachment]] = None,
+    ) -> bool:
+        """Sends email message to the contacts in ``Requestors`` field of
         given ticket with subject as is set in ``Subject`` field.
 
         :param ticket_id: ID of ticket to which message belongs
@@ -754,7 +784,7 @@ class Rt:
         return bool(msg[0])
 
     def delete_ticket(self, ticket_id: typing.Union[str, int]) -> None:
-        """ Mark a ticket as deleted.
+        """Mark a ticket as deleted.
 
         :param ticket_id: ID of ticket
 
@@ -773,13 +803,14 @@ class Rt:
 
             raise  # pragma: no cover
 
-    def comment(self,
-                ticket_id: typing.Union[str, int],
-                content: str = '',
-                content_type: TYPE_CONTENT_TYPE = 'text/plain',
-                attachments: typing.Optional[typing.Sequence[Attachment]] = None,
-                ) -> bool:
-        """ Adds comment to the given ticket.
+    def comment(
+        self,
+        ticket_id: typing.Union[str, int],
+        content: str = '',
+        content_type: TYPE_CONTENT_TYPE = 'text/plain',
+        attachments: typing.Optional[typing.Sequence[Attachment]] = None,
+    ) -> bool:
+        """Adds comment to the given ticket.
 
         :param ticket_id: ID of ticket to which comment belongs
         :param content: Content of comment
@@ -800,7 +831,7 @@ class Rt:
         return bool(msg[0])
 
     def get_attachments(self, ticket_id: typing.Union[str, int]) -> typing.Sequence[typing.Dict[str, str]]:
-        """ Get attachment list for a given ticket
+        """Get attachment list for a given ticket
 
         Example of a return result:
 
@@ -824,15 +855,17 @@ class Rt:
         """
         attachments = []
 
-        for item in self.__paged_request(f'ticket/{ticket_id}/attachments',
-                                         json_data=[{'field': 'Filename', 'operator': 'IS NOT', 'value': ''}],
-                                         params={'fields': 'Filename,ContentType,ContentLength'}):
+        for item in self.__paged_request(
+            f'ticket/{ticket_id}/attachments',
+            json_data=[{'field': 'Filename', 'operator': 'IS NOT', 'value': ''}],
+            params={'fields': 'Filename,ContentType,ContentLength'},
+        ):
             attachments.append(item)
 
         return attachments
 
     def get_attachments_ids(self, ticket_id: typing.Union[str, int]) -> typing.Optional[typing.List[int]]:
-        """ Get IDs of attachments for given ticket.
+        """Get IDs of attachments for given ticket.
 
         :param ticket_id: ID of ticket
         :returns: List of IDs (type int) of attachments belonging to given
@@ -840,15 +873,16 @@ class Rt:
         """
         attachments = []
 
-        for item in self.__paged_request(f'ticket/{ticket_id}/attachments',
-                                         json_data=[{'field': 'Filename', 'operator': 'IS NOT', 'value': ''}],
-                                         ):
+        for item in self.__paged_request(
+            f'ticket/{ticket_id}/attachments',
+            json_data=[{'field': 'Filename', 'operator': 'IS NOT', 'value': ''}],
+        ):
             attachments.append(int(item['id']))
 
         return attachments
 
     def get_attachment(self, attachment_id: typing.Union[str, int]) -> typing.Optional[dict]:
-        """ Get attachment.
+        """Get attachment.
 
         :param attachment_id: ID of attachment to fetch
         :returns: Attachment as dictionary with these keys:
@@ -906,7 +940,7 @@ class Rt:
         return res
 
     def get_user(self, user_id: typing.Union[int, str]) -> typing.Dict[str, typing.Any]:
-        """ Get user details.
+        """Get user details.
 
         :param user_id: Identification of user by username (str) or user ID
                         (int)
@@ -962,7 +996,7 @@ class Rt:
         return False
 
     def create_user(self, user_name: str, email_address: str, **kwargs: typing.Any) -> str:
-        """ Create user.
+        """Create user.
 
         :param user_name: Username (login for privileged, required)
         :param email_address: Email address (required)
@@ -972,18 +1006,44 @@ class Rt:
         :raises InvalidUseError: When invalid fields are set
         :raises UnexpectedResponseError: If the response from RT is not as expected
         """
-        valid_fields = {'Name', 'Password', 'EmailAddress', 'RealName',
-                        'Nickname', 'Gecos', 'Organization', 'Address1', 'Address2',
-                        'City', 'State', 'Zip', 'Country', 'HomePhone', 'WorkPhone',
-                        'MobilePhone', 'PagerPhone', 'ContactInfo', 'Comments',
-                        'Signature', 'Lang', 'EmailEncoding', 'WebEncoding',
-                        'ExternalContactInfoId', 'ContactInfoSystem', 'ExternalAuthId',
-                        'AuthSystem', 'Privileged', 'Disabled', 'CustomFields'}
+        valid_fields = {
+            'Name',
+            'Password',
+            'EmailAddress',
+            'RealName',
+            'Nickname',
+            'Gecos',
+            'Organization',
+            'Address1',
+            'Address2',
+            'City',
+            'State',
+            'Zip',
+            'Country',
+            'HomePhone',
+            'WorkPhone',
+            'MobilePhone',
+            'PagerPhone',
+            'ContactInfo',
+            'Comments',
+            'Signature',
+            'Lang',
+            'EmailEncoding',
+            'WebEncoding',
+            'ExternalContactInfoId',
+            'ContactInfoSystem',
+            'ExternalAuthId',
+            'AuthSystem',
+            'Privileged',
+            'Disabled',
+            'CustomFields',
+        }
         invalid_fields = []
 
-        post_data = {'Name': user_name,
-                     'EmailAddress': email_address,
-                     }
+        post_data = {
+            'Name': user_name,
+            'EmailAddress': email_address,
+        }
 
         for k, v in kwargs.items():
             if k not in valid_fields:
@@ -993,7 +1053,7 @@ class Rt:
                 post_data[k] = v
 
         if invalid_fields:
-            raise InvalidUseError(f'''Unsupported names of fields: {', '.join(invalid_fields)}.''')
+            raise InvalidUseError(f"""Unsupported names of fields: {', '.join(invalid_fields)}.""")
 
         try:
             res = self.__request('user', json_data=post_data)
@@ -1009,7 +1069,7 @@ class Rt:
         return res['id']
 
     def edit_user(self, user_id: typing.Union[str, int], **kwargs: typing.Any) -> typing.List[str]:
-        """ Edit user profile.
+        """Edit user profile.
 
         :param user_id: Identification of user by username (str) or user ID
                         (int)
@@ -1050,13 +1110,38 @@ class Rt:
         :raises InvalidUseError: When invalid fields are set
         :raises UnexpectedResponseError: If the response from RT is not as expected
         """
-        valid_fields = {'Name', 'Password', 'EmailAddress', 'RealName',
-                        'Nickname', 'Gecos', 'Organization', 'Address1', 'Address2',
-                        'City', 'State', 'Zip', 'Country', 'HomePhone', 'WorkPhone',
-                        'MobilePhone', 'PagerPhone', 'ContactInfo', 'Comments',
-                        'Signature', 'Lang', 'EmailEncoding', 'WebEncoding',
-                        'ExternalContactInfoId', 'ContactInfoSystem', 'ExternalAuthId',
-                        'AuthSystem', 'Privileged', 'Disabled', 'CustomFields'}
+        valid_fields = {
+            'Name',
+            'Password',
+            'EmailAddress',
+            'RealName',
+            'Nickname',
+            'Gecos',
+            'Organization',
+            'Address1',
+            'Address2',
+            'City',
+            'State',
+            'Zip',
+            'Country',
+            'HomePhone',
+            'WorkPhone',
+            'MobilePhone',
+            'PagerPhone',
+            'ContactInfo',
+            'Comments',
+            'Signature',
+            'Lang',
+            'EmailEncoding',
+            'WebEncoding',
+            'ExternalContactInfoId',
+            'ContactInfoSystem',
+            'ExternalAuthId',
+            'AuthSystem',
+            'Privileged',
+            'Disabled',
+            'CustomFields',
+        }
         invalid_fields = []
 
         post_data = {}
@@ -1069,7 +1154,7 @@ class Rt:
                 post_data[key] = val
 
         if invalid_fields:
-            raise InvalidUseError(f'''Unsupported names of fields: {', '.join(invalid_fields)}.''')
+            raise InvalidUseError(f"""Unsupported names of fields: {', '.join(invalid_fields)}.""")
 
         try:
             ret = self.__request_put(f'user/{user_id}', json_data=post_data)
@@ -1082,7 +1167,7 @@ class Rt:
         return ret
 
     def delete_user(self, user_id: typing.Union[str, int]) -> None:
-        """ Disable a user.
+        """Disable a user.
 
         :param user_id: Identification of a user by name (str) or ID (int)
 
@@ -1102,7 +1187,7 @@ class Rt:
             raise  # pragma: no cover
 
     def get_queue(self, queue_id: typing.Union[str, int]) -> typing.Optional[typing.Dict[str, typing.Any]]:
-        """ Get queue details.
+        """Get queue details.
 
         Example of a return result:
 
@@ -1169,7 +1254,7 @@ class Rt:
         return res
 
     def get_all_queues(self, include_disabled: bool = False) -> typing.List[typing.Dict[str, typing.Any]]:
-        """ Return a list of all queues.
+        """Return a list of all queues.
 
         Example of a return result:
 
@@ -1196,15 +1281,16 @@ class Rt:
 
         :raises UnexpectedMessageFormatError: In case that returned status code is not 200
         """
-        params = {'fields': 'Name,Description,CorrespondAddress,CommentAddress,InitialPriority,FinalPriority,DefaultDueIn',
-                  'find_disabled_rows': int(include_disabled),
-                  }
+        params = {
+            'fields': 'Name,Description,CorrespondAddress,CommentAddress,InitialPriority,FinalPriority,DefaultDueIn',
+            'find_disabled_rows': int(include_disabled),
+        }
         queues = self.__paged_request('queues/all', params=params)
 
         return list(queues)
 
     def edit_queue(self, queue_id: typing.Union[str, int], **kwargs: typing.Any) -> typing.List[str]:
-        """ Edit queue.
+        """Edit queue.
 
         :param queue_id: Identification of queue by name (str) or ID (int)
         :param kwargs: Other fields to edit from the following list:
@@ -1223,9 +1309,16 @@ class Rt:
         :raises InvalidUseError: When invalid fields are set
         :raises UnexpectedResponseError: If the response from RT is not as expected
         """
-        valid_fields = {'Name', 'Description', 'CorrespondAddress', 'CommentAddress',
-                        'Disabled', 'SLADisabled', 'Lifecycle', 'SortOrder',
-                        }
+        valid_fields = {
+            'Name',
+            'Description',
+            'CorrespondAddress',
+            'CommentAddress',
+            'Disabled',
+            'SLADisabled',
+            'Lifecycle',
+            'SortOrder',
+        }
         invalid_fields = []
 
         post_data = {}
@@ -1238,7 +1331,7 @@ class Rt:
                 post_data[key] = val
 
         if invalid_fields:
-            raise InvalidUseError(f'''Unsupported names of fields: {', '.join(invalid_fields)}.''')
+            raise InvalidUseError(f"""Unsupported names of fields: {', '.join(invalid_fields)}.""")
 
         try:
             ret = self.__request_put(f'queue/{queue_id}', json_data=post_data)
@@ -1251,7 +1344,7 @@ class Rt:
         return ret
 
     def create_queue(self, name: str, **kwargs: typing.Any) -> int:
-        """ Create queue.
+        """Create queue.
 
         :param name: Queue name (required)
         :param kwargs: Optional fields to set (see edit_queue)
@@ -1260,9 +1353,16 @@ class Rt:
         :raises InvalidUseError: When invalid fields are set
         :raises UnexpectedResponseError: If the response from RT is not as expected
         """
-        valid_fields = {'Name', 'Description', 'CorrespondAddress', 'CommentAddress',
-                        'Disabled', 'SLADisabled', 'Lifecycle', 'SortOrder',
-                        }
+        valid_fields = {
+            'Name',
+            'Description',
+            'CorrespondAddress',
+            'CommentAddress',
+            'Disabled',
+            'SLADisabled',
+            'Lifecycle',
+            'SortOrder',
+        }
         invalid_fields = []
 
         post_data = {'Name': name}
@@ -1275,7 +1375,7 @@ class Rt:
                 post_data[key] = val
 
         if invalid_fields:
-            raise InvalidUseError(f'''Unsupported names of fields: {', '.join(invalid_fields)}.''')
+            raise InvalidUseError(f"""Unsupported names of fields: {', '.join(invalid_fields)}.""")
 
         try:
             res = self.__request('queue', json_data=post_data)
@@ -1291,7 +1391,7 @@ class Rt:
         return int(res['id'])
 
     def delete_queue(self, queue_id: typing.Union[str, int]) -> None:
-        """ Disable a queue.
+        """Disable a queue.
 
         :param queue_id: Identification of queue by name (str) or ID (int)
 
@@ -1312,7 +1412,7 @@ class Rt:
             raise  # pragma: no cover
 
     def get_links(self, ticket_id: typing.Union[str, int]) -> typing.Optional[typing.List[typing.Dict[str, str]]]:
-        """ Gets the ticket links for a single ticket.
+        """Gets the ticket links for a single ticket.
 
         Example of a return result:
 
@@ -1345,9 +1445,14 @@ class Rt:
 
         return [link for link in ticket['_hyperlinks'] if link.get('type', '') == 'ticket' and link['ref'] != 'self']
 
-    def edit_link(self, ticket_id: typing.Union[str, int], link_name: TYPE_VALID_TICKET_LINK_NAMES, link_value: typing.Union[str, int],
-                  delete: bool = False) -> bool:
-        """ Creates or deletes a link between the specified tickets.
+    def edit_link(
+        self,
+        ticket_id: typing.Union[str, int],
+        link_name: TYPE_VALID_TICKET_LINK_NAMES,
+        link_value: typing.Union[str, int],
+        delete: bool = False,
+    ) -> bool:
+        """Creates or deletes a link between the specified tickets.
 
         :param ticket_id: ID of ticket to edit
         :param link_name: Name of link to edit ('Parent', 'Child', 'RefersTo',
@@ -1381,7 +1486,7 @@ class Rt:
         return True
 
     def merge_ticket(self, ticket_id: typing.Union[str, int], into_id: typing.Union[str, int]) -> bool:
-        """ Merge ticket into another.
+        """Merge ticket into another.
 
         :param ticket_id: ID of ticket to be merged
         :param into_id: ID of destination ticket
@@ -1402,7 +1507,7 @@ class Rt:
         return msg[0].lower() == 'merge successful'
 
     def take(self, ticket_id: typing.Union[str, int]) -> bool:
-        """ Take ticket
+        """Take ticket
 
         :param ticket_id: ID of ticket to be merged
         :returns: ``True``
@@ -1422,7 +1527,7 @@ class Rt:
         return msg[0].lower().startswith('owner changed')
 
     def untake(self, ticket_id: typing.Union[str, int]) -> bool:
-        """ Untake ticket
+        """Untake ticket
 
         :param ticket_id: ID of ticket to be merged
         :returns: ``True``
@@ -1442,7 +1547,7 @@ class Rt:
         return msg[0].lower().startswith('owner changed')
 
     def steal(self, ticket_id: typing.Union[str, int]) -> bool:
-        """ Steal ticket
+        """Steal ticket
 
         :param ticket_id: ID of ticket to be merged
         :returns: ``True``
@@ -1463,7 +1568,7 @@ class Rt:
 
 
 class AsyncRt:
-    r""" :term:`API` for Request Tracker according to
+    r""":term:`API` for Request Tracker according to
     https://docs.bestpractical.com/rt/5.0.2/RT/REST2.html. Interface is based on
     :term:`REST` architecture, which is based on HTTP/1.1 protocol. This module
     is therefore mainly sending and parsing special HTTP messages.
@@ -1475,15 +1580,16 @@ class AsyncRt:
               expected as input for string values.
     """
 
-    def __init__(self,
-                 url: str,
-                 proxy: typing.Optional[str] = None,
-                 verify_cert: typing.Union[str, bool] = True,
-                 http_auth: typing.Optional[httpx.Auth] = None,
-                 token: typing.Optional[str] = None,
-                 http_timeout: typing.Optional[int] = 20,
-                 ) -> None:
-        """ API initialization.
+    def __init__(
+        self,
+        url: str,
+        proxy: typing.Optional[str] = None,
+        verify_cert: typing.Union[str, bool] = True,
+        http_auth: typing.Optional[httpx.Auth] = None,
+        token: typing.Optional[str] = None,
+        http_timeout: typing.Optional[int] = 20,
+    ) -> None:
+        """API initialization.
 
         :param url: Base URL for Request Tracker API.
                       E.g.: http://tracker.example.com/REST/2.0/
@@ -1524,14 +1630,15 @@ class AsyncRt:
         self.logger.debug('Response content:')
         self.logger.debug(response.content.decode())
 
-    async def __request(self,
-                        selector: str,
-                        get_params: typing.Optional[typing.Dict[str, typing.Any]] = None,
-                        json_data: typing.Optional[typing.Union[typing.Dict[str, typing.Any], typing.List[typing.Any]]] = None,
-                        post_data: typing.Optional[typing.Dict[str, typing.Any]] = None,
-                        attachments: typing.Optional[typing.Sequence[Attachment]] = None,
-                        ) -> typing.Union[typing.Dict[str, typing.Any], typing.List[str]]:
-        """ General request for :term:`API`.
+    async def __request(
+        self,
+        selector: str,
+        get_params: typing.Optional[typing.Dict[str, typing.Any]] = None,
+        json_data: typing.Optional[typing.Union[typing.Dict[str, typing.Any], typing.List[typing.Any]]] = None,
+        post_data: typing.Optional[typing.Dict[str, typing.Any]] = None,
+        attachments: typing.Optional[typing.Sequence[Attachment]] = None,
+    ) -> typing.Union[typing.Dict[str, typing.Any], typing.List[str]]:
+        """General request for :term:`API`.
 
         :param selector: End part of URL which completes self.url parameter
                            set during class initialization.
@@ -1556,7 +1663,9 @@ class AsyncRt:
                 else:
                     response = await self.session.get(url, params=get_params)
             else:
-                fields: typing.List[typing.Tuple[str, typing.Any]] = [('Attachments', attachment.multipart_form_element()) for attachment in attachments]
+                fields: typing.List[typing.Tuple[str, typing.Any]] = [
+                    ('Attachments', attachment.multipart_form_element()) for attachment in attachments
+                ]
                 response = await self.session.post(url, files=fields, data={'JSON': json.dumps(json_data)})
 
             self.__debug_response(response)
@@ -1567,17 +1676,20 @@ class AsyncRt:
             except LookupError as exc:  # pragma: no cover
                 raise UnexpectedResponseError(f'Unknown response encoding: {response.encoding}.') from exc
             except UnicodeError as exc:  # pragma: no cover
-                raise UnexpectedResponseError(f'''Unknown response encoding (UTF-8 does not work) - "{response.content.decode('utf-8', 'replace')}".''') from exc
+                raise UnexpectedResponseError(
+                    f"""Unknown response encoding (UTF-8 does not work) - "{response.content.decode('utf-8', 'replace')}"."""
+                ) from exc
 
             return result
         except httpx.ConnectError as exc:  # pragma: no cover
             raise ConnectionError('Connection error', exc) from exc
 
-    async def __request_put(self,
-                            selector: str,
-                            json_data: typing.Optional[typing.Dict[str, typing.Any]] = None,
-                            ) -> typing.List[str]:
-        """ PUT request for :term:`API`.
+    async def __request_put(
+        self,
+        selector: str,
+        json_data: typing.Optional[typing.Dict[str, typing.Any]] = None,
+    ) -> typing.List[str]:
+        """PUT request for :term:`API`.
 
         :param selector: End part of URL which completes self.url parameter
                            set during class initialization.
@@ -1603,14 +1715,16 @@ class AsyncRt:
             except LookupError as exc:  # pragma: no cover
                 raise UnexpectedResponseError(f'Unknown response encoding: {response.encoding}.') from exc
             except UnicodeError as exc:  # pragma: no cover
-                raise UnexpectedResponseError(f'''Unknown response encoding (UTF-8 does not work) - "{response.content.decode('utf-8', 'replace')}".''') from exc
+                raise UnexpectedResponseError(
+                    f"""Unknown response encoding (UTF-8 does not work) - "{response.content.decode('utf-8', 'replace')}"."""
+                ) from exc
 
             return result
         except httpx.ConnectError as exc:  # pragma: no cover
             raise ConnectionError('Connection error', exc) from exc
 
     async def __request_delete(self, selector: str) -> typing.Dict[str, str]:
-        """ DELETE request for :term:`API`.
+        """DELETE request for :term:`API`.
 
         :param selector: End part of URL which completes self.url parameter
                            set during class initialization.
@@ -1636,21 +1750,24 @@ class AsyncRt:
             except LookupError as exc:  # pragma: no cover
                 raise UnexpectedResponseError(f'Unknown response encoding: {response.encoding}.') from exc
             except UnicodeError as exc:  # pragma: no cover
-                raise UnexpectedResponseError(f'''Unknown response encoding (UTF-8 does not work) - "{response.content.decode('utf-8', 'replace')}".''') from exc
+                raise UnexpectedResponseError(
+                    f"""Unknown response encoding (UTF-8 does not work) - "{response.content.decode('utf-8', 'replace')}"."""
+                ) from exc
 
             return result
         except httpx.ConnectError as exc:  # pragma: no cover
             raise ConnectionError('Connection error', exc) from exc
 
-    async def __paged_request(self,
-                              selector: str,
-                              json_data: typing.Optional[typing.Union[typing.List[typing.Dict[str, typing.Any]], typing.Dict[str, typing.Any]]] = None,
-                              params: typing.Optional[typing.Dict[str, typing.Any]] = None,
-                              page: int = 1,
-                              per_page: int = 20,
-                              recurse: bool = True,
-                              ) -> collections.abc.AsyncIterator:
-        """ Request using pagination for :term:`API`.
+    async def __paged_request(
+        self,
+        selector: str,
+        json_data: typing.Optional[typing.Union[typing.List[typing.Dict[str, typing.Any]], typing.Dict[str, typing.Any]]] = None,
+        params: typing.Optional[typing.Dict[str, typing.Any]] = None,
+        page: int = 1,
+        per_page: int = 20,
+        recurse: bool = True,
+    ) -> collections.abc.AsyncIterator:
+        """Request using pagination for :term:`API`.
 
         :param selector: End part of URL which completes self.url parameter
                            set during class initialization.
@@ -1703,12 +1820,9 @@ class AsyncRt:
 
             if recurse and result.get('pages', None) is not None and result['pages'] > result['page']:
                 for _page in range(2, result['pages'] + 1):
-                    async for item in self.__paged_request(selector,
-                                                           json_data=json_data,
-                                                           page=_page,
-                                                           per_page=result['per_page'],
-                                                           params=params,
-                                                           recurse=False):
+                    async for item in self.__paged_request(
+                        selector, json_data=json_data, page=_page, per_page=result['per_page'], params=params, recurse=False
+                    ):
                         yield item
             elif recurse and result.get('pages', None) is None:
                 # no more results found, exit here
@@ -1717,12 +1831,9 @@ class AsyncRt:
                 while True:
                     _page += 1
                     try:
-                        async for item in self.__paged_request(selector,
-                                                               json_data=json_data,
-                                                               page=_page,
-                                                               per_page=result['per_page'],
-                                                               params=params,
-                                                               recurse=False):
+                        async for item in self.__paged_request(
+                            selector, json_data=json_data, page=_page, per_page=result['per_page'], params=params, recurse=False
+                        ):
                             yield item
                     except NotFoundError:
                         break
@@ -1732,7 +1843,7 @@ class AsyncRt:
 
     @staticmethod
     def __check_response(response: httpx.Response) -> None:
-        """ Search general errors in server response and raise exceptions when found.
+        """Search general errors in server response and raise exceptions when found.
 
         :param response: Response from HTTP request.
         :raises BadRequestError: If the server returned an HTTP/400 error.
@@ -1752,14 +1863,15 @@ class AsyncRt:
             raise rt.exceptions.BadRequestError(ret)
 
         if response.status_code == 401:  # pragma: no cover
-            raise AuthorizationError(
-                'Server could not verify that you are authorized to access the requested document.')
+            raise AuthorizationError('Server could not verify that you are authorized to access the requested document.')
         if response.status_code == 404:
             raise NotFoundError('No such resource found.')
         if response.status_code not in (200, 201):
-            raise UnexpectedResponseError(f'Received status code {response.status_code} instead of 200.',
-                                          status_code=response.status_code,
-                                          response_message=response.text)
+            raise UnexpectedResponseError(
+                f'Received status code {response.status_code} instead of 200.',
+                status_code=response.status_code,
+                response_message=response.text,
+            )
 
     async def __get_url(self, url: str) -> typing.Dict[str, typing.Any]:
         """Call a URL as specified in the returned JSON of an API operation."""
@@ -1772,7 +1884,7 @@ class AsyncRt:
         return res
 
     async def new_correspondence(self, queue: typing.Optional[typing.Union[str, object]] = None) -> collections.abc.AsyncIterator:
-        """ Obtains tickets changed by other users than the system one.
+        """Obtains tickets changed by other users than the system one.
 
         :param queue: Queue where to search
 
@@ -1785,7 +1897,7 @@ class AsyncRt:
         return self.search(queue=queue, order='-LastUpdated')
 
     async def last_updated(self, since: str, queue: typing.Optional[str] = None) -> collections.abc.AsyncIterator:
-        """ Obtains tickets changed after given date.
+        """Obtains tickets changed after given date.
 
         :param since: Date as string in form '2011-02-24'
         :param queue: Queue where to search
@@ -1801,8 +1913,7 @@ class AsyncRt:
         if not self.__validate_date(since):
             raise InvalidUseError(f'Invalid date specified - "{since}"')
 
-        return self.search(queue=queue, order='-LastUpdated',
-                           LastUpdated__gt=since)
+        return self.search(queue=queue, order='-LastUpdated', LastUpdated__gt=since)
 
     @classmethod
     def __validate_date(cls, _date: str) -> bool:
@@ -1820,9 +1931,15 @@ class AsyncRt:
 
         return False
 
-    async def search(self, queue: typing.Optional[typing.Union[str, object]] = None, order: typing.Optional[str] = None,
-                     raw_query: typing.Optional[str] = None, query_format: str = 'l', **kwargs: typing.Any) -> collections.abc.AsyncIterator:
-        r""" Search arbitrary needles in given fields and queue.
+    async def search(
+        self,
+        queue: typing.Optional[typing.Union[str, object]] = None,
+        order: typing.Optional[str] = None,
+        raw_query: typing.Optional[str] = None,
+        query_format: str = 'l',
+        **kwargs: typing.Any,
+    ) -> collections.abc.AsyncIterator:
+        r"""Search arbitrary needles in given fields and queue.
 
         Example::
 
@@ -1900,7 +2017,7 @@ class AsyncRt:
                 if key[:3] != 'CF_':
                     query.append(f"{key}{op}'{value}'")
                 else:
-                    query.append(f'''CF.{{{key[3:]}}}'{op}'{value}\'''')
+                    query.append(f"""CF.{{{key[3:]}}}'{op}'{value}\'""")
         else:
             query.append(raw_query)
         get_params['query'] = ' AND '.join('(' + part + ')' for part in query)
@@ -1912,7 +2029,9 @@ class AsyncRt:
                 get_params['orderby'] = order
 
         if query_format == 'l':
-            get_params['fields'] = 'Owner,Status,Created,Subject,Queue,CustomFields,Requestor,Cc,AdminCc,Started,Created,TimeEstimated,Due,Type,InitialPriority,Priority,TimeLeft,LastUpdated'
+            get_params[
+                'fields'
+            ] = 'Owner,Status,Created,Subject,Queue,CustomFields,Requestor,Cc,AdminCc,Started,Created,TimeEstimated,Due,Type,InitialPriority,Priority,TimeLeft,LastUpdated'
             get_params['fields[Queue]'] = 'Name'
         elif query_format == 's':
             get_params['fields'] = 'Subject'
@@ -1921,7 +2040,7 @@ class AsyncRt:
             yield item
 
     async def get_ticket(self, ticket_id: typing.Union[str, int]) -> dict:
-        """ Fetch ticket by its ID.
+        """Fetch ticket by its ID.
 
         :param ticket_id: ID of demanded ticket
 
@@ -1960,14 +2079,16 @@ class AsyncRt:
 
         return res
 
-    async def create_ticket(self,
-                            queue: str,
-                            content_type: TYPE_CONTENT_TYPE = 'text/plain',
-                            subject: typing.Optional[str] = None,
-                            content: typing.Optional[str] = None,
-                            attachments: typing.Optional[typing.Sequence[Attachment]] = None,
-                            **kwargs: typing.Any) -> int:
-        """ Create new ticket and set given parameters.
+    async def create_ticket(
+        self,
+        queue: str,
+        content_type: TYPE_CONTENT_TYPE = 'text/plain',
+        subject: typing.Optional[str] = None,
+        content: typing.Optional[str] = None,
+        attachments: typing.Optional[typing.Sequence[Attachment]] = None,
+        **kwargs: typing.Any,
+    ) -> int:
+        """Create new ticket and set given parameters.
 
         Example of message sent to ``http://tracker.example.com/REST/2.0/ticket/new``::
 
@@ -2018,7 +2139,7 @@ class AsyncRt:
         return int(res['id'])
 
     async def edit_ticket(self, ticket_id: typing.Union[str, int], **kwargs: typing.Any) -> bool:
-        """ Edit ticket values.
+        """Edit ticket values.
 
         :param ticket_id: ID of ticket to edit
         :param kwargs: Other arguments possible to set:
@@ -2054,18 +2175,20 @@ class AsyncRt:
         return bool(msg[0])
 
     async def get_ticket_history(self, ticket_id: typing.Union[str, int]) -> collections.abc.AsyncIterator:
-        """ Get set of short history items
+        """Get set of short history items
 
         :param ticket_id: ID of ticket
         :returns: Iterator of history items ordered increasingly by time of event.
                   Each history item is a tuple containing (id, Description).
                   collections.abc.AsyncIterator[typing.Dict[str, typing.Any]]
         """
-        async for transaction in self.__paged_request(f'ticket/{ticket_id}/history',
-                                                      params={'fields': 'Type,Creator,Created,Description,_hyperlinks',
-                                                              'fields[Creator]': 'id,Name,RealName,EmailAddress',
-                                                              },
-                                                      ):
+        async for transaction in self.__paged_request(
+            f'ticket/{ticket_id}/history',
+            params={
+                'fields': 'Type,Creator,Created,Description,_hyperlinks',
+                'fields[Creator]': 'id,Name,RealName,EmailAddress',
+            },
+        ):
             yield transaction
 
     async def get_transaction(self, transaction_id: typing.Union[str, int]) -> typing.Dict[str, typing.Any]:
@@ -2081,14 +2204,15 @@ class AsyncRt:
 
         return res
 
-    async def __correspond(self,
-                           ticket_id: typing.Union[str, int],
-                           content: str = '',
-                           action: Literal['correspond', 'comment'] = 'correspond',
-                           content_type: TYPE_CONTENT_TYPE = 'text/plain',
-                           attachments: typing.Optional[typing.Sequence[Attachment]] = None,
-                           ) -> typing.List[str]:
-        """ Sends out the correspondence
+    async def __correspond(
+        self,
+        ticket_id: typing.Union[str, int],
+        content: str = '',
+        action: Literal['correspond', 'comment'] = 'correspond',
+        content_type: TYPE_CONTENT_TYPE = 'text/plain',
+        attachments: typing.Optional[typing.Sequence[Attachment]] = None,
+    ) -> typing.List[str]:
+        """Sends out the correspondence
 
         :param ticket_id: ID of ticket to which message belongs
         :param content: Content of email message
@@ -2103,9 +2227,10 @@ class AsyncRt:
         if action not in ('correspond', 'comment'):  # pragma: no cover
             raise InvalidUseError('action must be either "correspond" or "comment"')
 
-        post_data: typing.Dict[str, typing.Any] = {'Content': content,
-                                                   'ContentType': content_type,
-                                                   }
+        post_data: typing.Dict[str, typing.Any] = {
+            'Content': content,
+            'ContentType': content_type,
+        }
 
         # Adding a one-shot cc/bcc is not supported by RT5.0.2
         # if cc:
@@ -2123,13 +2248,14 @@ class AsyncRt:
 
         return res
 
-    async def reply(self,
-                    ticket_id: typing.Union[str, int],
-                    content: str = '',
-                    content_type: TYPE_CONTENT_TYPE = 'text/plain',
-                    attachments: typing.Optional[typing.Sequence[Attachment]] = None,
-                    ) -> bool:
-        """ Sends email message to the contacts in ``Requestors`` field of
+    async def reply(
+        self,
+        ticket_id: typing.Union[str, int],
+        content: str = '',
+        content_type: TYPE_CONTENT_TYPE = 'text/plain',
+        attachments: typing.Optional[typing.Sequence[Attachment]] = None,
+    ) -> bool:
+        """Sends email message to the contacts in ``Requestors`` field of
         given ticket with subject as is set in ``Subject`` field.
 
         :param ticket_id: ID of ticket to which message belongs
@@ -2151,7 +2277,7 @@ class AsyncRt:
         return bool(msg[0])
 
     async def delete_ticket(self, ticket_id: typing.Union[str, int]) -> None:
-        """ Mark a ticket as deleted.
+        """Mark a ticket as deleted.
 
         :param ticket_id: ID of ticket
 
@@ -2170,13 +2296,14 @@ class AsyncRt:
 
             raise  # pragma: no cover
 
-    async def comment(self,
-                      ticket_id: typing.Union[str, int],
-                      content: str = '',
-                      content_type: TYPE_CONTENT_TYPE = 'text/plain',
-                      attachments: typing.Optional[typing.Sequence[Attachment]] = None,
-                      ) -> bool:
-        """ Adds comment to the given ticket.
+    async def comment(
+        self,
+        ticket_id: typing.Union[str, int],
+        content: str = '',
+        content_type: TYPE_CONTENT_TYPE = 'text/plain',
+        attachments: typing.Optional[typing.Sequence[Attachment]] = None,
+    ) -> bool:
+        """Adds comment to the given ticket.
 
         :param ticket_id: ID of ticket to which comment belongs
         :param content: Content of comment
@@ -2197,7 +2324,7 @@ class AsyncRt:
         return bool(msg[0])
 
     async def get_attachments(self, ticket_id: typing.Union[str, int]) -> collections.abc.AsyncIterator:
-        """ Get attachment list for a given ticket
+        """Get attachment list for a given ticket
 
         Example of a return result:
 
@@ -2217,26 +2344,29 @@ class AsyncRt:
         :param ticket_id: ID of ticket
         :returns: Iterator of attachments belonging to given ticket. collections.abc.AsyncIterator[typing.Dict[str, str]]
         """
-        async for item in self.__paged_request(f'ticket/{ticket_id}/attachments',
-                                               json_data=[{'field': 'Filename', 'operator': 'IS NOT', 'value': ''}],
-                                               params={'fields': 'Filename,ContentType,ContentLength'}):
+        async for item in self.__paged_request(
+            f'ticket/{ticket_id}/attachments',
+            json_data=[{'field': 'Filename', 'operator': 'IS NOT', 'value': ''}],
+            params={'fields': 'Filename,ContentType,ContentLength'},
+        ):
             yield item
 
     async def get_attachments_ids(self, ticket_id: typing.Union[str, int]) -> collections.abc.AsyncIterator:
-        """ Get IDs of attachments for given ticket.
+        """Get IDs of attachments for given ticket.
 
         :param ticket_id: ID of ticket
         :returns: Iterator of IDs (type int) of attachments belonging to given
                   ticket.
                   collections.abc.AsyncIterator[int]
         """
-        async for item in self.__paged_request(f'ticket/{ticket_id}/attachments',
-                                               json_data=[{'field': 'Filename', 'operator': 'IS NOT', 'value': ''}],
-                                               ):
+        async for item in self.__paged_request(
+            f'ticket/{ticket_id}/attachments',
+            json_data=[{'field': 'Filename', 'operator': 'IS NOT', 'value': ''}],
+        ):
             yield int(item['id'])
 
     async def get_attachment(self, attachment_id: typing.Union[str, int]) -> typing.Optional[dict]:
-        """ Get attachment.
+        """Get attachment.
 
         :param attachment_id: ID of attachment to fetch
         :returns: Attachment as dictionary with these keys:
@@ -2294,7 +2424,7 @@ class AsyncRt:
         return res
 
     async def get_user(self, user_id: typing.Union[int, str]) -> typing.Dict[str, typing.Any]:
-        """ Get user details.
+        """Get user details.
 
         :param user_id: Identification of user by username (str) or user ID
                         (int)
@@ -2350,7 +2480,7 @@ class AsyncRt:
         return False
 
     async def create_user(self, user_name: str, email_address: str, **kwargs: typing.Any) -> str:
-        """ Create user.
+        """Create user.
 
         :param user_name: Username (login for privileged, required)
         :param email_address: Email address (required)
@@ -2360,18 +2490,44 @@ class AsyncRt:
         :raises InvalidUseError: When invalid fields are set
         :raises UnexpectedResponseError: If the response from RT is not as expected
         """
-        valid_fields = {'Name', 'Password', 'EmailAddress', 'RealName',
-                        'Nickname', 'Gecos', 'Organization', 'Address1', 'Address2',
-                        'City', 'State', 'Zip', 'Country', 'HomePhone', 'WorkPhone',
-                        'MobilePhone', 'PagerPhone', 'ContactInfo', 'Comments',
-                        'Signature', 'Lang', 'EmailEncoding', 'WebEncoding',
-                        'ExternalContactInfoId', 'ContactInfoSystem', 'ExternalAuthId',
-                        'AuthSystem', 'Privileged', 'Disabled', 'CustomFields'}
+        valid_fields = {
+            'Name',
+            'Password',
+            'EmailAddress',
+            'RealName',
+            'Nickname',
+            'Gecos',
+            'Organization',
+            'Address1',
+            'Address2',
+            'City',
+            'State',
+            'Zip',
+            'Country',
+            'HomePhone',
+            'WorkPhone',
+            'MobilePhone',
+            'PagerPhone',
+            'ContactInfo',
+            'Comments',
+            'Signature',
+            'Lang',
+            'EmailEncoding',
+            'WebEncoding',
+            'ExternalContactInfoId',
+            'ContactInfoSystem',
+            'ExternalAuthId',
+            'AuthSystem',
+            'Privileged',
+            'Disabled',
+            'CustomFields',
+        }
         invalid_fields = []
 
-        post_data = {'Name': user_name,
-                     'EmailAddress': email_address,
-                     }
+        post_data = {
+            'Name': user_name,
+            'EmailAddress': email_address,
+        }
 
         for k, v in kwargs.items():
             if k not in valid_fields:
@@ -2381,7 +2537,7 @@ class AsyncRt:
                 post_data[k] = v
 
         if invalid_fields:
-            raise InvalidUseError(f'''Unsupported names of fields: {', '.join(invalid_fields)}.''')
+            raise InvalidUseError(f"""Unsupported names of fields: {', '.join(invalid_fields)}.""")
 
         try:
             res = await self.__request('user', json_data=post_data)
@@ -2397,7 +2553,7 @@ class AsyncRt:
         return res['id']
 
     async def edit_user(self, user_id: typing.Union[str, int], **kwargs: typing.Any) -> typing.List[str]:
-        """ Edit user profile.
+        """Edit user profile.
 
         :param user_id: Identification of user by username (str) or user ID
                         (int)
@@ -2438,13 +2594,38 @@ class AsyncRt:
         :raises InvalidUseError: When invalid fields are set
         :raises UnexpectedResponseError: If the response from RT is not as expected
         """
-        valid_fields = {'Name', 'Password', 'EmailAddress', 'RealName',
-                        'Nickname', 'Gecos', 'Organization', 'Address1', 'Address2',
-                        'City', 'State', 'Zip', 'Country', 'HomePhone', 'WorkPhone',
-                        'MobilePhone', 'PagerPhone', 'ContactInfo', 'Comments',
-                        'Signature', 'Lang', 'EmailEncoding', 'WebEncoding',
-                        'ExternalContactInfoId', 'ContactInfoSystem', 'ExternalAuthId',
-                        'AuthSystem', 'Privileged', 'Disabled', 'CustomFields'}
+        valid_fields = {
+            'Name',
+            'Password',
+            'EmailAddress',
+            'RealName',
+            'Nickname',
+            'Gecos',
+            'Organization',
+            'Address1',
+            'Address2',
+            'City',
+            'State',
+            'Zip',
+            'Country',
+            'HomePhone',
+            'WorkPhone',
+            'MobilePhone',
+            'PagerPhone',
+            'ContactInfo',
+            'Comments',
+            'Signature',
+            'Lang',
+            'EmailEncoding',
+            'WebEncoding',
+            'ExternalContactInfoId',
+            'ContactInfoSystem',
+            'ExternalAuthId',
+            'AuthSystem',
+            'Privileged',
+            'Disabled',
+            'CustomFields',
+        }
         invalid_fields = []
 
         post_data = {}
@@ -2457,7 +2638,7 @@ class AsyncRt:
                 post_data[key] = val
 
         if invalid_fields:
-            raise InvalidUseError(f'''Unsupported names of fields: {', '.join(invalid_fields)}.''')
+            raise InvalidUseError(f"""Unsupported names of fields: {', '.join(invalid_fields)}.""")
 
         try:
             ret = await self.__request_put(f'user/{user_id}', json_data=post_data)
@@ -2470,7 +2651,7 @@ class AsyncRt:
         return ret
 
     async def delete_user(self, user_id: typing.Union[str, int]) -> None:
-        """ Disable a user.
+        """Disable a user.
 
         :param user_id: Identification of a user by name (str) or ID (int)
 
@@ -2490,7 +2671,7 @@ class AsyncRt:
             raise  # pragma: no cover
 
     async def get_queue(self, queue_id: typing.Union[str, int]) -> typing.Optional[typing.Dict[str, typing.Any]]:
-        """ Get queue details.
+        """Get queue details.
 
         Example of a return result:
 
@@ -2557,7 +2738,7 @@ class AsyncRt:
         return res
 
     async def get_all_queues(self, include_disabled: bool = False) -> collections.abc.AsyncIterator:
-        """ Return a list of all queues.
+        """Return a list of all queues.
 
         Example of a return result:
 
@@ -2585,14 +2766,15 @@ class AsyncRt:
 
         :raises UnexpectedMessageFormatError: In case that returned status code is not 200
         """
-        params = {'fields': 'Name,Description,CorrespondAddress,CommentAddress,InitialPriority,FinalPriority,DefaultDueIn',
-                  'find_disabled_rows': int(include_disabled),
-                  }
+        params = {
+            'fields': 'Name,Description,CorrespondAddress,CommentAddress,InitialPriority,FinalPriority,DefaultDueIn',
+            'find_disabled_rows': int(include_disabled),
+        }
         async for item in self.__paged_request('queues/all', params=params):
             yield item
 
     async def edit_queue(self, queue_id: typing.Union[str, int], **kwargs: typing.Any) -> typing.List[str]:
-        """ Edit queue.
+        """Edit queue.
 
         :param queue_id: Identification of queue by name (str) or ID (int)
         :param kwargs: Other fields to edit from the following list:
@@ -2611,9 +2793,16 @@ class AsyncRt:
         :raises InvalidUseError: When invalid fields are set
         :raises UnexpectedResponseError: If the response from RT is not as expected
         """
-        valid_fields = {'Name', 'Description', 'CorrespondAddress', 'CommentAddress',
-                        'Disabled', 'SLADisabled', 'Lifecycle', 'SortOrder',
-                        }
+        valid_fields = {
+            'Name',
+            'Description',
+            'CorrespondAddress',
+            'CommentAddress',
+            'Disabled',
+            'SLADisabled',
+            'Lifecycle',
+            'SortOrder',
+        }
         invalid_fields = []
 
         post_data = {}
@@ -2626,7 +2815,7 @@ class AsyncRt:
                 post_data[key] = val
 
         if invalid_fields:
-            raise InvalidUseError(f'''Unsupported names of fields: {', '.join(invalid_fields)}.''')
+            raise InvalidUseError(f"""Unsupported names of fields: {', '.join(invalid_fields)}.""")
 
         try:
             ret = await self.__request_put(f'queue/{queue_id}', json_data=post_data)
@@ -2639,7 +2828,7 @@ class AsyncRt:
         return ret
 
     async def create_queue(self, name: str, **kwargs: typing.Any) -> int:
-        """ Create queue.
+        """Create queue.
 
         :param name: Queue name (required)
         :param kwargs: Optional fields to set (see edit_queue)
@@ -2648,9 +2837,16 @@ class AsyncRt:
         :raises InvalidUseError: When invalid fields are set
         :raises UnexpectedResponseError: If the response from RT is not as expected
         """
-        valid_fields = {'Name', 'Description', 'CorrespondAddress', 'CommentAddress',
-                        'Disabled', 'SLADisabled', 'Lifecycle', 'SortOrder',
-                        }
+        valid_fields = {
+            'Name',
+            'Description',
+            'CorrespondAddress',
+            'CommentAddress',
+            'Disabled',
+            'SLADisabled',
+            'Lifecycle',
+            'SortOrder',
+        }
         invalid_fields = []
 
         post_data = {'Name': name}
@@ -2663,7 +2859,7 @@ class AsyncRt:
                 post_data[key] = val
 
         if invalid_fields:
-            raise InvalidUseError(f'''Unsupported names of fields: {', '.join(invalid_fields)}.''')
+            raise InvalidUseError(f"""Unsupported names of fields: {', '.join(invalid_fields)}.""")
 
         try:
             res = await self.__request('queue', json_data=post_data)
@@ -2679,7 +2875,7 @@ class AsyncRt:
         return int(res['id'])
 
     async def delete_queue(self, queue_id: typing.Union[str, int]) -> None:
-        """ Disable a queue.
+        """Disable a queue.
 
         :param queue_id: Identification of queue by name (str) or ID (int)
 
@@ -2700,7 +2896,7 @@ class AsyncRt:
             raise  # pragma: no cover
 
     async def get_links(self, ticket_id: typing.Union[str, int]) -> typing.List[typing.Dict[str, str]]:
-        """ Gets the ticket links for a single ticket.
+        """Gets the ticket links for a single ticket.
 
         Example of a return result:
 
@@ -2733,9 +2929,14 @@ class AsyncRt:
 
         return [link for link in ticket['_hyperlinks'] if link.get('type', '') == 'ticket' and link['ref'] != 'self']
 
-    async def edit_link(self, ticket_id: typing.Union[str, int], link_name: TYPE_VALID_TICKET_LINK_NAMES, link_value: typing.Union[str, int],
-                        delete: bool = False) -> bool:
-        """ Creates or deletes a link between the specified tickets.
+    async def edit_link(
+        self,
+        ticket_id: typing.Union[str, int],
+        link_name: TYPE_VALID_TICKET_LINK_NAMES,
+        link_value: typing.Union[str, int],
+        delete: bool = False,
+    ) -> bool:
+        """Creates or deletes a link between the specified tickets.
 
         :param ticket_id: ID of ticket to edit
         :param link_name: Name of link to edit ('Parent', 'Child', 'RefersTo',
@@ -2769,7 +2970,7 @@ class AsyncRt:
         return True
 
     async def merge_ticket(self, ticket_id: typing.Union[str, int], into_id: typing.Union[str, int]) -> bool:
-        """ Merge ticket into another.
+        """Merge ticket into another.
 
         :param ticket_id: ID of ticket to be merged
         :param into_id: ID of destination ticket
@@ -2790,7 +2991,7 @@ class AsyncRt:
         return msg[0].lower() == 'merge successful'
 
     async def take(self, ticket_id: typing.Union[str, int]) -> bool:
-        """ Take ticket
+        """Take ticket
 
         :param ticket_id: ID of ticket to be merged
         :returns: ``True``
@@ -2810,7 +3011,7 @@ class AsyncRt:
         return msg[0].lower().startswith('owner changed')
 
     async def untake(self, ticket_id: typing.Union[str, int]) -> bool:
-        """ Untake ticket
+        """Untake ticket
 
         :param ticket_id: ID of ticket to be merged
         :returns: ``True``
@@ -2830,7 +3031,7 @@ class AsyncRt:
         return msg[0].lower().startswith('owner changed')
 
     async def steal(self, ticket_id: typing.Union[str, int]) -> bool:
-        """ Steal ticket
+        """Steal ticket
 
         :param ticket_id: ID of ticket to be merged
         :returns: ``True``

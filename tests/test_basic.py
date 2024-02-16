@@ -2,7 +2,7 @@
 
 # ruff: noqa: S101, S105, S311
 
-__license__ = ''' Copyright (C) 2013 CZ.NIC, z.s.p.o.
+__license__ = """ Copyright (C) 2013 CZ.NIC, z.s.p.o.
     Copyright (c) 2021 CERT Gouvernemental (GOVCERT.LU)
 
     This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@ __license__ = ''' Copyright (C) 2013 CZ.NIC, z.s.p.o.
 
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
 __docformat__ = 'reStructuredText en'
 __authors__ = [
     '"Jiri Machalek" <jiri.machalek@nirt_connection.cz>',
@@ -57,7 +57,9 @@ def test_invalid_api_url():
 
 def test_ticket_operations(rt_connection: rt.rest2.Rt):
     ticket_subject = f'Testing issue {random_string()}'
-    ticket_text = 'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'
+    ticket_text = (
+        'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'
+    )
 
     # empty search result
     search_result = list(rt_connection.search(Subject=ticket_subject))
@@ -203,7 +205,9 @@ def test_ticket_operations(rt_connection: rt.rest2.Rt):
 def test_attachments_create(rt_connection: rt.rest2.Rt):
     """Create a ticket with a random (>= 2) number of attachments and verify that they have been successfully added to the ticket."""
     ticket_subject = f'Testing issue {random_string()}'
-    ticket_text = 'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'
+    ticket_text = (
+        'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'
+    )
 
     attachment_count = random.randint(2, 10)
     attachments = []
@@ -237,7 +241,9 @@ def test_attachments_create(rt_connection: rt.rest2.Rt):
 def test_attachments_comment(rt_connection: rt.rest2.Rt):
     """Create a ticket and comment to it with a random (>= 2) number of attachments and verify that they have been successfully added to the ticket."""
     ticket_subject = f'Testing issue {random_string()}'
-    ticket_text = 'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'
+    ticket_text = (
+        'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'
+    )
 
     # create
     ticket_id = rt_connection.create_ticket(subject=ticket_subject, content=ticket_text, queue=RT_QUEUE)
@@ -251,7 +257,9 @@ def test_attachments_comment(rt_connection: rt.rest2.Rt):
         attachments.append(rt.rest2.Attachment(attachment_name, 'text/plain', attachment_content))
 
     # comment with attachments
-    ticket_text = 'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'
+    ticket_text = (
+        'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'
+    )
     comment_success = rt_connection.comment(ticket_id=ticket_id, content=ticket_text, attachments=attachments)
     assert comment_success
 
@@ -272,7 +280,9 @@ def test_attachments_comment(rt_connection: rt.rest2.Rt):
 def test_attachments_reply(rt_connection: rt.rest2.Rt):
     """Create a ticket and reply to it with a random (>= 2) number of attachments and verify that they have been successfully added to the ticket."""
     ticket_subject = f'Testing issue {random_string()}'
-    ticket_text = 'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'
+    ticket_text = (
+        'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'
+    )
 
     # create
     ticket_id = rt_connection.create_ticket(subject=ticket_subject, content=ticket_text, queue=RT_QUEUE)
@@ -286,7 +296,9 @@ def test_attachments_reply(rt_connection: rt.rest2.Rt):
         attachments.append(rt.rest2.Attachment(attachment_name, 'text/plain', attachment_content))
 
     # comment with attachments
-    ticket_text = 'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'
+    ticket_text = (
+        'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'
+    )
     comment_success = rt_connection.reply(ticket_id=ticket_id, content=ticket_text, attachments=attachments)
     assert comment_success
 
@@ -306,7 +318,9 @@ def test_attachments_reply(rt_connection: rt.rest2.Rt):
 
 def test_ticket_operations_admincc_cc(rt_connection: rt.rest2.Rt):
     ticket_subject = f'Testing issue {random_string()}'
-    ticket_text = 'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'
+    ticket_text = (
+        'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'
+    )
 
     def compare_list(from_list: typing.List[str], ticket_list: typing.List[dict]) -> bool:
         """Lists (Requestor, AdminCc, Cc) returned from REST2 contain a list of dicts with additional user information.

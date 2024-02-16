@@ -2,7 +2,7 @@
 
 # ruff: noqa: S101, S105, S311
 
-__license__ = ''' Copyright (C) 2013 CZ.NIC, z.s.p.o.
+__license__ = """ Copyright (C) 2013 CZ.NIC, z.s.p.o.
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@ __license__ = ''' Copyright (C) 2013 CZ.NIC, z.s.p.o.
 
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
 __docformat__ = 'reStructuredText en'
 __authors__ = [
     '"Jiri Machalek" <jiri.machalek@nic.cz>',
@@ -91,11 +91,10 @@ class RtTestCase(unittest.TestCase):
         tracker.session.cookies.clear()
         tracker.session.cookies.update(cookies)
 
-    @unittest.skipUnless(_have_creds(RT_VALID_CREDENTIALS,
-                                     RT_INVALID_CREDENTIALS,
-                                     RT_MISSING_CREDENTIALS,
-                                     RT_BAD_URL),
-                         'missing credentials required to run test')
+    @unittest.skipUnless(
+        _have_creds(RT_VALID_CREDENTIALS, RT_INVALID_CREDENTIALS, RT_MISSING_CREDENTIALS, RT_BAD_URL),
+        'missing credentials required to run test',
+    )
     def test_login_and_logout(self):
         for name in self.RT_VALID_CREDENTIALS:
             tracker = rt.rest1.Rt(self.RT_VALID_CREDENTIALS[name]['url'], **self.RT_VALID_CREDENTIALS[name]['support'])
@@ -114,11 +113,12 @@ class RtTestCase(unittest.TestCase):
             tracker = rt.rest1.Rt(**params)
             self.assertRaises(rt.exceptions.UnexpectedResponseError, lambda: tracker.login())
 
-    @unittest.skipUnless(_have_creds(RT_VALID_CREDENTIALS),
-                         'missing credentials required to run test')
+    @unittest.skipUnless(_have_creds(RT_VALID_CREDENTIALS), 'missing credentials required to run test')
     def test_ticket_operations(self):
         ticket_subject = 'Testing issue ' + ''.join([random.choice(string.ascii_letters) for i in range(15)])
-        ticket_text = 'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'
+        ticket_text = (
+            'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'
+        )
         for name in ('RT4.4 stable',):
             url = self.RT_VALID_CREDENTIALS[name]['url']
             default_login = self.RT_VALID_CREDENTIALS[name]['support']['default_login']
@@ -179,15 +179,16 @@ class RtTestCase(unittest.TestCase):
             self.assertTrue(links1['DependsOn'][0].endswith('ticket/' + str(ticket2_id)), 'Unexpected value of link DependsOn.')
             links2 = tracker.get_links(ticket2_id)
             self.assertTrue('DependedOnBy' in links2, 'Missing just created link DependedOnBy.')
-            self.assertTrue(links2['DependedOnBy'][0].endswith('ticket/' + str(ticket_id)),
-                            'Unexpected value of link DependedOnBy.')
+            self.assertTrue(links2['DependedOnBy'][0].endswith('ticket/' + str(ticket_id)), 'Unexpected value of link DependedOnBy.')
             # reply with attachment
             attachment_content = b'Content of attachment.'
             attachment_name = 'attachment-name.txt'
             reply_text = 'Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.'
             # should provide a content type as RT 4.0 type guessing is broken (missing use statement for guess_media_type in REST.pm)
-            self.assertTrue(tracker.reply(ticket_id, text=reply_text, files=[(attachment_name, attachment_content, 'text/plain')]),
-                            'Reply to ticket returned False indicating error.')
+            self.assertTrue(
+                tracker.reply(ticket_id, text=reply_text, files=[(attachment_name, attachment_content, 'text/plain')]),
+                'Reply to ticket returned False indicating error.',
+            )
             # attachments list
             at_list = tracker.get_attachments(ticket_id)
             self.assertTrue(at_list, 'Empty list with attachment ids, something went wrong.')
@@ -195,8 +196,7 @@ class RtTestCase(unittest.TestCase):
             self.assertTrue(attachment_name in at_names, 'Attachment name is not in the list of attachments.')
             # get the attachment and compare it's content
             at_id = at_list[at_names.index(attachment_name)][0]
-            at_content = tracker.get_attachment_content(ticket_id,
-                                                        at_id)
+            at_content = tracker.get_attachment_content(ticket_id, at_id)
             self.assertEqual(at_content, attachment_content, 'Recorded attachment is not equal to the original file.')
             # merge tickets
             self.assertTrue(tracker.merge_ticket(ticket2_id, ticket_id), 'Merging tickets failed.')
@@ -205,11 +205,12 @@ class RtTestCase(unittest.TestCase):
             # get user
             self.assertIn('@', tracker.get_user(default_login)['EmailAddress'])
 
-    @unittest.skipUnless(_have_creds(RT_VALID_CREDENTIALS),
-                         'missing credentials required to run test')
+    @unittest.skipUnless(_have_creds(RT_VALID_CREDENTIALS), 'missing credentials required to run test')
     def test_ticket_operations_admincc_cc(self):
         ticket_subject = 'Testing issue ' + ''.join([random.choice(string.ascii_letters) for i in range(15)])
-        ticket_text = 'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'
+        ticket_text = (
+            'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'
+        )
         for name in ('RT4.4 stable',):
             url = self.RT_VALID_CREDENTIALS[name]['url']
             default_login = self.RT_VALID_CREDENTIALS[name]['support']['default_login']

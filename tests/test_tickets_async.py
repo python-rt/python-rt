@@ -2,7 +2,7 @@
 
 # ruff: noqa: S101
 
-__license__ = ''' Copyright (C) 2013 CZ.NIC, z.s.p.o.
+__license__ = """ Copyright (C) 2013 CZ.NIC, z.s.p.o.
     Copyright (c) 2021 CERT Gouvernemental (GOVCERT.LU)
 
     This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@ __license__ = ''' Copyright (C) 2013 CZ.NIC, z.s.p.o.
 
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
 __docformat__ = 'reStructuredText en'
 __authors__ = [
     '"Jiri Machalek" <jiri.machalek@nic.cz>',
@@ -38,12 +38,16 @@ from .conftest import RT_QUEUE
 async def test_ticket_attachments(async_rt_connection: rt.rest2.AsyncRt):
     """Test various ticket attachment operations."""
     ticket_subject = f'Testing issue {random_string()}'
-    ticket_text = 'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'
+    ticket_text = (
+        'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'
+    )
     attachment_content = b'Content of attachment.'
     attachment_name = 'attachment-name.txt'
 
     attachment = rt.rest2.Attachment(attachment_name, 'text/plain', attachment_content)
-    ticket_id = await async_rt_connection.create_ticket(subject=ticket_subject, content=ticket_text, queue=RT_QUEUE, attachments=[attachment])
+    ticket_id = await async_rt_connection.create_ticket(
+        subject=ticket_subject, content=ticket_text, queue=RT_QUEUE, attachments=[attachment]
+    )
     assert ticket_id
 
     att_ids = [item async for item in async_rt_connection.get_attachments_ids(ticket_id)]
@@ -65,7 +69,9 @@ async def test_ticket_attachments(async_rt_connection: rt.rest2.AsyncRt):
 async def test_ticket_take(async_rt_connection: rt.rest2.AsyncRt):
     """Test take/untake."""
     ticket_subject = f'Testing issue {random_string()}'
-    ticket_text = 'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'
+    ticket_text = (
+        'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'
+    )
 
     ticket_id = await async_rt_connection.create_ticket(subject=ticket_subject, content=ticket_text, queue=RT_QUEUE)
     assert ticket_id
