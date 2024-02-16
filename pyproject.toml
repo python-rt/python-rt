@@ -46,6 +46,7 @@ dev = [
     "ruff",
     "types-requests",
     "codespell",
+    "bandit",
 ]
 test = [
     "pytest",
