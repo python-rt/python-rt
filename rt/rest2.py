@@ -12,7 +12,7 @@ import json
 import logging
 import re
 import typing
-from typing import Literal
+from typing import Literal, List
 from urllib.parse import urljoin
 
 import httpx
