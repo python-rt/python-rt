@@ -12,7 +12,7 @@ import json
 import logging
 import re
 import typing
-from typing import Literal, List
+from typing import Literal
 from urllib.parse import urljoin
 
 import httpx
@@ -445,7 +445,7 @@ class Rt:
         queue: typing.Optional[typing.Union[str, object]] = None,
         order: typing.Optional[str] = None,
         raw_query: typing.Optional[str] = None,
-        query_format: typing.Union[str, list[str]] = 'l',
+        query_format: typing.Union[str, typing.List[str]] = 'l',
         **kwargs: typing.Any,
     ) -> typing.Iterator[dict]:
         r"""Search arbitrary needles in given fields and queue.
@@ -1940,7 +1940,7 @@ class AsyncRt:
         queue: typing.Optional[typing.Union[str, object]] = None,
         order: typing.Optional[str] = None,
         raw_query: typing.Optional[str] = None,
-        query_format: typing.Union[str, list[str]] = 'l',
+        query_format: typing.Union[str, typing.List[str]] = 'l',
         **kwargs: typing.Any,
     ) -> collections.abc.AsyncIterator:
         r"""Search arbitrary needles in given fields and queue.
