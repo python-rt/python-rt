@@ -1,6 +1,12 @@
 Change Log
 ==========
 
+Version 3.2.0 (2024-09-06)
+----------------------------
+Added
+^^^^^
+- Added option for custom list of fields to be populated for search "query_format" param to avoid unnecessary round trips to get fields like Told, Starts, Resolved, etc by returning the required fields during search. (see #97 @nerdfirefighter)
+
 Version 3.1.4 (2024-02-16)
 ----------------------------
 Fixes
