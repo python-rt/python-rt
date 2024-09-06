@@ -445,7 +445,7 @@ class Rt:
         queue: typing.Optional[typing.Union[str, object]] = None,
         order: typing.Optional[str] = None,
         raw_query: typing.Optional[str] = None,
-        query_format: str = 'l',
+        query_format: typing.Union[str, typing.List[str]] = 'l',
         **kwargs: typing.Any,
     ) -> typing.Iterator[dict]:
         r"""Search arbitrary needles in given fields and queue.
@@ -472,6 +472,7 @@ class Rt:
                                - i: only *id* fields are populated
                                - s: only *id* and *subject* fields are populated
                                - l: multi-line format, all fields are populated
+                               - [field1, field2]: list of fields to be populated
         :param kwargs:     Other arguments possible to set if not passing raw_query:
 
                              Requestors, Subject, Cc, AdminCc, Owner, Status,
@@ -536,7 +537,9 @@ class Rt:
             else:
                 get_params['orderby'] = order
 
-        if query_format == 'l':
+        if isinstance(query_format, list):
+            get_params['fields'] = ','.join(query_format)
+        elif query_format == 'l':
             get_params[
                 'fields'
             ] = 'Owner,Status,Created,Subject,Queue,CustomFields,Requestor,Cc,AdminCc,Started,Created,TimeEstimated,Due,Type,InitialPriority,Priority,TimeLeft,LastUpdated'
@@ -1937,7 +1940,7 @@ class AsyncRt:
         queue: typing.Optional[typing.Union[str, object]] = None,
         order: typing.Optional[str] = None,
         raw_query: typing.Optional[str] = None,
-        query_format: str = 'l',
+        query_format: typing.Union[str, typing.List[str]] = 'l',
         **kwargs: typing.Any,
     ) -> collections.abc.AsyncIterator:
         r"""Search arbitrary needles in given fields and queue.
@@ -1964,6 +1967,7 @@ class AsyncRt:
                                - i: only *id* fields are populated
                                - s: only *id* and *subject* fields are populated
                                - l: multi-line format, all fields are populated
+                               - [field1, field2]: list of fields to be populated
         :param kwargs:     Other arguments possible to set if not passing raw_query:
 
                              Requestors, Subject, Cc, AdminCc, Owner, Status,
@@ -2029,7 +2033,9 @@ class AsyncRt:
             else:
                 get_params['orderby'] = order
 
-        if query_format == 'l':
+        if isinstance(query_format, list):
+            get_params['fields'] = ','.join(query_format)
+        elif query_format == 'l':
             get_params[
                 'fields'
             ] = 'Owner,Status,Created,Subject,Queue,CustomFields,Requestor,Cc,AdminCc,Started,Created,TimeEstimated,Due,Type,InitialPriority,Priority,TimeLeft,LastUpdated'
