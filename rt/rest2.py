@@ -472,7 +472,7 @@ class Rt:
                                - i: only *id* fields are populated
                                - s: only *id* and *subject* fields are populated
                                - l: multi-line format, all fields are populated
-                               - [field1, field2]: list of fields to be populated 
+                               - [field1, field2]: list of fields to be populated
         :param kwargs:     Other arguments possible to set if not passing raw_query:
 
                              Requestors, Subject, Cc, AdminCc, Owner, Status,
@@ -1967,7 +1967,7 @@ class AsyncRt:
                                - i: only *id* fields are populated
                                - s: only *id* and *subject* fields are populated
                                - l: multi-line format, all fields are populated
-                               - [field1, field2]: list of fields to be populated 
+                               - [field1, field2]: list of fields to be populated
         :param kwargs:     Other arguments possible to set if not passing raw_query:
 
                              Requestors, Subject, Cc, AdminCc, Owner, Status,
