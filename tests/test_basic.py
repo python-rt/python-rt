@@ -76,7 +76,7 @@ def test_ticket_operations(rt_connection: rt.rest2.Rt):
     assert search_result[0]['Status'] == 'new'
 
     # search with query_format field list
-    search_result = list(rt_connection.search(Subject=ticket_subject, query_format=['Status','Subject']))
+    search_result = list(rt_connection.search(Subject=ticket_subject, query_format=['Status', 'Subject']))
     assert len(search_result) == 1
     assert search_result[0]['Subject'] == str(ticket_subject)
     assert search_result[0]['Status'] == 'new'

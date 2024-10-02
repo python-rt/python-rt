@@ -540,9 +540,9 @@ class Rt:
         if isinstance(query_format, list):
             get_params['fields'] = ','.join(query_format)
         elif query_format == 'l':
-            get_params[
-                'fields'
-            ] = 'Owner,Status,Created,Subject,Queue,CustomFields,Requestor,Cc,AdminCc,Started,Created,TimeEstimated,Due,Type,InitialPriority,Priority,TimeLeft,LastUpdated'
+            get_params['fields'] = (
+                'Owner,Status,Created,Subject,Queue,CustomFields,Requestor,Cc,AdminCc,Started,Created,TimeEstimated,Due,Type,InitialPriority,Priority,TimeLeft,LastUpdated'
+            )
             get_params['fields[Queue]'] = 'Name'
         elif query_format == 's':
             get_params['fields'] = 'Subject'
@@ -2036,9 +2036,9 @@ class AsyncRt:
         if isinstance(query_format, list):
             get_params['fields'] = ','.join(query_format)
         elif query_format == 'l':
-            get_params[
-                'fields'
-            ] = 'Owner,Status,Created,Subject,Queue,CustomFields,Requestor,Cc,AdminCc,Started,Created,TimeEstimated,Due,Type,InitialPriority,Priority,TimeLeft,LastUpdated'
+            get_params['fields'] = (
+                'Owner,Status,Created,Subject,Queue,CustomFields,Requestor,Cc,AdminCc,Started,Created,TimeEstimated,Due,Type,InitialPriority,Priority,TimeLeft,LastUpdated'
+            )
             get_params['fields[Queue]'] = 'Name'
         elif query_format == 's':
             get_params['fields'] = 'Subject'
