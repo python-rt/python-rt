@@ -25,9 +25,10 @@ Contents:
    "2.7", "< 2.0.0"
    ">= 3.5, <3.7", ">= 2.0.0, < 3.0.0"
    ">= 3.7", ">= 3.0.0, < 3.1.0"
-   ">= 3.8", ">= 3.0.0"
+   ">= 3.8", ">= 3.0.0, < 3.3.0"
+   ">= 3.9", ">= 3.3.0"
 
-.. note:: Please note that starting with the major release of v3.0.0, this library requires Python version >= 3.8.
+.. note:: Please note that starting with the release of v3.3.0, this library requires Python version >= 3.9.
     See the *Python version compatibility* table above for more detailed information.
 
 .. warning:: Although version 3.x still supports RT REST API version 1, it contains minor breaking changes.

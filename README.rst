@@ -29,7 +29,7 @@ Python implementation of REST API described here:
    ">= 3.9", ">= 3.3.0"
 
 ℹ️ **Note**:
-    Please note that starting with the major release of v3.0.0, this library requires Python version >= 3.8.
+    Please note that starting with the release of v3.3.0, this library requires Python version >= 3.9.
     See the *Python version compatibility* table above for more detailed information.
 
 ⚡ **Note**:
