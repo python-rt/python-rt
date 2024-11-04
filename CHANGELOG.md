@@ -3,6 +3,10 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v3.3.0], 2024-10-04
+## Removed
+- Remove support for now EoL Python 3.8.
+
 ## [v3.2.0], 2024-09-06
 ## Added
 - Added option for custom list of fields to be populated for search "query_format" param to avoid unnecessary round trips to get fields like Told, Starts, Resolved, etc by returning the required fields during search. (see #97 @nerdfirefighter)

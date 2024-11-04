@@ -60,7 +60,7 @@ class Attachment:
     file_type: str
     file_content: bytes
 
-    def to_dict(self) -> typing.Dict[str, str]:
+    def to_dict(self) -> dict[str, str]:
         """Convert to a dictionary for submitting to the REST API."""
         return {
             'FileName': self.file_name,
@@ -68,7 +68,7 @@ class Attachment:
             'FileContent': base64.b64encode(self.file_content).decode('utf-8'),
         }
 
-    def multipart_form_element(self) -> typing.Tuple[str, bytes, str]:
+    def multipart_form_element(self) -> tuple[str, bytes, str]:
         """Convert to a tuple as required for multipart-form-data submission."""
         return (
             self.file_name,
@@ -144,11 +144,11 @@ class Rt:
     def __request(
         self,
         selector: str,
-        get_params: typing.Optional[typing.Dict[str, typing.Any]] = None,
-        json_data: typing.Optional[typing.Union[typing.Dict[str, typing.Any], typing.List[typing.Any]]] = None,
-        post_data: typing.Optional[typing.Dict[str, typing.Any]] = None,
+        get_params: typing.Optional[dict[str, typing.Any]] = None,
+        json_data: typing.Optional[typing.Union[dict[str, typing.Any], list[typing.Any]]] = None,
+        post_data: typing.Optional[dict[str, typing.Any]] = None,
         attachments: typing.Optional[typing.Sequence[Attachment]] = None,
-    ) -> typing.Union[typing.Dict[str, typing.Any], typing.List[str]]:
+    ) -> typing.Union[dict[str, typing.Any], list[str]]:
         """General request for :term:`API`.
 
         :param selector: End part of URL which completes self.url parameter
@@ -174,9 +174,7 @@ class Rt:
                 else:
                     response = self.session.get(url, params=get_params)
             else:
-                fields: typing.List[typing.Tuple[str, typing.Any]] = [
-                    ('Attachments', attachment.multipart_form_element()) for attachment in attachments
-                ]
+                fields: list[tuple[str, typing.Any]] = [('Attachments', attachment.multipart_form_element()) for attachment in attachments]
                 response = self.session.post(url, files=fields, data={'JSON': json.dumps(json_data)})
 
             self.__debug_response(response)
@@ -198,8 +196,8 @@ class Rt:
     def __request_put(
         self,
         selector: str,
-        json_data: typing.Optional[typing.Dict[str, typing.Any]] = None,
-    ) -> typing.List[str]:
+        json_data: typing.Optional[dict[str, typing.Any]] = None,
+    ) -> list[str]:
         """PUT request for :term:`API`.
 
         :param selector: End part of URL which completes self.url parameter
@@ -237,7 +235,7 @@ class Rt:
     def __request_delete(
         self,
         selector: str,
-    ) -> typing.Dict[str, str]:
+    ) -> dict[str, str]:
         """DELETE request for :term:`API`.
 
         :param selector: End part of URL which completes self.url parameter
@@ -275,12 +273,12 @@ class Rt:
     def __paged_request(
         self,
         selector: str,
-        json_data: typing.Optional[typing.Union[typing.List[typing.Dict[str, typing.Any]], typing.Dict[str, typing.Any]]] = None,
-        params: typing.Optional[typing.Dict[str, typing.Any]] = None,
+        json_data: typing.Optional[typing.Union[list[dict[str, typing.Any]], dict[str, typing.Any]]] = None,
+        params: typing.Optional[dict[str, typing.Any]] = None,
         page: int = 1,
         per_page: int = 20,
         recurse: bool = True,
-    ) -> typing.Iterator[typing.Dict[str, typing.Any]]:
+    ) -> typing.Iterator[dict[str, typing.Any]]:
         """Request using pagination for :term:`API`.
 
         :param selector: End part of URL which completes self.url parameter
@@ -384,7 +382,7 @@ class Rt:
                 response_message=response.text,
             )
 
-    def __get_url(self, url: str) -> typing.Dict[str, typing.Any]:
+    def __get_url(self, url: str) -> dict[str, typing.Any]:
         """Call a URL as specified in the returned JSON of an API operation."""
         url_ = url.split('/REST/2.0/', 1)[1]
         res = self.__request(url_)
@@ -445,7 +443,7 @@ class Rt:
         queue: typing.Optional[typing.Union[str, object]] = None,
         order: typing.Optional[str] = None,
         raw_query: typing.Optional[str] = None,
-        query_format: typing.Union[str, typing.List[str]] = 'l',
+        query_format: typing.Union[str, list[str]] = 'l',
         **kwargs: typing.Any,
     ) -> typing.Iterator[dict]:
         r"""Search arbitrary needles in given fields and queue.
@@ -629,7 +627,7 @@ class Rt:
         if content_type not in ('text/plain', 'text/html'):  # pragma: no cover
             raise ValueError('Invalid content-type specified.')
 
-        ticket_data: typing.Dict[str, typing.Any] = {'Queue': queue}
+        ticket_data: dict[str, typing.Any] = {'Queue': queue}
 
         if subject is not None:
             ticket_data['Subject'] = subject
@@ -684,7 +682,7 @@ class Rt:
 
         return bool(msg[0])
 
-    def get_ticket_history(self, ticket_id: typing.Union[str, int]) -> typing.Optional[typing.List[typing.Dict[str, typing.Any]]]:
+    def get_ticket_history(self, ticket_id: typing.Union[str, int]) -> typing.Optional[list[dict[str, typing.Any]]]:
         """Get set of short history items.
 
         :param ticket_id: ID of ticket
@@ -702,7 +700,7 @@ class Rt:
 
         return list(transactions)
 
-    def get_transaction(self, transaction_id: typing.Union[str, int]) -> typing.Dict[str, typing.Any]:
+    def get_transaction(self, transaction_id: typing.Union[str, int]) -> dict[str, typing.Any]:
         """Get a transaction.
 
         :param transaction_id: ID of transaction
@@ -722,7 +720,7 @@ class Rt:
         action: Literal['correspond', 'comment'] = 'correspond',
         content_type: TYPE_CONTENT_TYPE = 'text/plain',
         attachments: typing.Optional[typing.Sequence[Attachment]] = None,
-    ) -> typing.List[str]:
+    ) -> list[str]:
         """Sends out the correspondence.
 
         :param ticket_id: ID of ticket to which message belongs
@@ -738,7 +736,7 @@ class Rt:
         if action not in ('correspond', 'comment'):  # pragma: no cover
             raise InvalidUseError('action must be either "correspond" or "comment"')
 
-        post_data: typing.Dict[str, typing.Any] = {
+        post_data: dict[str, typing.Any] = {
             'Content': content,
             'ContentType': content_type,
         }
@@ -834,7 +832,7 @@ class Rt:
 
         return bool(msg[0])
 
-    def get_attachments(self, ticket_id: typing.Union[str, int]) -> typing.Sequence[typing.Dict[str, str]]:
+    def get_attachments(self, ticket_id: typing.Union[str, int]) -> typing.Sequence[dict[str, str]]:
         """Get attachment list for a given ticket.
 
         Example of a return result:
@@ -868,7 +866,7 @@ class Rt:
 
         return attachments
 
-    def get_attachments_ids(self, ticket_id: typing.Union[str, int]) -> typing.Optional[typing.List[int]]:
+    def get_attachments_ids(self, ticket_id: typing.Union[str, int]) -> typing.Optional[list[int]]:
         """Get IDs of attachments for given ticket.
 
         :param ticket_id: ID of ticket
@@ -943,7 +941,7 @@ class Rt:
 
         return res
 
-    def get_user(self, user_id: typing.Union[int, str]) -> typing.Dict[str, typing.Any]:
+    def get_user(self, user_id: typing.Union[int, str]) -> dict[str, typing.Any]:
         """Get user details.
 
         :param user_id: Identification of user by username (str) or user ID
@@ -1072,7 +1070,7 @@ class Rt:
 
         return res['id']
 
-    def edit_user(self, user_id: typing.Union[str, int], **kwargs: typing.Any) -> typing.List[str]:
+    def edit_user(self, user_id: typing.Union[str, int], **kwargs: typing.Any) -> list[str]:
         """Edit user profile.
 
         :param user_id: Identification of user by username (str) or user ID
@@ -1190,7 +1188,7 @@ class Rt:
 
             raise  # pragma: no cover
 
-    def get_queue(self, queue_id: typing.Union[str, int]) -> typing.Optional[typing.Dict[str, typing.Any]]:
+    def get_queue(self, queue_id: typing.Union[str, int]) -> typing.Optional[dict[str, typing.Any]]:
         """Get queue details.
 
         Example of a return result:
@@ -1257,7 +1255,7 @@ class Rt:
 
         return res
 
-    def get_all_queues(self, include_disabled: bool = False) -> typing.List[typing.Dict[str, typing.Any]]:
+    def get_all_queues(self, include_disabled: bool = False) -> list[dict[str, typing.Any]]:
         """Return a list of all queues.
 
         Example of a return result:
@@ -1293,7 +1291,7 @@ class Rt:
 
         return list(queues)
 
-    def edit_queue(self, queue_id: typing.Union[str, int], **kwargs: typing.Any) -> typing.List[str]:
+    def edit_queue(self, queue_id: typing.Union[str, int], **kwargs: typing.Any) -> list[str]:
         """Edit queue.
 
         :param queue_id: Identification of queue by name (str) or ID (int)
@@ -1415,7 +1413,7 @@ class Rt:
 
             raise  # pragma: no cover
 
-    def get_links(self, ticket_id: typing.Union[str, int]) -> typing.Optional[typing.List[typing.Dict[str, str]]]:
+    def get_links(self, ticket_id: typing.Union[str, int]) -> typing.Optional[list[dict[str, str]]]:
         """Gets the ticket links for a single ticket.
 
         Example of a return result:
@@ -1637,11 +1635,11 @@ class AsyncRt:
     async def __request(
         self,
         selector: str,
-        get_params: typing.Optional[typing.Dict[str, typing.Any]] = None,
-        json_data: typing.Optional[typing.Union[typing.Dict[str, typing.Any], typing.List[typing.Any]]] = None,
-        post_data: typing.Optional[typing.Dict[str, typing.Any]] = None,
+        get_params: typing.Optional[dict[str, typing.Any]] = None,
+        json_data: typing.Optional[typing.Union[dict[str, typing.Any], list[typing.Any]]] = None,
+        post_data: typing.Optional[dict[str, typing.Any]] = None,
         attachments: typing.Optional[typing.Sequence[Attachment]] = None,
-    ) -> typing.Union[typing.Dict[str, typing.Any], typing.List[str]]:
+    ) -> typing.Union[dict[str, typing.Any], list[str]]:
         """General request for :term:`API`.
 
         :param selector: End part of URL which completes self.url parameter
@@ -1667,9 +1665,7 @@ class AsyncRt:
                 else:
                     response = await self.session.get(url, params=get_params)
             else:
-                fields: typing.List[typing.Tuple[str, typing.Any]] = [
-                    ('Attachments', attachment.multipart_form_element()) for attachment in attachments
-                ]
+                fields: list[tuple[str, typing.Any]] = [('Attachments', attachment.multipart_form_element()) for attachment in attachments]
                 response = await self.session.post(url, files=fields, data={'JSON': json.dumps(json_data)})
 
             self.__debug_response(response)
@@ -1691,8 +1687,8 @@ class AsyncRt:
     async def __request_put(
         self,
         selector: str,
-        json_data: typing.Optional[typing.Dict[str, typing.Any]] = None,
-    ) -> typing.List[str]:
+        json_data: typing.Optional[dict[str, typing.Any]] = None,
+    ) -> list[str]:
         """PUT request for :term:`API`.
 
         :param selector: End part of URL which completes self.url parameter
@@ -1727,7 +1723,7 @@ class AsyncRt:
         except httpx.ConnectError as exc:  # pragma: no cover
             raise ConnectionError('Connection error', exc) from exc
 
-    async def __request_delete(self, selector: str) -> typing.Dict[str, str]:
+    async def __request_delete(self, selector: str) -> dict[str, str]:
         """DELETE request for :term:`API`.
 
         :param selector: End part of URL which completes self.url parameter
@@ -1765,8 +1761,8 @@ class AsyncRt:
     async def __paged_request(
         self,
         selector: str,
-        json_data: typing.Optional[typing.Union[typing.List[typing.Dict[str, typing.Any]], typing.Dict[str, typing.Any]]] = None,
-        params: typing.Optional[typing.Dict[str, typing.Any]] = None,
+        json_data: typing.Optional[typing.Union[list[dict[str, typing.Any]], dict[str, typing.Any]]] = None,
+        params: typing.Optional[dict[str, typing.Any]] = None,
         page: int = 1,
         per_page: int = 20,
         recurse: bool = True,
@@ -1877,7 +1873,7 @@ class AsyncRt:
                 response_message=response.text,
             )
 
-    async def __get_url(self, url: str) -> typing.Dict[str, typing.Any]:
+    async def __get_url(self, url: str) -> dict[str, typing.Any]:
         """Call a URL as specified in the returned JSON of an API operation."""
         url_ = url.split('/REST/2.0/', 1)[1]
         res = await self.__request(url_)
@@ -1940,7 +1936,7 @@ class AsyncRt:
         queue: typing.Optional[typing.Union[str, object]] = None,
         order: typing.Optional[str] = None,
         raw_query: typing.Optional[str] = None,
-        query_format: typing.Union[str, typing.List[str]] = 'l',
+        query_format: typing.Union[str, list[str]] = 'l',
         **kwargs: typing.Any,
     ) -> collections.abc.AsyncIterator:
         r"""Search arbitrary needles in given fields and queue.
@@ -2126,7 +2122,7 @@ class AsyncRt:
         if content_type not in ('text/plain', 'text/html'):  # pragma: no cover
             raise ValueError('Invalid content-type specified.')
 
-        ticket_data: typing.Dict[str, typing.Any] = {'Queue': queue}
+        ticket_data: dict[str, typing.Any] = {'Queue': queue}
 
         if subject is not None:
             ticket_data['Subject'] = subject
@@ -2198,7 +2194,7 @@ class AsyncRt:
         ):
             yield transaction
 
-    async def get_transaction(self, transaction_id: typing.Union[str, int]) -> typing.Dict[str, typing.Any]:
+    async def get_transaction(self, transaction_id: typing.Union[str, int]) -> dict[str, typing.Any]:
         """Get a transaction.
 
         :param transaction_id: ID of transaction
@@ -2218,7 +2214,7 @@ class AsyncRt:
         action: Literal['correspond', 'comment'] = 'correspond',
         content_type: TYPE_CONTENT_TYPE = 'text/plain',
         attachments: typing.Optional[typing.Sequence[Attachment]] = None,
-    ) -> typing.List[str]:
+    ) -> list[str]:
         """Sends out the correspondence.
 
         :param ticket_id: ID of ticket to which message belongs
@@ -2234,7 +2230,7 @@ class AsyncRt:
         if action not in ('correspond', 'comment'):  # pragma: no cover
             raise InvalidUseError('action must be either "correspond" or "comment"')
 
-        post_data: typing.Dict[str, typing.Any] = {
+        post_data: dict[str, typing.Any] = {
             'Content': content,
             'ContentType': content_type,
         }
@@ -2430,7 +2426,7 @@ class AsyncRt:
 
         return res
 
-    async def get_user(self, user_id: typing.Union[int, str]) -> typing.Dict[str, typing.Any]:
+    async def get_user(self, user_id: typing.Union[int, str]) -> dict[str, typing.Any]:
         """Get user details.
 
         :param user_id: Identification of user by username (str) or user ID
@@ -2559,7 +2555,7 @@ class AsyncRt:
 
         return res['id']
 
-    async def edit_user(self, user_id: typing.Union[str, int], **kwargs: typing.Any) -> typing.List[str]:
+    async def edit_user(self, user_id: typing.Union[str, int], **kwargs: typing.Any) -> list[str]:
         """Edit user profile.
 
         :param user_id: Identification of user by username (str) or user ID
@@ -2677,7 +2673,7 @@ class AsyncRt:
 
             raise  # pragma: no cover
 
-    async def get_queue(self, queue_id: typing.Union[str, int]) -> typing.Optional[typing.Dict[str, typing.Any]]:
+    async def get_queue(self, queue_id: typing.Union[str, int]) -> typing.Optional[dict[str, typing.Any]]:
         """Get queue details.
 
         Example of a return result:
@@ -2780,7 +2776,7 @@ class AsyncRt:
         async for item in self.__paged_request('queues/all', params=params):
             yield item
 
-    async def edit_queue(self, queue_id: typing.Union[str, int], **kwargs: typing.Any) -> typing.List[str]:
+    async def edit_queue(self, queue_id: typing.Union[str, int], **kwargs: typing.Any) -> list[str]:
         """Edit queue.
 
         :param queue_id: Identification of queue by name (str) or ID (int)
@@ -2902,7 +2898,7 @@ class AsyncRt:
 
             raise  # pragma: no cover
 
-    async def get_links(self, ticket_id: typing.Union[str, int]) -> typing.List[typing.Dict[str, str]]:
+    async def get_links(self, ticket_id: typing.Union[str, int]) -> list[dict[str, str]]:
         """Gets the ticket links for a single ticket.
 
         Example of a return result:

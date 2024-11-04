@@ -25,7 +25,8 @@ Python implementation of REST API described here:
    "2.7", "< 2.0.0"
    ">= 3.5, <3.7", ">= 2.0.0, < 3.0.0"
    ">= 3.7", ">= 3.0.0, < 3.1.0"
-   ">= 3.8", ">= 3.0.0"
+   ">= 3.8", ">= 3.0.0, < 3.3.0"
+   ">= 3.9", ">= 3.3.0"
 
 ℹ️ **Note**:
     Please note that starting with the major release of v3.0.0, this library requires Python version >= 3.8.

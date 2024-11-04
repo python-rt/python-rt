@@ -173,9 +173,9 @@ class Rt:
     def __request(
         self,
         selector: str,
-        get_params: typing.Optional[typing.Dict[str, typing.Any]] = None,
-        post_data: typing.Optional[typing.Dict[str, typing.Any]] = None,
-        files: typing.Optional[typing.List[typing.Tuple[str, typing.IO, typing.Optional[str]]]] = None,
+        get_params: typing.Optional[dict[str, typing.Any]] = None,
+        post_data: typing.Optional[dict[str, typing.Any]] = None,
+        files: typing.Optional[list[tuple[str, typing.IO, typing.Optional[str]]]] = None,
         without_login: bool = False,
         text_response: bool = True,
     ) -> str:
@@ -300,7 +300,7 @@ class Rt:
         cls,
         msg: typing.Iterable[str],
         expect_keys: typing.Iterable[str] = (),
-    ) -> typing.Dict[str, str]:
+    ) -> dict[str, str]:
         """Parse an RT API response body into a Python dictionary.
 
         This method knows the general format for key-value RT API responses,
@@ -352,7 +352,7 @@ class Rt:
     def __parse_response_numlist(
         cls,
         msg: typing.Iterable[str],
-    ) -> typing.List[typing.Tuple[int, str]]:
+    ) -> list[tuple[int, str]]:
         """Parse an RT API response body into a numbered list.
 
         The RT API for transactions and attachments returns a numbered list of
@@ -368,7 +368,7 @@ class Rt:
         return sorted((int(key), value) for key, value in cls.__parse_response_dict(msg).items())
 
     @classmethod
-    def __parse_response_ticket(cls, msg: typing.Iterable[str]) -> typing.Dict[str, typing.Union[str, typing.Sequence[str]]]:
+    def __parse_response_ticket(cls, msg: typing.Iterable[str]) -> dict[str, typing.Union[str, typing.Sequence[str]]]:
         """Parse an RT API ticket response into a Python dictionary.
 
         :keyword msg: A multiline string, or an iterable of string lines, with
@@ -383,7 +383,7 @@ class Rt:
         if not pairs.get('id', '').startswith('ticket/'):
             raise UnexpectedMessageFormatError("Response from RT didn't contain a valid ticket_id")
         _, _, numerical_id = pairs['id'].partition('/')
-        ticket = typing.cast(typing.Dict[str, typing.Sequence[str]], pairs)
+        ticket = typing.cast(dict[str, typing.Sequence[str]], pairs)
         ticket['numerical_id'] = numerical_id
         for key in ['Requestors', 'Cc', 'AdminCc']:
             try:
@@ -447,7 +447,7 @@ class Rt:
             self.login_result = None
         return ret
 
-    def new_correspondence(self, queue: typing.Optional[typing.Union[str, object]] = None) -> typing.List[dict]:
+    def new_correspondence(self, queue: typing.Optional[typing.Union[str, object]] = None) -> list[dict]:
         """Obtains tickets changed by other users than the system one.
 
         :keyword queue: Queue where to search
@@ -459,7 +459,7 @@ class Rt:
         """
         return self.search(Queue=queue, order='-LastUpdated', LastUpdatedBy__notexact=self.default_login)
 
-    def last_updated(self, since: str, queue: typing.Optional[typing.Union[str, object]] = None) -> typing.List[dict]:
+    def last_updated(self, since: str, queue: typing.Optional[typing.Union[str, object]] = None) -> list[dict]:
         """Obtains tickets changed after given date.
 
         :param since: Date as string in form '2011-02-24'
@@ -478,9 +478,9 @@ class Rt:
         order: typing.Optional[str] = None,
         raw_query: typing.Optional[str] = None,
         Format: str = 'l',
-        Fields: typing.Optional[typing.List[str]] = None,
+        Fields: typing.Optional[list[str]] = None,
         **kwargs: typing.Any,
-    ) -> typing.List[dict]:
+    ) -> list[dict]:
         r"""Search arbitrary needles in given fields and queue.
 
         Example::
@@ -672,7 +672,7 @@ class Rt:
     def create_ticket(
         self,
         Queue: typing.Optional[typing.Union[str, object]] = None,
-        files: typing.Optional[typing.List[typing.Tuple[str, typing.IO, typing.Optional[str]]]] = None,
+        files: typing.Optional[list[tuple[str, typing.IO, typing.Optional[str]]]] = None,
         **kwargs: typing.Any,
     ) -> int:
         """Create new ticket and set given parameters.
@@ -759,7 +759,7 @@ class Rt:
 
     def get_history(
         self, ticket_id: typing.Union[str, int], transaction_id: typing.Optional[typing.Union[str, int]] = None
-    ) -> typing.Optional[typing.List[dict]]:
+    ) -> typing.Optional[list[dict]]:
         """Get set of history items.
 
         :param ticket_id: ID of ticket
@@ -791,7 +791,7 @@ class Rt:
         ):
             return None
         items = typing.cast(
-            typing.List[typing.Dict[str, typing.Union[str, typing.List[typing.Tuple[int, str]]]]],
+            list[dict[str, typing.Union[str, list[tuple[int, str]]]]],
             [self.__parse_response_dict(msg, ['Content', 'Attachments']) for msg in msgs.split('\n--\n')],
         )
         for body in items:
@@ -799,7 +799,7 @@ class Rt:
             body['Attachments'] = self.__parse_response_numlist(attachments)
         return items
 
-    def get_short_history(self, ticket_id: typing.Union[str, int]) -> typing.Optional[typing.List[typing.Tuple[int, str]]]:
+    def get_short_history(self, ticket_id: typing.Union[str, int]) -> typing.Optional[list[tuple[int, str]]]:
         """Get set of short history items.
 
         :param ticket_id: ID of ticket
@@ -823,7 +823,7 @@ class Rt:
         cc: str = '',
         bcc: str = '',
         content_type: str = 'text/plain',
-        files: typing.Optional[typing.List[typing.Tuple[str, typing.IO, typing.Optional[str]]]] = None,
+        files: typing.Optional[list[tuple[str, typing.IO, typing.Optional[str]]]] = None,
     ) -> bool:
         """Sends out the correspondence.
 
@@ -863,7 +863,7 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
         cc: str = '',
         bcc: str = '',
         content_type: str = 'text/plain',
-        files: typing.Optional[typing.List[typing.Tuple[str, typing.IO, typing.Optional[str]]]] = None,
+        files: typing.Optional[list[tuple[str, typing.IO, typing.Optional[str]]]] = None,
     ) -> bool:
         """Sends email message to the contacts in ``Requestors`` field of
         given ticket with subject as is set in ``Subject`` field.
@@ -901,7 +901,7 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
         cc: str = '',
         bcc: str = '',
         content_type: str = 'text/plain',
-        files: typing.Optional[typing.List[typing.Tuple[str, typing.IO, typing.Optional[str]]]] = None,
+        files: typing.Optional[list[tuple[str, typing.IO, typing.Optional[str]]]] = None,
     ) -> bool:
         """Adds comment to the given ticket.
 
@@ -937,7 +937,7 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
         """
         return self.__correspond(ticket_id, text, 'comment', cc, bcc, content_type, files)
 
-    def get_attachments(self, ticket_id: typing.Union[str, int]) -> typing.Optional[typing.List[typing.Tuple[str, str, str, str]]]:
+    def get_attachments(self, ticket_id: typing.Union[str, int]) -> typing.Optional[list[tuple[str, str, str, str]]]:
         """Get attachment list for a given ticket.
 
         :param ticket_id: ID of ticket
@@ -963,7 +963,7 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
                     attachment_infos.append(info.groups())
         return attachment_infos  # type: ignore # type returned by the regex, if it matches, is as defined above
 
-    def get_attachments_ids(self, ticket_id: typing.Union[str, int]) -> typing.Optional[typing.List[int]]:
+    def get_attachments_ids(self, ticket_id: typing.Union[str, int]) -> typing.Optional[list[int]]:
         """Get IDs of attachments for given ticket.
 
         :param ticket_id: ID of ticket
@@ -1051,7 +1051,7 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
                                            Missing line starting with `Content:`.'
             )
         cont_id = cont_matching[0]
-        pairs: typing.Dict[str, typing.Any] = {}
+        pairs: dict[str, typing.Any] = {}
         for i in range(head_id):
             if b': ' in msg[i]:
                 header, content = msg[i].split(b': ', 1)
@@ -1095,7 +1095,7 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
             return None
         return msg[msg.find(b'\n') + 2 :]
 
-    def get_user(self, user_id: typing.Union[str, int]) -> typing.Optional[typing.Dict[str, str]]:
+    def get_user(self, user_id: typing.Union[str, int]) -> typing.Optional[dict[str, str]]:
         """Get user details.
 
         :param user_id: Identification of user by username (str) or user ID
@@ -1245,7 +1245,7 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
                 return int(match.group(1))
         return False
 
-    def get_queue(self, queue_id: typing.Union[str, int]) -> typing.Optional[typing.Dict[str, str]]:
+    def get_queue(self, queue_id: typing.Union[str, int]) -> typing.Optional[dict[str, str]]:
         """Get queue details.
 
         :param queue_id: Identification of queue by name (str) or queue ID
@@ -1320,7 +1320,7 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
         """
         return int(self.edit_queue('new', Name=Name, **kwargs))
 
-    def get_links(self, ticket_id: typing.Union[str, int]) -> typing.Optional[typing.Dict[str, typing.List[str]]]:
+    def get_links(self, ticket_id: typing.Union[str, int]) -> typing.Optional[dict[str, list[str]]]:
         """Gets the ticket links for a single ticket.
 
         :param ticket_id: ticket ID

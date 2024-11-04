@@ -19,7 +19,7 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
-requires-python = ">= 3.8"
+requires-python = ">= 3.9"
 dependencies = [
     "requests",
     "httpx",
@@ -49,8 +49,8 @@ dev = [
     "bandit",
 ]
 test = [
-    "pytest",
-    "pytest-asyncio",
+    "pytest>=8.3",
+    "pytest-asyncio>=0.24",
     "coverage",
 ]
 
@@ -86,7 +86,9 @@ files = [
 ]
 
 [tool.pytest.ini_options]
-minversion = "6.0"
+minversion = "8.0"
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "session"
 testpaths = [
     "tests"
 ]
@@ -94,7 +96,7 @@ testpaths = [
 [tool.ruff]
 line-length = 140
 indent-width = 4
-target-version = "py38"
+target-version = "py39"
 
 [tool.ruff.lint]
 select = [

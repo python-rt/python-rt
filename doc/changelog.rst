@@ -1,6 +1,12 @@
 Change Log
 ==========
 
+Version 3.3.0 (2024-11-04)
+----------------------------
+Removed
+^^^^^^^
+- Remove support for now EoL Python 3.8.
+
 Version 3.2.0 (2024-09-06)
 ----------------------------
 Added
