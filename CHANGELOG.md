@@ -3,6 +3,10 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [unreleased], xxxx-xx-xx
+## Fixes
+- Fix str(bytes) warning (*BytesWarning: str() on a bytes instance*) (#1074) 
+
 ## [v3.3.0], 2024-10-04
 ## Removed
 - Remove support for now EoL Python 3.8.
