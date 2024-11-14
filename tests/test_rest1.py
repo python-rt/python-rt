@@ -166,7 +166,7 @@ class RtTestCase(unittest.TestCase):
             # get_short_history
             short_hist = tracker.get_short_history(ticket_id)
             self.assertTrue(len(short_hist) > 0, 'Empty ticket short history.')
-            self.assertEqual(short_hist[0][1], 'Ticket created by %s' % default_login)
+            self.assertEqual(short_hist[0][1], f'Ticket created by {default_login}')
             # create 2nd ticket
             ticket2_subject = 'Testing issue ' + ''.join([random.choice(string.ascii_letters) for i in range(15)])
             ticket2_id = tracker.create_ticket(Subject=ticket2_subject)

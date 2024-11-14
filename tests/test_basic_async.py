@@ -27,7 +27,6 @@ __authors__ = [
 import base64
 import random
 import string
-import typing
 
 import httpx
 import pytest
@@ -338,7 +337,7 @@ async def test_ticket_operations_admincc_cc(async_rt_connection: rt.rest2.AsyncR
         'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'
     )
 
-    def compare_list(from_list: typing.List[str], ticket_list: typing.List[dict]) -> bool:
+    def compare_list(from_list: list[str], ticket_list: list[dict]) -> bool:
         """Lists (Requestor, AdminCc, Cc) returned from REST2 contain a list of dicts with additional user information.
 
         Thus a simple compare of both lists is not enough.
