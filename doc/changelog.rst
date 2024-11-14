@@ -1,6 +1,19 @@
 Change Log
 ==========
 
+Version 3.3.1 (2024-11-14)
+----------------------------
+Fixes
+^^^^^
+- Fix str(bytes) warning (*BytesWarning: str() on a bytes instance*) (#1074)
+
+Changes
+^^^^^^^
+- Set included files for ruff
+- Switch to hatchling
+- Set ignores for tests files
+- Ignore uv.lock
+
 Version 3.3.0 (2024-11-04)
 ----------------------------
 Removed
