@@ -1,6 +1,6 @@
 [build-system]
-requires = ["setuptools>=65", "setuptools_scm[toml]>=7.0"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling", "hatch-vcs"]
+build-backend = "hatchling.build"
 
 [project]
 name = "rt"
@@ -9,20 +9,20 @@ readme = "README.rst"
 license = { text = "GNU General Public License v3 (GPLv3)" }
 authors = [{ name = "Georges Toth", email = "georges.toth@govcert.etat.lu" }]
 classifiers = [
-    "Development Status :: 5 - Production/Stable",
-    "Environment :: Console",
-    "Intended Audience :: Developers",
-    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
-    "Operating System :: POSIX",
-    "Programming Language :: Python",
-    "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3",
-    "Topic :: Software Development :: Libraries :: Python Modules",
+  "Development Status :: 5 - Production/Stable",
+  "Environment :: Console",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+  "Operating System :: POSIX",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3",
+  "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 requires-python = ">= 3.9"
 dependencies = [
-    "requests",
-    "httpx",
+  "requests",
+  "httpx",
 ]
 dynamic = ["version"]
 
@@ -35,37 +35,37 @@ Changelog = "https://github.com/python-rt/python-rt/blob/master/CHANGELOG.md"
 
 [project.optional-dependencies]
 docs = [
-    "sphinx",
-    "sphinx-autodoc-typehints",
-    "sphinx-rtd-theme",
-    "furo",
-    "sphinx-copybutton",
+  "sphinx",
+  "sphinx-autodoc-typehints",
+  "sphinx-rtd-theme",
+  "furo",
+  "sphinx-copybutton",
 ]
 dev = [
-    "mypy",
-    "ruff",
-    "types-requests",
-    "codespell",
-    "bandit",
+  "mypy",
+  "ruff",
+  "types-requests",
+  "codespell",
+  "bandit",
 ]
 test = [
-    "pytest>=8.3",
-    "pytest-asyncio>=0.24",
-    "coverage",
+  "pytest>=8.3",
+  "pytest-asyncio>=0.24",
+  "coverage",
 ]
 
-[tool.setuptools]
-include-package-data = true
+[tool.hatch.envs.default]
+installer = "uv"
 
-[tool.setuptools.packages.find]
-exclude = ["tests"]
-namespaces = false
+[tool.hatch.build.targets.sdist]
+include = [
+  "/rt",
+  "/tests",
+]
+exclude = []
 
-[tool.pycodestyle]
-filename = "rt/rt.py"
-ignore = "E501, W503, E124, E126"
-
-[tool.setuptools_scm]
+[tool.hatch.version]
+source = "vcs"
 
 [tool.mypy]
 show_error_codes = true
@@ -82,7 +82,7 @@ strict_optional = true
 check_untyped_defs = false
 
 files = [
-    "rt/**/*.py"
+  "rt/**/*.py"
 ]
 
 [tool.pytest.ini_options]
@@ -90,99 +90,102 @@ minversion = "8.0"
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "session"
 testpaths = [
-    "tests"
+  "tests"
 ]
 
 [tool.ruff]
 line-length = 140
 indent-width = 4
 target-version = "py39"
+include = ["pyproject.toml", "rt/**/*.py", "tests/**/*.py"]
 
 [tool.ruff.lint]
 select = [
-    "E", # pycodestyle errors
-    "W", # pycodestyle warnings
-    "F", # pyflakes
-    "I", # isort
-    "C", # flake8-comprehensions
-    "B", # flake8-bugbear
-    "D", # pydocstyle
-    "N", # pep8-naming
-    "UP", # pyupgrade
-    "YTT", # flake8-2020
-    "ANN", # flake8-annotations
-    "ASYNC", # flake8-async
-    "S", # flake8-bandit
-    "BLE", # flake8-blind-except
-    "B", # flake8-bugbear
-    "A", # flake8-builtins
-    "COM", # flake8-commas
-    "C4", # flake8-comprehensions
-    "DTZ", # flake8-datetimez
-    "EM103", # flake8-errmsg - dot-format-in-exception
-    "EXE", # flake8-executable
-    "ISC", # flake8-implicit-str-concat
-    "ICN", # flake8-import-conventions
-    "G", # flake8-logging-format
-    "INP", # flake8-no-pep420
-    "PIE", # flake8-pie
-    "T20", # flake8-print
-    "PYI", # flake8-pyi
-    "RSE", # flake8-raise
-    "RET", # flake8-return
-    "SLF", # flake8-self
-    "SLOT", # flake8-slots
-    #    "SIM",  # flake8-simplify
-    "TID", # flake8-tidy-imports
-    "TCH", # flake8-type-checking
-    "PTH", # flake8-use-pathlib
-    "TD", # flake8-todos
-    "FIX", # flake8-fixme
-    "ERA", # eradicate
-    "PL", # Pylint
-    "PLC", # Convention
-    "PLE", # Error
-    "PLR", # Refactor
-    "PLW", # Warning
-    "B904", # reraise-no-cause
-    "FLY", # flynt
-    #    "PERF",  # Perflint
-    "RUF013", # implicit-optional
+  "E", # pycodestyle errors
+  "W", # pycodestyle warnings
+  "F", # pyflakes
+  "I", # isort
+  "C", # flake8-comprehensions
+  "B", # flake8-bugbear
+  "D", # pydocstyle
+  "N", # pep8-naming
+  "UP", # pyupgrade
+  "YTT", # flake8-2020
+  "ANN", # flake8-annotations
+  "ASYNC", # flake8-async
+  "S", # flake8-bandit
+  "BLE", # flake8-blind-except
+  "B", # flake8-bugbear
+  "A", # flake8-builtins
+  "COM", # flake8-commas
+  "C4", # flake8-comprehensions
+  "DTZ", # flake8-datetimez
+  "EM103", # flake8-errmsg - dot-format-in-exception
+  "EXE", # flake8-executable
+  "ISC", # flake8-implicit-str-concat
+  "ICN", # flake8-import-conventions
+  "G", # flake8-logging-format
+  "INP", # flake8-no-pep420
+  "PIE", # flake8-pie
+  "T20", # flake8-print
+  "PYI", # flake8-pyi
+  "RSE", # flake8-raise
+  "RET", # flake8-return
+  "SLF", # flake8-self
+  "SLOT", # flake8-slots
+  #    "SIM",  # flake8-simplify
+  "TID", # flake8-tidy-imports
+  "TCH", # flake8-type-checking
+  "PTH", # flake8-use-pathlib
+  "TD", # flake8-todos
+  "FIX", # flake8-fixme
+  "ERA", # eradicate
+  "PL", # Pylint
+  "PLC", # Convention
+  "PLE", # Error
+  "PLR", # Refactor
+  "PLW", # Warning
+  "B904", # reraise-no-cause
+  "FLY", # flynt
+  #    "PERF",  # Perflint
+  "RUF013", # implicit-optional
 ]
 unfixable = [
-    'ERA001',
-    'T201', # `print` found
+  'ERA001',
+  'T201', # `print` found
 ]
 extend-select = ['Q', 'RUF100', 'C90']
 flake8-quotes = { inline-quotes = 'single', multiline-quotes = 'single' }
 ignore = [
-    "C901", # too complex
-    "E501", # line too long
-    "B008", # do not perform function call in argument defaults
-    "ANN101", # missing-type-self
-    "ANN401", # any-type
-    "ANN002", # missing-type-args
-    "ANN003", # missing-type-kwargs
-    "ANN102", # missing-type-cls
-    "PLR0913", # Too many arguments to function call
-    "PLR0915", # Too many statements
-    "PLR2004", # Magic value used in comparison
-    "PLW0603", # Using the global statement
-    "PLR0912", # Too many branches
-    "COM812", #	missing-trailing-comma
-    "ISC001", # single-line-implicit-string-concatenation
-    "Q001", # bad-quotes-multiline-string
-    "RET504", # Unnecessary assignment before `return` statement
-    "D401", # First line of docstring should be in imperative mood
-    "D205", # 1 blank line required between summary line and description
+  "C901", # too complex
+  "E501", # line too long
+  "B008", # do not perform function call in argument defaults
+  "ANN101", # missing-type-self
+  "ANN401", # any-type
+  "ANN002", # missing-type-args
+  "ANN003", # missing-type-kwargs
+  "ANN102", # missing-type-cls
+  "PLR0913", # Too many arguments to function call
+  "PLR0915", # Too many statements
+  "PLR2004", # Magic value used in comparison
+  "PLW0603", # Using the global statement
+  "PLR0912", # Too many branches
+  "COM812", #	missing-trailing-comma
+  "ISC001", # single-line-implicit-string-concatenation
+  "Q001", # bad-quotes-multiline-string
+  "RET504", # Unnecessary assignment before `return` statement
+  "D401", # First line of docstring should be in imperative mood
+  "D205", # 1 blank line required between summary line and description
 ]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = [
-    "ANN", # Missing return type annotation
+  "ANN", # Missing return type annotation
+  "D", # Missing docstring
+  "ERA001", # Found commented-out code
 ]
 "rt/rest1.py" = [
-    "N803", # Argument name should be lowercase
+  "N803", # Argument name should be lowercase
 ]
 
 [tool.ruff.format]
