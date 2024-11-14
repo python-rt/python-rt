@@ -1,6 +1,7 @@
 *.pyc
 .coverage
 coverage.xml
+uv.lock
 
 build
 dist
