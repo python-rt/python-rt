@@ -720,6 +720,8 @@ class Rt:
         action: Literal['correspond', 'comment'] = 'correspond',
         content_type: TYPE_CONTENT_TYPE = 'text/plain',
         attachments: typing.Optional[typing.Sequence[Attachment]] = None,
+        cc: str = '',
+        bcc: str = '',
     ) -> list[str]:
         """Sends out the correspondence.
 
@@ -728,6 +730,8 @@ class Rt:
         :param action: correspond or comment
         :param content_type: Content type of email message, defaults to text/plain. Alternative is text/html.
         :param attachments: Optional list of :py:class:`~rt.rest2.Attachment` objects
+        :param cc: Optional CC email addresses
+        :param bcc: Optional BCC email addresses
         :returns: List of messages returned by the backend related to the executed action.
         :raises BadRequestError: When ticket does not exist
         :raises InvalidUseError: If the `action` parameter is invalid
@@ -741,12 +745,11 @@ class Rt:
             'ContentType': content_type,
         }
 
-        # Adding a one-shot cc/bcc is not supported by RT5.0.2
-        # if cc:
-        #     post_data['Cc'] = cc  # noqa: ERA001
-        #
-        # if bcc:
-        #     post_data['Bcc'] = bcc  # noqa: ERA001
+        if cc:
+            post_data['Cc'] = cc
+
+        if bcc:
+            post_data['Bcc'] = bcc
 
         res = self.__request(f'ticket/{ticket_id}/{action}', json_data=post_data, attachments=attachments)
 
@@ -763,6 +766,8 @@ class Rt:
         content: str = '',
         content_type: TYPE_CONTENT_TYPE = 'text/plain',
         attachments: typing.Optional[typing.Sequence[Attachment]] = None,
+        cc: str = '',
+        bcc: str = '',
     ) -> bool:
         """Sends email message to the contacts in ``Requestors`` field of
         given ticket with subject as is set in ``Subject`` field.
@@ -771,6 +776,8 @@ class Rt:
         :param content: Content of email message (text/plain or text/html)
         :param content_type: Content type of email message, default to text/plain
         :param attachments: Optional list of :py:class:`~rt.rest2.Attachment` objects
+        :param cc: Optional CC email addresses
+        :param bcc: Optional BCC email addresses
         :returns: ``True``
                       Operation was successful
                   ``False``
@@ -778,7 +785,7 @@ class Rt:
         :raises BadRequestError: When ticket does not exist
         :raises UnexpectedResponseError: If the response from RT is not as expected
         """
-        msg = self.__correspond(ticket_id, content, 'correspond', content_type, attachments)
+        msg = self.__correspond(ticket_id, content, 'correspond', content_type, attachments, cc, bcc)
 
         if not (isinstance(msg, list) and len(msg) >= 1):  # pragma: no cover
             raise UnexpectedResponseError(str(msg))
@@ -811,6 +818,8 @@ class Rt:
         content: str = '',
         content_type: TYPE_CONTENT_TYPE = 'text/plain',
         attachments: typing.Optional[typing.Sequence[Attachment]] = None,
+        cc: str = '',
+        bcc: str = '',
     ) -> bool:
         """Adds comment to the given ticket.
 
@@ -818,6 +827,8 @@ class Rt:
         :param content: Content of comment
         :param content_type: Content type of comment, default to text/plain
         :param attachments: Optional list of :py:class:`~rt.rest2.Attachment` objects
+        :param cc: Optional CC email addresses
+        :param bcc: Optional BCC email addresses
         :returns: ``True``
                       Operation was successful
                   ``False``
@@ -825,7 +836,7 @@ class Rt:
         :raises BadRequestError: When ticket does not exist
         :raises UnexpectedResponseError: If the response from RT is not as expected
         """
-        msg = self.__correspond(ticket_id, content, 'comment', content_type, attachments)
+        msg = self.__correspond(ticket_id, content, 'comment', content_type, attachments, cc, bcc)
 
         if not (isinstance(msg, list) and len(msg) >= 1):  # pragma: no cover
             raise UnexpectedResponseError(str(msg))
