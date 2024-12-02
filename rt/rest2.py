@@ -11,6 +11,7 @@ import datetime
 import json
 import logging
 import re
+import ssl
 import typing
 from typing import Literal
 from urllib.parse import urljoin
@@ -124,7 +125,15 @@ class Rt:
         self.url = url
         self.base_url = url.split('REST/2.0/', 1)[0]
 
-        self.session = httpx.Client(timeout=http_timeout, verify=verify_cert, proxy=proxy, auth=http_auth)
+        if isinstance(verify_cert, bool):
+            ssl_verify: ssl.SSLContext | bool = verify_cert
+        elif isinstance(verify_cert, str):
+            # Starting with version 0.28.0 of httpx, verify should be either a bool or an SSL Context.
+            ssl_verify = ssl.create_default_context(cafile=verify_cert)
+        else:
+            ssl_verify = True
+
+        self.session = httpx.Client(timeout=http_timeout, verify=ssl_verify, proxy=proxy, auth=http_auth)
 
         if token is not None:  # pragma: no cover  # no way to add tests for this with the current docker image
             self.session.headers['Authorization'] = f'token {token}'
@@ -1615,7 +1624,15 @@ class AsyncRt:
         self.url = url
         self.base_url = url.split('REST/2.0/', 1)[0]
 
-        self.session = httpx.AsyncClient(timeout=http_timeout, verify=verify_cert, proxy=proxy, auth=http_auth)
+        if isinstance(verify_cert, bool):
+            ssl_verify: ssl.SSLContext | bool = verify_cert
+        elif isinstance(verify_cert, str):
+            # Starting with version 0.28.0 of httpx, verify should be either a bool or an SSL Context.
+            ssl_verify = ssl.create_default_context(cafile=verify_cert)
+        else:
+            ssl_verify = True
+
+        self.session = httpx.AsyncClient(timeout=http_timeout, verify=ssl_verify, proxy=proxy, auth=http_auth)
 
         if token is not None:  # pragma: no cover  # no way to add tests for this with the current docker image
             self.session.headers['Authorization'] = f'token {token}'
