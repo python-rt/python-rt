@@ -124,7 +124,7 @@ class Rt:
         self.url = url
         self.base_url = url.split('REST/2.0/', 1)[0]
 
-        self.session = httpx.Client(timeout=http_timeout, verify=verify_cert, proxies=proxy, auth=http_auth)
+        self.session = httpx.Client(timeout=http_timeout, verify=verify_cert, proxy=proxy, auth=http_auth)
 
         if token is not None:  # pragma: no cover  # no way to add tests for this with the current docker image
             self.session.headers['Authorization'] = f'token {token}'
@@ -1615,7 +1615,7 @@ class AsyncRt:
         self.url = url
         self.base_url = url.split('REST/2.0/', 1)[0]
 
-        self.session = httpx.AsyncClient(timeout=http_timeout, verify=verify_cert, proxies=proxy, auth=http_auth)
+        self.session = httpx.AsyncClient(timeout=http_timeout, verify=verify_cert, proxy=proxy, auth=http_auth)
 
         if token is not None:  # pragma: no cover  # no way to add tests for this with the current docker image
             self.session.headers['Authorization'] = f'token {token}'

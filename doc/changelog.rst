@@ -1,6 +1,12 @@
 Change Log
 ==========
 
+Version [unreleased] (2024-12-02)
+----------------------------
+Fixes
+^^^^^
+- Replace the removed httpx parameter of *proxies* by *proxy* (fixes #102)
+
 Version 3.3.1 (2024-11-14)
 ----------------------------
 Fixes
