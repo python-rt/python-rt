@@ -3,9 +3,11 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [unreleased], 2024-12-02
+## [v3.3.2], 2024-12-02
 ## Fixes
 - Replace the removed httpx parameter of *proxies* by *proxy* (fixes #102)
+- Pin dependencies to supported relative upstream versions.
+- Remove the now obsolete *setup.py*.
 
 ## [v3.3.1], 2024-11-14
 ## Fixes

@@ -49,9 +49,9 @@ dev = [
   "bandit",
 ]
 test = [
-  "pytest>=8.3",
-  "pytest-asyncio>=0.24",
-  "coverage",
+  "pytest~=8.3",
+  "pytest-asyncio~=0.24",
+  "coverage~=7.6",
 ]
 
 [tool.hatch.envs.default]
