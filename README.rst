@@ -45,14 +45,6 @@ Python implementation of REST API described here:
     Though version 3.x still supports RT REST API version 1, it contains minor breaking changes. Please see the changelog
     in the documentation for details.
 
-Requirements
-============
-
-This module uses following Python modules:
- - requests (http://docs.python-requests.org/)
- - requests-toolbelt (https://pypi.org/project/requests-toolbelt/)
- - typing-extensions (depending on python version)
-
 Documentation
 =============
 https://python-rt.readthedocs.io/en/latest/
