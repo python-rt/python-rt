@@ -442,7 +442,7 @@ class Rt:
             except ValueError:
                 return False
 
-            if 1970 < year < 2100 and 1 < month <= 12 and 1 < day <= 31:
+            if 1970 < year < 2100 and 1 < month <= 12 and 1 <= day <= 31:
                 return True
 
         return False
@@ -1943,7 +1943,7 @@ class AsyncRt:
             except ValueError:
                 return False
 
-            if 1970 < year < 2100 and 1 < month <= 12 and 1 < day <= 31:
+            if 1970 < year < 2100 and 1 < month <= 12 and 1 <= day <= 31:
                 return True
 
         return False
