@@ -413,7 +413,7 @@ class Rt:
                   ``False``
                       Otherwise
         :raises AuthorizationError: In case that credentials are not supplied neither
-                                    during inicialization or call of this method.
+                                    during initialization or call of this method.
         """
         if (login is not None) and (password is not None):
             login_data = {'user': login, 'pass': password}  # type: typing.Optional[typing.Dict[str, str]]
