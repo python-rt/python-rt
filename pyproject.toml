@@ -33,7 +33,7 @@ Source = "https://github.com/python-rt/python-rt"
 Tracker = "https://github.com/python-rt/python-rt/issues"
 Changelog = "https://github.com/python-rt/python-rt/blob/master/CHANGELOG.md"
 
-[project.optional-dependencies]
+[dependency-groups]
 docs = [
   "sphinx",
   "sphinx-autodoc-typehints",

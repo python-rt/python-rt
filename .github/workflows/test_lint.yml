@@ -34,7 +34,7 @@ jobs:
       - name: Install dependencies
         run: |
           python3 -m pip install uv
-          uv sync --extra test
+          uv sync --group test
 
       - name: Test with pytest
         run: |
@@ -62,7 +62,7 @@ jobs:
       - name: Install dependencies
         run: |
           python3 -m pip install uv
-          uv sync --extra test
+          uv sync --group test
           uv pip install coverage[toml]
 
       - name: Generate coverage data
@@ -92,7 +92,7 @@ jobs:
 
       - run: |
           python3 -m pip install uv
-          uv sync --extra dev
+          uv sync --group dev
 
       - name: mypy
         run: uv run mypy --config-file pyproject.toml rt
