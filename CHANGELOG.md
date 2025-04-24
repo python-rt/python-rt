@@ -3,6 +3,10 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v3.3.6], 2025-04-24
+## Fixes
+- Catch *TransportError* from httpx and re-raise as *ConnectionError* so that httpx transport error exceptions do not leak (fixes #109).
+
 ## [v3.3.5], 2025-04-18
 ## Fixes
 - There was still a comparison issue, fix bad date comparison (fixes #107)

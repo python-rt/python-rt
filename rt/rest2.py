@@ -201,6 +201,8 @@ class Rt:
             return result
         except httpx.ConnectError as exc:  # pragma: no cover
             raise ConnectionError('Connection error', exc) from exc
+        except httpx.TransportError as exc:  # pragma: no cover
+            raise ConnectionError('Transport error', exc) from exc
 
     def __request_put(
         self,
@@ -240,6 +242,8 @@ class Rt:
             return result
         except httpx.ConnectError as exc:  # pragma: no cover
             raise ConnectionError('Connection error', exc) from exc
+        except httpx.TransportError as exc:  # pragma: no cover
+            raise ConnectionError('Transport error', exc) from exc
 
     def __request_delete(
         self,
@@ -278,6 +282,8 @@ class Rt:
             return result
         except httpx.ConnectError as exc:  # pragma: no cover
             raise ConnectionError('Connection error', exc) from exc
+        except httpx.TransportError as exc:  # pragma: no cover
+            raise ConnectionError('Transport error', exc) from exc
 
     def __paged_request(
         self,
@@ -358,6 +364,8 @@ class Rt:
 
         except httpx.ConnectError as exc:  # pragma: no cover
             raise ConnectionError('Connection error', exc) from exc
+        except httpx.TransportError as exc:  # pragma: no cover
+            raise ConnectionError('Transport error', exc) from exc
 
     @staticmethod
     def __check_response(response: httpx.Response) -> None:
@@ -1700,6 +1708,8 @@ class AsyncRt:
             return result
         except httpx.ConnectError as exc:  # pragma: no cover
             raise ConnectionError('Connection error', exc) from exc
+        except httpx.TransportError as exc:  # pragma: no cover
+            raise ConnectionError('Transport error', exc) from exc
 
     async def __request_put(
         self,
@@ -1739,6 +1749,8 @@ class AsyncRt:
             return result
         except httpx.ConnectError as exc:  # pragma: no cover
             raise ConnectionError('Connection error', exc) from exc
+        except httpx.TransportError as exc:  # pragma: no cover
+            raise ConnectionError('Transport error', exc) from exc
 
     async def __request_delete(self, selector: str) -> dict[str, str]:
         """DELETE request for :term:`API`.
@@ -1774,6 +1786,8 @@ class AsyncRt:
             return result
         except httpx.ConnectError as exc:  # pragma: no cover
             raise ConnectionError('Connection error', exc) from exc
+        except httpx.TransportError as exc:  # pragma: no cover
+            raise ConnectionError('Transport error', exc) from exc
 
     async def __paged_request(
         self,
@@ -1857,6 +1871,8 @@ class AsyncRt:
 
         except httpx.ConnectError as exc:  # pragma: no cover
             raise ConnectionError('Connection error', exc) from exc
+        except httpx.TransportError as exc:  # pragma: no cover
+            raise ConnectionError('Transport error', exc) from exc
 
     @staticmethod
     def __check_response(response: httpx.Response) -> None:
