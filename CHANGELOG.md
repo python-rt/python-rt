@@ -3,44 +3,48 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+### Changes
+- Use RT v6 based docker image for tests
+
 ## [v3.3.6], 2025-04-24
-## Fixes
+### Fixes
 - Catch *TransportError* from httpx and re-raise as *ConnectionError* so that httpx transport error exceptions do not leak (fixes #109).
 
 ## [v3.3.5], 2025-04-18
-## Fixes
+### Fixes
 - There was still a comparison issue, fix bad date comparison (fixes #107)
 
 ## [v3.3.4], 2025-03-03
-## Fixes
+### Fixes
 - Fix bad date comparison (fixes #107)
 
 ## [v3.3.3], 2024-12-02
-## Changes
+### Changes
 - Starting with version 0.28.0 of httpx, *verify* should be either a bool or an *SSL Context*.
 
 ## [v3.3.2], 2024-12-02
-## Fixes
+### Fixes
 - Replace the removed httpx parameter of *proxies* by *proxy* (fixes #102)
 - Pin dependencies to supported relative upstream versions.
 - Remove the now obsolete *setup.py*.
 
 ## [v3.3.1], 2024-11-14
-## Fixes
+### Fixes
 - Fix str(bytes) warning (*BytesWarning: str() on a bytes instance*) (#1074)
 
-## Changes
+### Changes
 - Set included files for ruff
 - Switch to hatchling
 - Set ignores for tests files
 - Ignore uv.lock
 
 ## [v3.3.0], 2024-10-04
-## Removed
+### Removed
 - Remove support for now EoL Python 3.8.
 
 ## [v3.2.0], 2024-09-06
-## Added
+### Added
 - Added option for custom list of fields to be populated for search "query_format" param to avoid unnecessary round trips to get fields like Told, Starts, Resolved, etc by returning the required fields during search. (see #97 @nerdfirefighter)
 
 ## [v3.1.4], 2024-02-16

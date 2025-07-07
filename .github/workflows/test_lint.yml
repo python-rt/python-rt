@@ -14,7 +14,7 @@ jobs:
 
     services:
       rt:
-        image: netsandbox/request-tracker:5.0
+        image: netsandbox/request-tracker:6.0
         ports:
           - 8080:8080
         env:
@@ -47,7 +47,7 @@ jobs:
 
     services:
       rt:
-        image: netsandbox/request-tracker:5.0
+        image: netsandbox/request-tracker:6.0
         ports:
           - 8080:8080
         env:
