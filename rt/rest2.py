@@ -699,13 +699,13 @@ class Rt:
 
         return bool(msg[0])
 
-    def get_ticket_history(self, ticket_id: typing.Union[str, int]) -> typing.Optional[list[dict[str, typing.Any]]]:
+    def get_ticket_history(self, ticket_id: typing.Union[str, int]) -> list[dict[str, typing.Any]]:
         """Get set of short history items.
 
         :param ticket_id: ID of ticket
         :returns: List of history items ordered increasingly by time of event.
                   Each history item is a tuple containing (id, Description).
-                  Returns None if ticket does not exist.
+                  Returns an empty list if ticket does not exist.
         """
         transactions = self.__paged_request(
             f'ticket/{ticket_id}/history',
@@ -883,12 +883,12 @@ class Rt:
 
         return attachments
 
-    def get_attachments_ids(self, ticket_id: typing.Union[str, int]) -> typing.Optional[list[int]]:
+    def get_attachments_ids(self, ticket_id: typing.Union[str, int]) -> list[int]:
         """Get IDs of attachments for given ticket.
 
         :param ticket_id: ID of ticket
         :returns: List of IDs (type int) of attachments belonging to given
-                  ticket. Returns None if ticket does not exist.
+                  ticket. Returns an empty list if ticket does not exist.
         """
         attachments = []
 
@@ -900,7 +900,7 @@ class Rt:
 
         return attachments
 
-    def get_attachment(self, attachment_id: typing.Union[str, int]) -> typing.Optional[dict]:
+    def get_attachment(self, attachment_id: typing.Union[str, int]) -> dict:
         """Get attachment.
 
         :param attachment_id: ID of attachment to fetch
@@ -1205,7 +1205,7 @@ class Rt:
 
             raise  # pragma: no cover
 
-    def get_queue(self, queue_id: typing.Union[str, int]) -> typing.Optional[dict[str, typing.Any]]:
+    def get_queue(self, queue_id: typing.Union[str, int]) -> dict[str, typing.Any]:
         """Get queue details.
 
         Example of a return result:
@@ -1430,7 +1430,7 @@ class Rt:
 
             raise  # pragma: no cover
 
-    def get_links(self, ticket_id: typing.Union[str, int]) -> typing.Optional[list[dict[str, str]]]:
+    def get_links(self, ticket_id: typing.Union[str, int]) -> list[dict[str, str]]:
         """Gets the ticket links for a single ticket.
 
         Example of a return result:
@@ -1456,8 +1456,7 @@ class Rt:
                         * child
                         * refers-to
                         * referred-to-by
-
-                  None is returned if ticket does not exist.
+        :raises NotFoundError: If there is no ticket with the specified ticket_id.
         :raises UnexpectedMessageFormatError: In case that returned status code is not 200
         """
         ticket = self.get_ticket(ticket_id)
@@ -2401,7 +2400,7 @@ class AsyncRt:
         ):
             yield int(item['id'])
 
-    async def get_attachment(self, attachment_id: typing.Union[str, int]) -> typing.Optional[dict]:
+    async def get_attachment(self, attachment_id: typing.Union[str, int]) -> dict:
         """Get attachment.
 
         :param attachment_id: ID of attachment to fetch
@@ -2706,7 +2705,7 @@ class AsyncRt:
 
             raise  # pragma: no cover
 
-    async def get_queue(self, queue_id: typing.Union[str, int]) -> typing.Optional[dict[str, typing.Any]]:
+    async def get_queue(self, queue_id: typing.Union[str, int]) -> dict[str, typing.Any]:
         """Get queue details.
 
         Example of a return result:
@@ -2957,8 +2956,7 @@ class AsyncRt:
                         * child
                         * refers-to
                         * referred-to-by
-
-                  None is returned if ticket does not exist.
+        :raises NotFoundError: If there is no ticket with the specified ticket_id.
         :raises UnexpectedMessageFormatError: In case that returned status code is not 200
         """
         ticket = await self.get_ticket(ticket_id)
