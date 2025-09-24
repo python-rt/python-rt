@@ -3,9 +3,11 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## [v3.3.7], 2025-09-24
 ### Changes
 - Use RT v6 based docker image for tests
+### Fixes
+- Fix optional return types (#111)
 
 ## [v3.3.6], 2025-04-24
 ### Fixes
