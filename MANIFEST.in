@@ -6,6 +6,5 @@ recursive-include doc *
 recursive-include tests *
 
 recursive-exclude .github *
-exclude .codebeatignore
 exclude .gitignore
 exclude .readthedocs.yaml

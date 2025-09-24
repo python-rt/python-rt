@@ -1,6 +1,3 @@
-.. image:: https://codebeat.co/badges/a52cfe15-b824-435b-a594-4bf2be2fb06f
-    :target: https://codebeat.co/projects/github-com-python-rt-python-rt-master
-    :alt: codebeat badge
 .. image:: https://github.com/python-rt/python-rt/actions/workflows/test_lint.yml/badge.svg
     :target: https://github.com/python-rt/python-rt/actions/workflows/test_lint.yml
     :alt: tests
