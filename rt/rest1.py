@@ -383,7 +383,7 @@ class Rt:
         if not pairs.get('id', '').startswith('ticket/'):
             raise UnexpectedMessageFormatError("Response from RT didn't contain a valid ticket_id")
         _, _, numerical_id = pairs['id'].partition('/')
-        ticket = typing.cast(dict[str, typing.Sequence[str]], pairs)
+        ticket = typing.cast('dict[str, typing.Sequence[str]]', pairs)
         ticket['numerical_id'] = numerical_id
         for key in ['Requestors', 'Cc', 'AdminCc']:
             try:
@@ -791,11 +791,11 @@ class Rt:
         ):
             return None
         items = typing.cast(
-            list[dict[str, typing.Union[str, list[tuple[int, str]]]]],
+            'list[dict[str, typing.Union[str, list[tuple[int, str]]]]]',
             [self.__parse_response_dict(msg, ['Content', 'Attachments']) for msg in msgs.split('\n--\n')],
         )
         for body in items:
-            attachments = typing.cast(str, body.get('Attachments', ''))
+            attachments = typing.cast('str', body.get('Attachments', ''))
             body['Attachments'] = self.__parse_response_numlist(attachments)
         return items
 
@@ -1029,7 +1029,7 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
         :raises UnexpectedMessageFormatError: Unexpected format of returned message.
         """
         _msg = self.__request(f'ticket/{ticket_id}/attachments/{attachment_id}', text_response=False)
-        msg = typing.cast(bytes, _msg).split(b'\n')
+        msg = typing.cast('bytes', _msg).split(b'\n')
         if (len(msg) > 2) and (
             self.RE_PATTERNS['invalid_attachment_pattern_bytes'].match(msg[2])
             or self.RE_PATTERNS['does_not_exist_pattern_bytes'].match(msg[2])
@@ -1086,7 +1086,7 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
         Returns: Bytes with content of attachment or None if ticket or
                  attachment does not exist.
         """
-        msg = typing.cast(bytes, self.__request(f'ticket/{ticket_id}/attachments/{attachment_id}/content', text_response=False))
+        msg = typing.cast('bytes', self.__request(f'ticket/{ticket_id}/attachments/{attachment_id}/content', text_response=False))
         lines = msg.split(b'\n', 3)
         if (len(lines) == 4) and (
             self.RE_PATTERNS['invalid_attachment_pattern_bytes'].match(lines[2])

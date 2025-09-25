@@ -3,6 +3,15 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v3.3.8], 2025-09-25
+### Added
+- Allow for specifying a custom RT JSON filter when querying for attachments for a ticket (#110). This solved the issue with not returning attachment IDs in
+    case an attachment file name is empty as the default query explicitely excludes those.
+### Changes
+- Remove unused noqa directives
+- Do not use len() in asset when no comparison is being done
+- Add quotes to type expression in `typing.cast()`
+
 ## [v3.3.7], 2025-09-24
 ### Changes
 - Use RT v6 based docker image for tests

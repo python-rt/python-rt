@@ -1,6 +1,6 @@
 """Tests for Rt - Python interface to Request Tracker :term:`API`"""
 
-# ruff: noqa: S101, S105, S311
+# ruff: noqa: S311
 
 __license__ = """ Copyright (C) 2013 CZ.NIC, z.s.p.o.
 

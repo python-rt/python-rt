@@ -62,7 +62,7 @@ def test_ticket_operations(rt_connection: rt.rest2.Rt):
 
     # empty search result
     search_result = list(rt_connection.search(Subject=ticket_subject))
-    assert not len(search_result)
+    assert not search_result
 
     # create
     ticket_id = rt_connection.create_ticket(subject=ticket_subject, content=ticket_text, queue=RT_QUEUE)

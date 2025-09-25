@@ -1,6 +1,6 @@
 """Tests for python-rt / REST2 - Python interface to Request Tracker :term:`API`."""
 
-# ruff: noqa: S101, S105, S311
+# ruff: noqa: S101
 
 __license__ = """ Copyright (C) 2013 CZ.NIC, z.s.p.o.
     Copyright (c) 2021 CERT Gouvernemental (GOVCERT.LU)

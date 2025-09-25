@@ -65,7 +65,7 @@ async def test_ticket_operations(async_rt_connection: rt.rest2.AsyncRt):
 
     # empty search result
     search_result = [item async for item in async_rt_connection.search(Subject=ticket_subject)]
-    assert not len(search_result)
+    assert not search_result
 
     # create
     ticket_id = await async_rt_connection.create_ticket(subject=ticket_subject, content=ticket_text, queue=RT_QUEUE)
