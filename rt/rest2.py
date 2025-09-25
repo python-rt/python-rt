@@ -20,12 +20,7 @@ import httpx
 
 import rt.exceptions
 
-from .exceptions import (
-    AuthorizationError,
-    InvalidUseError,
-    NotFoundError,
-    UnexpectedResponseError,
-)
+from .exceptions import AuthorizationError, InvalidUseError, NotFoundError, UnexpectedResponseError
 
 __license__ = """ Copyright (C) 2012 CZ.NIC, z.s.p.o.
     Copyright (c) 2015 Genome Research Ltd.
@@ -44,31 +39,18 @@ __license__ = """ Copyright (C) 2012 CZ.NIC, z.s.p.o.
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-__docformat__ = "reStructuredText en"
+__docformat__ = 'reStructuredText en'
 __authors__ = [
     '"Jiri Machalek" <jiri.machalek@nic.cz>',
     '"Joshua C. randall" <jcrandall@alum.mit.edu>',
     '"Georges Toth" <georges.toth@govcert.etat.lu>',
 ]
 
-VALID_TICKET_LINK_NAMES = (
-    "Parent",
-    "Child",
-    "RefersTo",
-    "ReferredToBy",
-    "DependsOn",
-    "DependedOnBy",
-)
-TYPE_VALID_TICKET_LINK_NAMES = Literal[
-    "Parent", "Child", "RefersTo", "ReferredToBy", "DependsOn", "DependedOnBy"
-]
-TYPE_CONTENT_TYPE = Literal["text/plain", "text/html"]
+VALID_TICKET_LINK_NAMES = ('Parent', 'Child', 'RefersTo', 'ReferredToBy', 'DependsOn', 'DependedOnBy')
+TYPE_VALID_TICKET_LINK_NAMES = Literal['Parent', 'Child', 'RefersTo', 'ReferredToBy', 'DependsOn', 'DependedOnBy']
+TYPE_CONTENT_TYPE = Literal['text/plain', 'text/html']
 
-REGEX_PATTERNS = {
-    "does_not_exist": re.compile(
-        r"""(user|queue|resource)(?: [^does]+)? does not exist""", re.I
-    )
-}
+REGEX_PATTERNS = {'does_not_exist': re.compile(r"""(user|queue|resource)(?: [^does]+)? does not exist""", re.I)}
 
 
 @dataclasses.dataclass
@@ -82,9 +64,9 @@ class Attachment:
     def to_dict(self) -> dict[str, str]:
         """Convert to a dictionary for submitting to the REST API."""
         return {
-            "FileName": self.file_name,
-            "FileType": self.file_type,
-            "FileContent": base64.b64encode(self.file_content).decode("utf-8"),
+            'FileName': self.file_name,
+            'FileType': self.file_type,
+            'FileContent': base64.b64encode(self.file_content).decode('utf-8'),
         }
 
     def multipart_form_element(self) -> tuple[str, bytes, str]:
@@ -134,16 +116,14 @@ class Rt:
         self.logger = logging.getLogger(__name__)
 
         # ensure trailing slash
-        if not url.endswith("/"):
-            url = f"{url}/"
+        if not url.endswith('/'):
+            url = f'{url}/'
 
-        if not url.endswith("REST/2.0/"):
-            raise ValueError(
-                "Invalid REST URL specified, please use a form of https://example.com/REST/2.0/"
-            )
+        if not url.endswith('REST/2.0/'):
+            raise ValueError('Invalid REST URL specified, please use a form of https://example.com/REST/2.0/')
 
         self.url = url
-        self.base_url = url.split("REST/2.0/", 1)[0]
+        self.base_url = url.split('REST/2.0/', 1)[0]
 
         if isinstance(verify_cert, bool):
             ssl_verify: ssl.SSLContext | bool = verify_cert
@@ -153,38 +133,28 @@ class Rt:
         else:
             ssl_verify = True
 
-        self.session = httpx.Client(
-            timeout=http_timeout, verify=ssl_verify, proxy=proxy, auth=http_auth
-        )
+        self.session = httpx.Client(timeout=http_timeout, verify=ssl_verify, proxy=proxy, auth=http_auth)
 
-        if (
-            token is not None
-        ):  # pragma: no cover  # no way to add tests for this with the current docker image
-            self.session.headers["Authorization"] = f"token {token}"
+        if token is not None:  # pragma: no cover  # no way to add tests for this with the current docker image
+            self.session.headers['Authorization'] = f'token {token}'
 
     def __debug_response(self, response: httpx.Response) -> None:
         """Output debug information for a given HTTP response."""
         response.request.read()
-        self.logger.debug(
-            "### %s", datetime.datetime.now(tz=datetime.timezone.utc).isoformat()
-        )
-        self.logger.debug("Request URL: %s", response.request.url)
-        self.logger.debug("Request method: %s", response.request.method)
-        self.logger.debug("Request headers: %s", response.request.headers)
-        self.logger.debug(
-            "Request body: %s", response.request.content.decode("utf8", "ignore")
-        )
-        self.logger.debug("Response status code: %s", str(response.status_code))
-        self.logger.debug("Response content:")
+        self.logger.debug('### %s', datetime.datetime.now(tz=datetime.timezone.utc).isoformat())
+        self.logger.debug('Request URL: %s', response.request.url)
+        self.logger.debug('Request method: %s', response.request.method)
+        self.logger.debug('Request headers: %s', response.request.headers)
+        self.logger.debug('Request body: %s', response.request.content.decode('utf8', 'ignore'))
+        self.logger.debug('Response status code: %s', str(response.status_code))
+        self.logger.debug('Response content:')
         self.logger.debug(response.content.decode())
 
     def __request(
         self,
         selector: str,
         get_params: typing.Optional[dict[str, typing.Any]] = None,
-        json_data: typing.Optional[
-            typing.Union[dict[str, typing.Any], list[typing.Any]]
-        ] = None,
+        json_data: typing.Optional[typing.Union[dict[str, typing.Any], list[typing.Any]]] = None,
         post_data: typing.Optional[dict[str, typing.Any]] = None,
         attachments: typing.Optional[typing.Sequence[Attachment]] = None,
     ) -> typing.Union[dict[str, typing.Any], list[str]]:
@@ -213,13 +183,8 @@ class Rt:
                 else:
                     response = self.session.get(url, params=get_params)
             else:
-                fields: list[tuple[str, typing.Any]] = [
-                    ("Attachments", attachment.multipart_form_element())
-                    for attachment in attachments
-                ]
-                response = self.session.post(
-                    url, files=fields, data={"JSON": json.dumps(json_data)}
-                )
+                fields: list[tuple[str, typing.Any]] = [('Attachments', attachment.multipart_form_element()) for attachment in attachments]
+                response = self.session.post(url, files=fields, data={'JSON': json.dumps(json_data)})
 
             self.__debug_response(response)
             self.__check_response(response)
@@ -227,9 +192,7 @@ class Rt:
             try:
                 result = response.json()
             except LookupError as exc:  # pragma: no cover
-                raise UnexpectedResponseError(
-                    f"Unknown response encoding: {response.encoding}."
-                ) from exc
+                raise UnexpectedResponseError(f'Unknown response encoding: {response.encoding}.') from exc
             except UnicodeError as exc:  # pragma: no cover
                 raise UnexpectedResponseError(
                     f"""Unknown response encoding (UTF-8 does not work) - "{response.content.decode('utf-8', 'replace')}"."""
@@ -237,9 +200,9 @@ class Rt:
 
             return result
         except httpx.ConnectError as exc:  # pragma: no cover
-            raise ConnectionError("Connection error", exc) from exc
+            raise ConnectionError('Connection error', exc) from exc
         except httpx.TransportError as exc:  # pragma: no cover
-            raise ConnectionError("Transport error", exc) from exc
+            raise ConnectionError('Transport error', exc) from exc
 
     def __request_put(
         self,
@@ -261,7 +224,7 @@ class Rt:
             url = str(urljoin(self.url, selector))
 
             _headers = dict(self.session.headers)
-            _headers["Content-Type"] = "application/json"
+            _headers['Content-Type'] = 'application/json'
             response = self.session.put(url, json=json_data, headers=_headers)
 
             self.__debug_response(response)
@@ -270,9 +233,7 @@ class Rt:
             try:
                 result = response.json()
             except LookupError as exc:  # pragma: no cover
-                raise UnexpectedResponseError(
-                    f"Unknown response encoding: {response.encoding}."
-                ) from exc
+                raise UnexpectedResponseError(f'Unknown response encoding: {response.encoding}.') from exc
             except UnicodeError as exc:  # pragma: no cover
                 raise UnexpectedResponseError(
                     f"""Unknown response encoding (UTF-8 does not work) - "{response.content.decode('utf-8', 'replace')}"."""
@@ -280,9 +241,9 @@ class Rt:
 
             return result
         except httpx.ConnectError as exc:  # pragma: no cover
-            raise ConnectionError("Connection error", exc) from exc
+            raise ConnectionError('Connection error', exc) from exc
         except httpx.TransportError as exc:  # pragma: no cover
-            raise ConnectionError("Transport error", exc) from exc
+            raise ConnectionError('Transport error', exc) from exc
 
     def __request_delete(
         self,
@@ -303,7 +264,7 @@ class Rt:
             url = str(urljoin(self.url, selector))
 
             _headers = dict(self.session.headers)
-            _headers["Content-Type"] = "application/json"
+            _headers['Content-Type'] = 'application/json'
             response = self.session.delete(url, headers=_headers)
 
             self.__debug_response(response)
@@ -312,9 +273,7 @@ class Rt:
             try:
                 result = response.json()
             except LookupError as exc:  # pragma: no cover
-                raise UnexpectedResponseError(
-                    f"Unknown response encoding: {response.encoding}."
-                ) from exc
+                raise UnexpectedResponseError(f'Unknown response encoding: {response.encoding}.') from exc
             except UnicodeError as exc:  # pragma: no cover
                 raise UnexpectedResponseError(
                     f"""Unknown response encoding (UTF-8 does not work) - "{response.content.decode('utf-8', 'replace')}"."""
@@ -322,16 +281,14 @@ class Rt:
 
             return result
         except httpx.ConnectError as exc:  # pragma: no cover
-            raise ConnectionError("Connection error", exc) from exc
+            raise ConnectionError('Connection error', exc) from exc
         except httpx.TransportError as exc:  # pragma: no cover
-            raise ConnectionError("Transport error", exc) from exc
+            raise ConnectionError('Transport error', exc) from exc
 
     def __paged_request(
         self,
         selector: str,
-        json_data: typing.Optional[
-            typing.Union[list[dict[str, typing.Any]], dict[str, typing.Any]]
-        ] = None,
+        json_data: typing.Optional[typing.Union[list[dict[str, typing.Any]], dict[str, typing.Any]]] = None,
         params: typing.Optional[dict[str, typing.Any]] = None,
         page: int = 1,
         per_page: int = 20,
@@ -353,17 +310,17 @@ class Rt:
         :raises ConnectionError: In case of connection error.
         """
         if params:
-            params["page"] = page
-            params["per_page"] = per_page
+            params['page'] = page
+            params['per_page'] = per_page
         else:
-            params = {"page": page, "per_page": per_page}
+            params = {'page': page, 'per_page': per_page}
 
         try:
             url = str(urljoin(self.url, selector))
 
-            method = "get"
+            method = 'get'
             if json_data is not None:
-                method = "post"
+                method = 'post'
 
             response = self.session.request(method, url, json=json_data, params=params)
 
@@ -372,59 +329,43 @@ class Rt:
             try:
                 result = response.json()
             except LookupError as exc:  # pragma: no cover
-                raise UnexpectedResponseError(
-                    f"Unknown response encoding: {response.encoding}."
-                ) from exc
+                raise UnexpectedResponseError(f'Unknown response encoding: {response.encoding}.') from exc
             except UnicodeError:  # pragma: no cover
                 # replace errors - we need decoded content just to check for error codes in __check_response
-                result = response.content.decode("utf-8", "replace")
+                result = response.content.decode('utf-8', 'replace')
 
-            if not isinstance(result, dict) and "items" in result:
-                raise UnexpectedResponseError("Server returned an unexpected result")
+            if not isinstance(result, dict) and 'items' in result:
+                raise UnexpectedResponseError('Server returned an unexpected result')
 
-            if result.get("pages", None) is None and result["count"] == 0:
+            if result.get('pages', None) is None and result['count'] == 0:
                 # no more results found, exit here
                 # (workaround for the >=RT5.0.5 undefined pages variable for non-superusers)
                 raise NotFoundError
 
-            yield from result["items"]
+            yield from result['items']
 
-            if (
-                recurse
-                and result.get("pages", None) is not None
-                and result["pages"] > result["page"]
-            ):
-                for _page in range(2, result["pages"] + 1):
+            if recurse and result.get('pages', None) is not None and result['pages'] > result['page']:
+                for _page in range(2, result['pages'] + 1):
                     yield from self.__paged_request(
-                        selector,
-                        json_data=json_data,
-                        page=_page,
-                        per_page=result["per_page"],
-                        params=params,
-                        recurse=False,
+                        selector, json_data=json_data, page=_page, per_page=result['per_page'], params=params, recurse=False
                     )
-            elif recurse and result.get("pages", None) is None:
+            elif recurse and result.get('pages', None) is None:
                 # no more results found, exit here
                 # (workaround for the >=RT5.0.5 undefined pages variable for non-superusers)
-                _page = result["page"]
+                _page = result['page']
                 while True:
                     _page += 1
                     try:
                         yield from self.__paged_request(
-                            selector,
-                            json_data=json_data,
-                            page=_page,
-                            per_page=result["per_page"],
-                            params=params,
-                            recurse=False,
+                            selector, json_data=json_data, page=_page, per_page=result['per_page'], params=params, recurse=False
                         )
                     except NotFoundError:
                         break
 
         except httpx.ConnectError as exc:  # pragma: no cover
-            raise ConnectionError("Connection error", exc) from exc
+            raise ConnectionError('Connection error', exc) from exc
         except httpx.TransportError as exc:  # pragma: no cover
-            raise ConnectionError("Transport error", exc) from exc
+            raise ConnectionError('Transport error', exc) from exc
 
     @staticmethod
     def __check_response(response: httpx.Response) -> None:
@@ -440,29 +381,27 @@ class Rt:
             try:
                 ret = response.json()
             except json.JSONDecodeError:
-                ret = "Bad request"
+                ret = 'Bad request'
 
             if isinstance(ret, dict):
-                raise rt.exceptions.BadRequestError(ret["message"])
+                raise rt.exceptions.BadRequestError(ret['message'])
 
             raise rt.exceptions.BadRequestError(ret)
 
         if response.status_code == 401:  # pragma: no cover
-            raise AuthorizationError(
-                "Server could not verify that you are authorized to access the requested document."
-            )
+            raise AuthorizationError('Server could not verify that you are authorized to access the requested document.')
         if response.status_code == 404:
-            raise NotFoundError("No such resource found.")
+            raise NotFoundError('No such resource found.')
         if response.status_code not in (200, 201):
             raise UnexpectedResponseError(
-                f"Received status code {response.status_code} instead of 200.",
+                f'Received status code {response.status_code} instead of 200.',
                 status_code=response.status_code,
                 response_message=response.text,
             )
 
     def __get_url(self, url: str) -> dict[str, typing.Any]:
         """Call a URL as specified in the returned JSON of an API operation."""
-        url_ = url.split("/REST/2.0/", 1)[1]
+        url_ = url.split('/REST/2.0/', 1)[1]
         res = self.__request(url_)
 
         if not isinstance(res, dict):  # pragma: no cover
@@ -470,9 +409,7 @@ class Rt:
 
         return res
 
-    def new_correspondence(
-        self, queue: typing.Optional[typing.Union[str, object]] = None
-    ) -> typing.Iterator[dict]:
+    def new_correspondence(self, queue: typing.Optional[typing.Union[str, object]] = None) -> typing.Iterator[dict]:
         """Obtains tickets changed by other users than the system one.
 
         :param queue: Queue where to search
@@ -482,11 +419,9 @@ class Rt:
                   Each ticket is dictionary, the same as in
                   :py:meth:`~Rt.get_ticket`.
         """
-        return self.search(queue=queue, order="-LastUpdated")
+        return self.search(queue=queue, order='-LastUpdated')
 
-    def last_updated(
-        self, since: str, queue: typing.Optional[str] = None
-    ) -> typing.Iterator[dict]:
+    def last_updated(self, since: str, queue: typing.Optional[str] = None) -> typing.Iterator[dict]:
         """Obtains tickets changed after given date.
 
         :param since: Date as string in form '2011-02-24'
@@ -502,12 +437,12 @@ class Rt:
         if not self.__validate_date(since):
             raise InvalidUseError(f'Invalid date specified - "{since}"')
 
-        return self.search(queue=queue, order="-LastUpdated", LastUpdated__gt=since)
+        return self.search(queue=queue, order='-LastUpdated', LastUpdated__gt=since)
 
     @classmethod
     def __validate_date(cls, _date: str) -> bool:
         """Check whether the specified date is in the supported format."""
-        if m := re.match(r"(\d{4})-(\d{2})-(\d{2})", _date):
+        if m := re.match(r'(\d{4})-(\d{2})-(\d{2})', _date):
             try:
                 year = int(m.group(1))
                 month = int(m.group(2))
@@ -525,7 +460,7 @@ class Rt:
         queue: typing.Optional[typing.Union[str, object]] = None,
         order: typing.Optional[str] = None,
         raw_query: typing.Optional[str] = None,
-        query_format: typing.Union[str, list[str]] = "l",
+        query_format: typing.Union[str, list[str]] = 'l',
         **kwargs: typing.Any,
     ) -> typing.Iterator[dict]:
         r"""Search arbitrary needles in given fields and queue.
@@ -583,49 +518,49 @@ class Rt:
         """
         get_params = {}
         query = []
-        url = "tickets"
+        url = 'tickets'
 
         if queue is not None:
             query.append(f"Queue='{queue}'")
         if not raw_query:
             operators_map = {
-                "gt": ">",
-                "lt": "<",
-                "exact": "=",
-                "notexact": "!=",
-                "like": " LIKE ",
-                "notlike": " NOT LIKE ",
+                'gt': '>',
+                'lt': '<',
+                'exact': '=',
+                'notexact': '!=',
+                'like': ' LIKE ',
+                'notlike': ' NOT LIKE ',
             }
 
             for key, value in kwargs.items():
-                op = "="
-                key_parts = key.split("__")
+                op = '='
+                key_parts = key.split('__')
                 if len(key_parts) > 1:
-                    key = "__".join(key_parts[:-1])
-                    op = operators_map.get(key_parts[-1], "=")
-                if key[:3] != "CF_":
+                    key = '__'.join(key_parts[:-1])
+                    op = operators_map.get(key_parts[-1], '=')
+                if key[:3] != 'CF_':
                     query.append(f"{key}{op}'{value}'")
                 else:
                     query.append(f"""CF.{{{key[3:]}}}'{op}'{value}\'""")
         else:
             query.append(raw_query)
-        get_params["query"] = " AND ".join("(" + part + ")" for part in query)
+        get_params['query'] = ' AND '.join('(' + part + ')' for part in query)
         if order:
-            if order.startswith("-"):
-                get_params["orderby"] = order[1:]
-                get_params["order"] = "DESC"
+            if order.startswith('-'):
+                get_params['orderby'] = order[1:]
+                get_params['order'] = 'DESC'
             else:
-                get_params["orderby"] = order
+                get_params['orderby'] = order
 
         if isinstance(query_format, list):
-            get_params["fields"] = ",".join(query_format)
-        elif query_format == "l":
-            get_params["fields"] = (
-                "Owner,Status,Created,Subject,Queue,CustomFields,Requestor,Cc,AdminCc,Started,Created,TimeEstimated,Due,Type,InitialPriority,Priority,TimeLeft,LastUpdated"
+            get_params['fields'] = ','.join(query_format)
+        elif query_format == 'l':
+            get_params['fields'] = (
+                'Owner,Status,Created,Subject,Queue,CustomFields,Requestor,Cc,AdminCc,Started,Created,TimeEstimated,Due,Type,InitialPriority,Priority,TimeLeft,LastUpdated'
             )
-            get_params["fields[Queue]"] = "Name"
-        elif query_format == "s":
-            get_params["fields"] = "Subject"
+            get_params['fields[Queue]'] = 'Name'
+        elif query_format == 's':
+            get_params['fields'] = 'Subject'
 
         yield from self.__paged_request(url, params=get_params)
 
@@ -662,9 +597,7 @@ class Rt:
         :raises UnexpectedMessageFormatError: Unexpected format of returned message.
         :raises NotFoundError: If there is no ticket with the specified ticket_id.
         """
-        res = self.__request(
-            f"ticket/{ticket_id}", get_params={"fields[Queue]": "Name"}
-        )
+        res = self.__request(f'ticket/{ticket_id}', get_params={'fields[Queue]': 'Name'})
 
         if not isinstance(res, dict):  # pragma: no cover
             raise UnexpectedResponseError(str(res))
@@ -674,7 +607,7 @@ class Rt:
     def create_ticket(
         self,
         queue: str,
-        content_type: TYPE_CONTENT_TYPE = "text/plain",
+        content_type: TYPE_CONTENT_TYPE = 'text/plain',
         subject: typing.Optional[str] = None,
         content: typing.Optional[str] = None,
         attachments: typing.Optional[typing.Sequence[Attachment]] = None,
@@ -708,31 +641,29 @@ class Rt:
         :returns: ID of new ticket
         :raises ValueError: If the `content_type` is not of a supported format.
         """
-        if content_type not in ("text/plain", "text/html"):  # pragma: no cover
-            raise ValueError("Invalid content-type specified.")
+        if content_type not in ('text/plain', 'text/html'):  # pragma: no cover
+            raise ValueError('Invalid content-type specified.')
 
-        ticket_data: dict[str, typing.Any] = {"Queue": queue}
+        ticket_data: dict[str, typing.Any] = {'Queue': queue}
 
         if subject is not None:
-            ticket_data["Subject"] = subject
+            ticket_data['Subject'] = subject
 
         if content is not None:
-            ticket_data["Content"] = content
-            ticket_data["ContentType"] = content_type
+            ticket_data['Content'] = content
+            ticket_data['ContentType'] = content_type
 
         for k, v in kwargs.items():
             ticket_data[k] = v
 
-        res = self.__request("ticket", json_data=ticket_data, attachments=attachments)
+        res = self.__request('ticket', json_data=ticket_data, attachments=attachments)
 
         if not isinstance(res, dict):  # pragma: no cover
             raise UnexpectedResponseError(str(res))
 
-        return int(res["id"])
+        return int(res['id'])
 
-    def edit_ticket(
-        self, ticket_id: typing.Union[str, int], **kwargs: typing.Any
-    ) -> bool:
+    def edit_ticket(self, ticket_id: typing.Union[str, int], **kwargs: typing.Any) -> bool:
         """Edit ticket values.
 
         :param ticket_id: ID of ticket to edit
@@ -752,7 +683,7 @@ class Rt:
                       Ticket with given ID does not exist or unknown parameter
                       was set (in this case all other valid fields are changed)
         """
-        msg = self.__request_put(f"ticket/{ticket_id}", json_data=kwargs)
+        msg = self.__request_put(f'ticket/{ticket_id}', json_data=kwargs)
 
         self.logger.debug(msg)
 
@@ -763,14 +694,12 @@ class Rt:
             return True
 
         for k in msg:
-            if REGEX_PATTERNS["does_not_exist"].search(k):
+            if REGEX_PATTERNS['does_not_exist'].search(k):
                 raise rt.exceptions.NotFoundError(k)
 
         return bool(msg[0])
 
-    def get_ticket_history(
-        self, ticket_id: typing.Union[str, int]
-    ) -> list[dict[str, typing.Any]]:
+    def get_ticket_history(self, ticket_id: typing.Union[str, int]) -> list[dict[str, typing.Any]]:
         """Get set of short history items.
 
         :param ticket_id: ID of ticket
@@ -779,26 +708,22 @@ class Rt:
                   Returns an empty list if ticket does not exist.
         """
         transactions = self.__paged_request(
-            f"ticket/{ticket_id}/history",
+            f'ticket/{ticket_id}/history',
             params={
-                "fields": "Type,Creator,Created,Description,_hyperlinks",
-                "fields[Creator]": "id,Name,RealName,EmailAddress",
+                'fields': 'Type,Creator,Created,Description,_hyperlinks',
+                'fields[Creator]': 'id,Name,RealName,EmailAddress',
             },
         )
 
         return list(transactions)
 
-    def get_transaction(
-        self, transaction_id: typing.Union[str, int]
-    ) -> dict[str, typing.Any]:
+    def get_transaction(self, transaction_id: typing.Union[str, int]) -> dict[str, typing.Any]:
         """Get a transaction.
 
         :param transaction_id: ID of transaction
         :returns: Return a single transaction.
         """
-        res = self.__request(
-            f"transaction/{transaction_id}", get_params={"fields": "Description"}
-        )
+        res = self.__request(f'transaction/{transaction_id}', get_params={'fields': 'Description'})
 
         if not isinstance(res, dict):  # pragma: no cover
             raise UnexpectedResponseError(str(res))
@@ -808,9 +733,9 @@ class Rt:
     def __correspond(
         self,
         ticket_id: typing.Union[str, int],
-        content: str = "",
-        action: Literal["correspond", "comment"] = "correspond",
-        content_type: TYPE_CONTENT_TYPE = "text/plain",
+        content: str = '',
+        action: Literal['correspond', 'comment'] = 'correspond',
+        content_type: TYPE_CONTENT_TYPE = 'text/plain',
         attachments: typing.Optional[typing.Sequence[Attachment]] = None,
     ) -> list[str]:
         """Sends out the correspondence.
@@ -825,12 +750,12 @@ class Rt:
         :raises InvalidUseError: If the `action` parameter is invalid
         :raises UnexpectedResponseError: If the response from RT is not as expected
         """
-        if action not in ("correspond", "comment"):  # pragma: no cover
+        if action not in ('correspond', 'comment'):  # pragma: no cover
             raise InvalidUseError('action must be either "correspond" or "comment"')
 
         post_data: dict[str, typing.Any] = {
-            "Content": content,
-            "ContentType": content_type,
+            'Content': content,
+            'ContentType': content_type,
         }
 
         # Adding a one-shot cc/bcc is not supported by RT5.0.2
@@ -840,9 +765,7 @@ class Rt:
         # if bcc:
         #     post_data['Bcc'] = bcc  # noqa: ERA001
 
-        res = self.__request(
-            f"ticket/{ticket_id}/{action}", json_data=post_data, attachments=attachments
-        )
+        res = self.__request(f'ticket/{ticket_id}/{action}', json_data=post_data, attachments=attachments)
 
         if not isinstance(res, list):  # pragma: no cover
             raise UnexpectedResponseError(str(res))
@@ -854,8 +777,8 @@ class Rt:
     def reply(
         self,
         ticket_id: typing.Union[str, int],
-        content: str = "",
-        content_type: TYPE_CONTENT_TYPE = "text/plain",
+        content: str = '',
+        content_type: TYPE_CONTENT_TYPE = 'text/plain',
         attachments: typing.Optional[typing.Sequence[Attachment]] = None,
     ) -> bool:
         """Sends email message to the contacts in ``Requestors`` field of
@@ -872,9 +795,7 @@ class Rt:
         :raises BadRequestError: When ticket does not exist
         :raises UnexpectedResponseError: If the response from RT is not as expected
         """
-        msg = self.__correspond(
-            ticket_id, content, "correspond", content_type, attachments
-        )
+        msg = self.__correspond(ticket_id, content, 'correspond', content_type, attachments)
 
         if not (isinstance(msg, list) and len(msg) >= 1):  # pragma: no cover
             raise UnexpectedResponseError(str(msg))
@@ -891,7 +812,7 @@ class Rt:
         :raises UnexpectedResponseError: If the response from RT is not as expected
         """
         try:
-            self.__request_delete(f"ticket/{ticket_id}")
+            self.__request_delete(f'ticket/{ticket_id}')
         except UnexpectedResponseError as exc:
             if exc.status_code == 400:  # pragma: no cover
                 raise rt.exceptions.BadRequestError(exc.response_message) from exc
@@ -904,8 +825,8 @@ class Rt:
     def comment(
         self,
         ticket_id: typing.Union[str, int],
-        content: str = "",
-        content_type: TYPE_CONTENT_TYPE = "text/plain",
+        content: str = '',
+        content_type: TYPE_CONTENT_TYPE = 'text/plain',
         attachments: typing.Optional[typing.Sequence[Attachment]] = None,
     ) -> bool:
         """Adds comment to the given ticket.
@@ -921,9 +842,7 @@ class Rt:
         :raises BadRequestError: When ticket does not exist
         :raises UnexpectedResponseError: If the response from RT is not as expected
         """
-        msg = self.__correspond(
-            ticket_id, content, "comment", content_type, attachments
-        )
+        msg = self.__correspond(ticket_id, content, 'comment', content_type, attachments)
 
         if not (isinstance(msg, list) and len(msg) >= 1):  # pragma: no cover
             raise UnexpectedResponseError(str(msg))
@@ -933,9 +852,7 @@ class Rt:
     def get_attachments(
         self,
         ticket_id: typing.Union[str, int],
-        filter: typing.Optional[list[dict[str, str]]] = [
-            {"field": "Filename", "operator": "IS NOT", "value": ""}
-        ],
+        filter: typing.Optional[list[dict[str, str]]] = [{"field": "Filename", "operator": "IS NOT", "value": ""}],
     ) -> typing.Sequence[dict[str, str]]:
         """Get attachment list for a given ticket.
 
@@ -963,9 +880,9 @@ class Rt:
         attachments = []
 
         for item in self.__paged_request(
-            f"ticket/{ticket_id}/attachments",
+            f'ticket/{ticket_id}/attachments',
             json_data=filter,
-            params={"fields": "Filename,ContentType,ContentLength"},
+            params={'fields': 'Filename,ContentType,ContentLength'},
         ):
             attachments.append(item)
 
@@ -974,9 +891,7 @@ class Rt:
     def get_attachments_ids(
         self,
         ticket_id: typing.Union[str, int],
-        filter: typing.Optional[list[dict[str, str]]] = [
-            {"field": "Filename", "operator": "IS NOT", "value": ""}
-        ],
+        filter: typing.Optional[list[dict[str, str]]] = [{"field": "Filename", "operator": "IS NOT", "value": ""}],
     ) -> list[int]:
         """Get IDs of attachments for given ticket.
 
@@ -988,10 +903,10 @@ class Rt:
         attachments = []
 
         for item in self.__paged_request(
-            f"ticket/{ticket_id}/attachments",
+            f'ticket/{ticket_id}/attachments',
             json_data=filter,
         ):
-            attachments.append(int(item["id"]))
+            attachments.append(int(item['id']))
 
         return attachments
 
@@ -1046,7 +961,7 @@ class Rt:
         :raises UnexpectedMessageFormatError: Unexpected format of returned message.
         :raises NotFoundError: If attachment with specified ID does not exist.
         """
-        res = self.__request(f"attachment/{attachment_id}")
+        res = self.__request(f'attachment/{attachment_id}')
 
         if not (res is None or isinstance(res, dict)):  # pragma: no cover
             raise UnexpectedResponseError(str(res))
@@ -1084,16 +999,14 @@ class Rt:
         :raises UnexpectedMessageFormatError: In case that returned status code is not 200
         :raises NotFoundError: If the user does not exist.
         """
-        res = self.__request(f"user/{user_id}")
+        res = self.__request(f'user/{user_id}')
 
         if not isinstance(res, dict):  # pragma: no cover
             raise UnexpectedResponseError(str(res))
 
         return res
 
-    def user_exists(
-        self, user_id: typing.Union[int, str], privileged: bool = True
-    ) -> bool:
+    def user_exists(self, user_id: typing.Union[int, str], privileged: bool = True) -> bool:
         """Check if a given user_id exists.
 
         :parameter user_id: User ID to lookup.
@@ -1104,16 +1017,14 @@ class Rt:
         try:
             user_dict = self.get_user(user_id)
 
-            if not privileged or (privileged and user_dict.get("Privileged", "0") == 1):
+            if not privileged or (privileged and user_dict.get('Privileged', '0') == 1):
                 return True
         except rt.exceptions.NotFoundError:
             return False
 
         return False
 
-    def create_user(
-        self, user_name: str, email_address: str, **kwargs: typing.Any
-    ) -> str:
+    def create_user(self, user_name: str, email_address: str, **kwargs: typing.Any) -> str:
         """Create user.
 
         :param user_name: Username (login for privileged, required)
@@ -1125,42 +1036,42 @@ class Rt:
         :raises UnexpectedResponseError: If the response from RT is not as expected
         """
         valid_fields = {
-            "Name",
-            "Password",
-            "EmailAddress",
-            "RealName",
-            "Nickname",
-            "Gecos",
-            "Organization",
-            "Address1",
-            "Address2",
-            "City",
-            "State",
-            "Zip",
-            "Country",
-            "HomePhone",
-            "WorkPhone",
-            "MobilePhone",
-            "PagerPhone",
-            "ContactInfo",
-            "Comments",
-            "Signature",
-            "Lang",
-            "EmailEncoding",
-            "WebEncoding",
-            "ExternalContactInfoId",
-            "ContactInfoSystem",
-            "ExternalAuthId",
-            "AuthSystem",
-            "Privileged",
-            "Disabled",
-            "CustomFields",
+            'Name',
+            'Password',
+            'EmailAddress',
+            'RealName',
+            'Nickname',
+            'Gecos',
+            'Organization',
+            'Address1',
+            'Address2',
+            'City',
+            'State',
+            'Zip',
+            'Country',
+            'HomePhone',
+            'WorkPhone',
+            'MobilePhone',
+            'PagerPhone',
+            'ContactInfo',
+            'Comments',
+            'Signature',
+            'Lang',
+            'EmailEncoding',
+            'WebEncoding',
+            'ExternalContactInfoId',
+            'ContactInfoSystem',
+            'ExternalAuthId',
+            'AuthSystem',
+            'Privileged',
+            'Disabled',
+            'CustomFields',
         }
         invalid_fields = []
 
         post_data = {
-            "Name": user_name,
-            "EmailAddress": email_address,
+            'Name': user_name,
+            'EmailAddress': email_address,
         }
 
         for k, v in kwargs.items():
@@ -1171,12 +1082,10 @@ class Rt:
                 post_data[k] = v
 
         if invalid_fields:
-            raise InvalidUseError(
-                f"""Unsupported names of fields: {', '.join(invalid_fields)}."""
-            )
+            raise InvalidUseError(f"""Unsupported names of fields: {', '.join(invalid_fields)}.""")
 
         try:
-            res = self.__request("user", json_data=post_data)
+            res = self.__request('user', json_data=post_data)
         except UnexpectedResponseError as exc:  # pragma: no cover
             if exc.status_code == 400:
                 raise rt.exceptions.BadRequestError(exc.response_message) from exc
@@ -1186,11 +1095,9 @@ class Rt:
         if not isinstance(res, dict):  # pragma: no cover
             raise UnexpectedResponseError(str(res))
 
-        return res["id"]
+        return res['id']
 
-    def edit_user(
-        self, user_id: typing.Union[str, int], **kwargs: typing.Any
-    ) -> list[str]:
+    def edit_user(self, user_id: typing.Union[str, int], **kwargs: typing.Any) -> list[str]:
         """Edit user profile.
 
         :param user_id: Identification of user by username (str) or user ID
@@ -1233,36 +1140,36 @@ class Rt:
         :raises UnexpectedResponseError: If the response from RT is not as expected
         """
         valid_fields = {
-            "Name",
-            "Password",
-            "EmailAddress",
-            "RealName",
-            "Nickname",
-            "Gecos",
-            "Organization",
-            "Address1",
-            "Address2",
-            "City",
-            "State",
-            "Zip",
-            "Country",
-            "HomePhone",
-            "WorkPhone",
-            "MobilePhone",
-            "PagerPhone",
-            "ContactInfo",
-            "Comments",
-            "Signature",
-            "Lang",
-            "EmailEncoding",
-            "WebEncoding",
-            "ExternalContactInfoId",
-            "ContactInfoSystem",
-            "ExternalAuthId",
-            "AuthSystem",
-            "Privileged",
-            "Disabled",
-            "CustomFields",
+            'Name',
+            'Password',
+            'EmailAddress',
+            'RealName',
+            'Nickname',
+            'Gecos',
+            'Organization',
+            'Address1',
+            'Address2',
+            'City',
+            'State',
+            'Zip',
+            'Country',
+            'HomePhone',
+            'WorkPhone',
+            'MobilePhone',
+            'PagerPhone',
+            'ContactInfo',
+            'Comments',
+            'Signature',
+            'Lang',
+            'EmailEncoding',
+            'WebEncoding',
+            'ExternalContactInfoId',
+            'ContactInfoSystem',
+            'ExternalAuthId',
+            'AuthSystem',
+            'Privileged',
+            'Disabled',
+            'CustomFields',
         }
         invalid_fields = []
 
@@ -1276,12 +1183,10 @@ class Rt:
                 post_data[key] = val
 
         if invalid_fields:
-            raise InvalidUseError(
-                f"""Unsupported names of fields: {', '.join(invalid_fields)}."""
-            )
+            raise InvalidUseError(f"""Unsupported names of fields: {', '.join(invalid_fields)}.""")
 
         try:
-            ret = self.__request_put(f"user/{user_id}", json_data=post_data)
+            ret = self.__request_put(f'user/{user_id}', json_data=post_data)
         except UnexpectedResponseError as exc:  # pragma: no cover
             if exc.status_code == 400:
                 raise rt.exceptions.BadRequestError(exc.response_message) from exc
@@ -1300,7 +1205,7 @@ class Rt:
         :raises UnexpectedResponseError: If the response from RT is not as expected
         """
         try:
-            _ = self.__request_delete(f"user/{user_id}")
+            _ = self.__request_delete(f'user/{user_id}')
         except UnexpectedResponseError as exc:
             if exc.status_code == 400:  # pragma: no cover
                 raise rt.exceptions.BadRequestError(exc.response_message) from exc
@@ -1370,16 +1275,14 @@ class Rt:
         :raises UnexpectedMessageFormatError: In case that returned status code is not 200
         :raises NotFoundError: In case the queue does not exist
         """
-        res = self.__request(f"queue/{queue_id}")
+        res = self.__request(f'queue/{queue_id}')
 
         if not (res is None or isinstance(res, dict)):  # pragma: no cover
             raise UnexpectedResponseError(str(res))
 
         return res
 
-    def get_all_queues(
-        self, include_disabled: bool = False
-    ) -> list[dict[str, typing.Any]]:
+    def get_all_queues(self, include_disabled: bool = False) -> list[dict[str, typing.Any]]:
         """Return a list of all queues.
 
         Example of a return result:
@@ -1408,16 +1311,14 @@ class Rt:
         :raises UnexpectedMessageFormatError: In case that returned status code is not 200
         """
         params = {
-            "fields": "Name,Description,CorrespondAddress,CommentAddress,InitialPriority,FinalPriority,DefaultDueIn",
-            "find_disabled_rows": int(include_disabled),
+            'fields': 'Name,Description,CorrespondAddress,CommentAddress,InitialPriority,FinalPriority,DefaultDueIn',
+            'find_disabled_rows': int(include_disabled),
         }
-        queues = self.__paged_request("queues/all", params=params)
+        queues = self.__paged_request('queues/all', params=params)
 
         return list(queues)
 
-    def edit_queue(
-        self, queue_id: typing.Union[str, int], **kwargs: typing.Any
-    ) -> list[str]:
+    def edit_queue(self, queue_id: typing.Union[str, int], **kwargs: typing.Any) -> list[str]:
         """Edit queue.
 
         :param queue_id: Identification of queue by name (str) or ID (int)
@@ -1438,14 +1339,14 @@ class Rt:
         :raises UnexpectedResponseError: If the response from RT is not as expected
         """
         valid_fields = {
-            "Name",
-            "Description",
-            "CorrespondAddress",
-            "CommentAddress",
-            "Disabled",
-            "SLADisabled",
-            "Lifecycle",
-            "SortOrder",
+            'Name',
+            'Description',
+            'CorrespondAddress',
+            'CommentAddress',
+            'Disabled',
+            'SLADisabled',
+            'Lifecycle',
+            'SortOrder',
         }
         invalid_fields = []
 
@@ -1459,12 +1360,10 @@ class Rt:
                 post_data[key] = val
 
         if invalid_fields:
-            raise InvalidUseError(
-                f"""Unsupported names of fields: {', '.join(invalid_fields)}."""
-            )
+            raise InvalidUseError(f"""Unsupported names of fields: {', '.join(invalid_fields)}.""")
 
         try:
-            ret = self.__request_put(f"queue/{queue_id}", json_data=post_data)
+            ret = self.__request_put(f'queue/{queue_id}', json_data=post_data)
         except UnexpectedResponseError as exc:  # pragma: no cover
             if exc.status_code == 400:
                 raise rt.exceptions.BadRequestError(exc.response_message) from exc
@@ -1484,18 +1383,18 @@ class Rt:
         :raises UnexpectedResponseError: If the response from RT is not as expected
         """
         valid_fields = {
-            "Name",
-            "Description",
-            "CorrespondAddress",
-            "CommentAddress",
-            "Disabled",
-            "SLADisabled",
-            "Lifecycle",
-            "SortOrder",
+            'Name',
+            'Description',
+            'CorrespondAddress',
+            'CommentAddress',
+            'Disabled',
+            'SLADisabled',
+            'Lifecycle',
+            'SortOrder',
         }
         invalid_fields = []
 
-        post_data = {"Name": name}
+        post_data = {'Name': name}
 
         for key, val in kwargs.items():
             if key not in valid_fields:
@@ -1505,12 +1404,10 @@ class Rt:
                 post_data[key] = val
 
         if invalid_fields:
-            raise InvalidUseError(
-                f"""Unsupported names of fields: {', '.join(invalid_fields)}."""
-            )
+            raise InvalidUseError(f"""Unsupported names of fields: {', '.join(invalid_fields)}.""")
 
         try:
-            res = self.__request("queue", json_data=post_data)
+            res = self.__request('queue', json_data=post_data)
         except UnexpectedResponseError as exc:  # pragma: no cover
             if exc.status_code == 400:
                 raise rt.exceptions.BadRequestError(exc.response_message) from exc
@@ -1520,7 +1417,7 @@ class Rt:
         if not isinstance(res, dict):  # pragma: no cover
             raise UnexpectedResponseError(str(res))
 
-        return int(res["id"])
+        return int(res['id'])
 
     def delete_queue(self, queue_id: typing.Union[str, int]) -> None:
         """Disable a queue.
@@ -1533,7 +1430,7 @@ class Rt:
         :raises UnexpectedResponseError: If the response from RT is not as expected
         """
         try:
-            _ = self.__request_delete(f"queue/{queue_id}")
+            _ = self.__request_delete(f'queue/{queue_id}')
         except UnexpectedResponseError as exc:  # pragma: no cover
             if exc.status_code == 400:
                 raise rt.exceptions.BadRequestError(exc.response_message) from exc
@@ -1574,11 +1471,7 @@ class Rt:
         """
         ticket = self.get_ticket(ticket_id)
 
-        return [
-            link
-            for link in ticket["_hyperlinks"]
-            if link.get("type", "") == "ticket" and link["ref"] != "self"
-        ]
+        return [link for link in ticket['_hyperlinks'] if link.get('type', '') == 'ticket' and link['ref'] != 'self']
 
     def edit_link(
         self,
@@ -1603,28 +1496,24 @@ class Rt:
                             when a wrong link name is used or when trying to link to a deleted ticket.
         """
         if link_name not in VALID_TICKET_LINK_NAMES:
-            raise InvalidUseError(
-                f'Unsupported link name. Use one of "{", ".join(VALID_TICKET_LINK_NAMES)}".'
-            )
+            raise InvalidUseError(f'Unsupported link name. Use one of "{", ".join(VALID_TICKET_LINK_NAMES)}".')
 
         if delete:
-            json_data = {f"Delete{link_name}": link_value}
+            json_data = {f'Delete{link_name}': link_value}
         else:
-            json_data = {f"Add{link_name}": link_value}
+            json_data = {f'Add{link_name}': link_value}
 
-        msg = self.__request_put(f"ticket/{ticket_id}", json_data=json_data)
+        msg = self.__request_put(f'ticket/{ticket_id}', json_data=json_data)
 
         if msg and isinstance(msg, list):
             if msg[0].startswith("Couldn't resolve"):
                 raise NotFoundError(msg[0])
-            if "not allowed" in msg[0]:
+            if 'not allowed' in msg[0]:
                 raise InvalidUseError(msg[0])
 
         return True
 
-    def merge_ticket(
-        self, ticket_id: typing.Union[str, int], into_id: typing.Union[str, int]
-    ) -> bool:
+    def merge_ticket(self, ticket_id: typing.Union[str, int], into_id: typing.Union[str, int]) -> bool:
         """Merge ticket into another.
 
         :param ticket_id: ID of ticket to be merged
@@ -1636,16 +1525,14 @@ class Rt:
                       exist or user does not have ModifyTicket permission.
         :raises UnexpectedResponseError: If the response from RT is not as expected
         """
-        msg = self.__request_put(
-            f"ticket/{ticket_id}", json_data={"MergeInto": into_id}
-        )
+        msg = self.__request_put(f'ticket/{ticket_id}', json_data={'MergeInto': into_id})
 
         if not isinstance(msg, list) or len(msg) != 1:  # pragma: no cover
             raise UnexpectedResponseError(str(msg))
 
         self.logger.debug(str(msg))
 
-        return msg[0].lower() == "merge successful"
+        return msg[0].lower() == 'merge successful'
 
     def take(self, ticket_id: typing.Union[str, int]) -> bool:
         """Take ticket.
@@ -1658,14 +1545,14 @@ class Rt:
                       have TakeTicket permission.
         :raises UnexpectedResponseError: If the response from RT is not as expected
         """
-        msg = self.__request_put(f"ticket/{ticket_id}/take")
+        msg = self.__request_put(f'ticket/{ticket_id}/take')
 
         if not isinstance(msg, list) or len(msg) != 1:  # pragma: no cover
             raise UnexpectedResponseError(str(msg))
 
         self.logger.debug(str(msg))
 
-        return msg[0].lower().startswith("owner changed")
+        return msg[0].lower().startswith('owner changed')
 
     def untake(self, ticket_id: typing.Union[str, int]) -> bool:
         """Untake ticket.
@@ -1678,14 +1565,14 @@ class Rt:
                       own the ticket.
         :raises UnexpectedResponseError: If the response from RT is not as expected
         """
-        msg = self.__request_put(f"ticket/{ticket_id}/untake")
+        msg = self.__request_put(f'ticket/{ticket_id}/untake')
 
         if not isinstance(msg, list) or len(msg) != 1:  # pragma: no cover
             raise UnexpectedResponseError(str(msg))
 
         self.logger.debug(str(msg))
 
-        return msg[0].lower().startswith("owner changed")
+        return msg[0].lower().startswith('owner changed')
 
     def steal(self, ticket_id: typing.Union[str, int]) -> bool:
         """Steal ticket.
@@ -1698,14 +1585,14 @@ class Rt:
                       have StealTicket permission.
         :raises UnexpectedResponseError: If the response from RT is not as expected
         """
-        msg = self.__request_put(f"ticket/{ticket_id}/steal")
+        msg = self.__request_put(f'ticket/{ticket_id}/steal')
 
         if not isinstance(msg, list) or len(msg) != 1:  # pragma: no cover
             raise UnexpectedResponseError(str(msg))
 
         self.logger.debug(str(msg))
 
-        return msg[0].lower().startswith("owner changed")
+        return msg[0].lower().startswith('owner changed')
 
 
 class AsyncRt:
@@ -1745,16 +1632,14 @@ class AsyncRt:
         self.logger = logging.getLogger(__name__)
 
         # ensure trailing slash
-        if not url.endswith("/"):
-            url = f"{url}/"
+        if not url.endswith('/'):
+            url = f'{url}/'
 
-        if not url.endswith("REST/2.0/"):
-            raise ValueError(
-                "Invalid REST URL specified, please use a form of https://example.com/REST/2.0/"
-            )
+        if not url.endswith('REST/2.0/'):
+            raise ValueError('Invalid REST URL specified, please use a form of https://example.com/REST/2.0/')
 
         self.url = url
-        self.base_url = url.split("REST/2.0/", 1)[0]
+        self.base_url = url.split('REST/2.0/', 1)[0]
 
         if isinstance(verify_cert, bool):
             ssl_verify: ssl.SSLContext | bool = verify_cert
@@ -1764,38 +1649,28 @@ class AsyncRt:
         else:
             ssl_verify = True
 
-        self.session = httpx.AsyncClient(
-            timeout=http_timeout, verify=ssl_verify, proxy=proxy, auth=http_auth
-        )
+        self.session = httpx.AsyncClient(timeout=http_timeout, verify=ssl_verify, proxy=proxy, auth=http_auth)
 
-        if (
-            token is not None
-        ):  # pragma: no cover  # no way to add tests for this with the current docker image
-            self.session.headers["Authorization"] = f"token {token}"
+        if token is not None:  # pragma: no cover  # no way to add tests for this with the current docker image
+            self.session.headers['Authorization'] = f'token {token}'
 
     def __debug_response(self, response: httpx.Response) -> None:
         """Output debug information for a given HTTP response."""
         response.request.read()
-        self.logger.debug(
-            "### %s", datetime.datetime.now(tz=datetime.timezone.utc).isoformat()
-        )
-        self.logger.debug("Request URL: %s", response.request.url)
-        self.logger.debug("Request method: %s", response.request.method)
-        self.logger.debug("Request headers: %s", response.request.headers)
-        self.logger.debug(
-            "Request body: %s", response.request.content.decode("utf8", "ignore")
-        )
-        self.logger.debug("Response status code: %s", str(response.status_code))
-        self.logger.debug("Response content:")
+        self.logger.debug('### %s', datetime.datetime.now(tz=datetime.timezone.utc).isoformat())
+        self.logger.debug('Request URL: %s', response.request.url)
+        self.logger.debug('Request method: %s', response.request.method)
+        self.logger.debug('Request headers: %s', response.request.headers)
+        self.logger.debug('Request body: %s', response.request.content.decode('utf8', 'ignore'))
+        self.logger.debug('Response status code: %s', str(response.status_code))
+        self.logger.debug('Response content:')
         self.logger.debug(response.content.decode())
 
     async def __request(
         self,
         selector: str,
         get_params: typing.Optional[dict[str, typing.Any]] = None,
-        json_data: typing.Optional[
-            typing.Union[dict[str, typing.Any], list[typing.Any]]
-        ] = None,
+        json_data: typing.Optional[typing.Union[dict[str, typing.Any], list[typing.Any]]] = None,
         post_data: typing.Optional[dict[str, typing.Any]] = None,
         attachments: typing.Optional[typing.Sequence[Attachment]] = None,
     ) -> typing.Union[dict[str, typing.Any], list[str]]:
@@ -1824,13 +1699,8 @@ class AsyncRt:
                 else:
                     response = await self.session.get(url, params=get_params)
             else:
-                fields: list[tuple[str, typing.Any]] = [
-                    ("Attachments", attachment.multipart_form_element())
-                    for attachment in attachments
-                ]
-                response = await self.session.post(
-                    url, files=fields, data={"JSON": json.dumps(json_data)}
-                )
+                fields: list[tuple[str, typing.Any]] = [('Attachments', attachment.multipart_form_element()) for attachment in attachments]
+                response = await self.session.post(url, files=fields, data={'JSON': json.dumps(json_data)})
 
             self.__debug_response(response)
             self.__check_response(response)
@@ -1838,9 +1708,7 @@ class AsyncRt:
             try:
                 result = response.json()
             except LookupError as exc:  # pragma: no cover
-                raise UnexpectedResponseError(
-                    f"Unknown response encoding: {response.encoding}."
-                ) from exc
+                raise UnexpectedResponseError(f'Unknown response encoding: {response.encoding}.') from exc
             except UnicodeError as exc:  # pragma: no cover
                 raise UnexpectedResponseError(
                     f"""Unknown response encoding (UTF-8 does not work) - "{response.content.decode('utf-8', 'replace')}"."""
@@ -1848,9 +1716,9 @@ class AsyncRt:
 
             return result
         except httpx.ConnectError as exc:  # pragma: no cover
-            raise ConnectionError("Connection error", exc) from exc
+            raise ConnectionError('Connection error', exc) from exc
         except httpx.TransportError as exc:  # pragma: no cover
-            raise ConnectionError("Transport error", exc) from exc
+            raise ConnectionError('Transport error', exc) from exc
 
     async def __request_put(
         self,
@@ -1872,7 +1740,7 @@ class AsyncRt:
             url = str(urljoin(self.url, selector))
 
             _headers = dict(self.session.headers)
-            _headers["Content-Type"] = "application/json"
+            _headers['Content-Type'] = 'application/json'
             response = await self.session.put(url, json=json_data, headers=_headers)
 
             self.__debug_response(response)
@@ -1881,9 +1749,7 @@ class AsyncRt:
             try:
                 result = response.json()
             except LookupError as exc:  # pragma: no cover
-                raise UnexpectedResponseError(
-                    f"Unknown response encoding: {response.encoding}."
-                ) from exc
+                raise UnexpectedResponseError(f'Unknown response encoding: {response.encoding}.') from exc
             except UnicodeError as exc:  # pragma: no cover
                 raise UnexpectedResponseError(
                     f"""Unknown response encoding (UTF-8 does not work) - "{response.content.decode('utf-8', 'replace')}"."""
@@ -1891,9 +1757,9 @@ class AsyncRt:
 
             return result
         except httpx.ConnectError as exc:  # pragma: no cover
-            raise ConnectionError("Connection error", exc) from exc
+            raise ConnectionError('Connection error', exc) from exc
         except httpx.TransportError as exc:  # pragma: no cover
-            raise ConnectionError("Transport error", exc) from exc
+            raise ConnectionError('Transport error', exc) from exc
 
     async def __request_delete(self, selector: str) -> dict[str, str]:
         """DELETE request for :term:`API`.
@@ -1911,7 +1777,7 @@ class AsyncRt:
             url = str(urljoin(self.url, selector))
 
             _headers = dict(self.session.headers)
-            _headers["Content-Type"] = "application/json"
+            _headers['Content-Type'] = 'application/json'
             response = await self.session.delete(url, headers=_headers)
 
             self.__debug_response(response)
@@ -1920,9 +1786,7 @@ class AsyncRt:
             try:
                 result = response.json()
             except LookupError as exc:  # pragma: no cover
-                raise UnexpectedResponseError(
-                    f"Unknown response encoding: {response.encoding}."
-                ) from exc
+                raise UnexpectedResponseError(f'Unknown response encoding: {response.encoding}.') from exc
             except UnicodeError as exc:  # pragma: no cover
                 raise UnexpectedResponseError(
                     f"""Unknown response encoding (UTF-8 does not work) - "{response.content.decode('utf-8', 'replace')}"."""
@@ -1930,16 +1794,14 @@ class AsyncRt:
 
             return result
         except httpx.ConnectError as exc:  # pragma: no cover
-            raise ConnectionError("Connection error", exc) from exc
+            raise ConnectionError('Connection error', exc) from exc
         except httpx.TransportError as exc:  # pragma: no cover
-            raise ConnectionError("Transport error", exc) from exc
+            raise ConnectionError('Transport error', exc) from exc
 
     async def __paged_request(
         self,
         selector: str,
-        json_data: typing.Optional[
-            typing.Union[list[dict[str, typing.Any]], dict[str, typing.Any]]
-        ] = None,
+        json_data: typing.Optional[typing.Union[list[dict[str, typing.Any]], dict[str, typing.Any]]] = None,
         params: typing.Optional[dict[str, typing.Any]] = None,
         page: int = 1,
         per_page: int = 20,
@@ -1961,83 +1823,65 @@ class AsyncRt:
         :raises ConnectionError: In case of connection error.
         """
         if params:
-            params["page"] = page
-            params["per_page"] = per_page
+            params['page'] = page
+            params['per_page'] = per_page
         else:
-            params = {"page": page, "per_page": per_page}
+            params = {'page': page, 'per_page': per_page}
 
         try:
             url = str(urljoin(self.url, selector))
 
-            method = "get"
+            method = 'get'
             if json_data is not None:
-                method = "post"
+                method = 'post'
 
-            response = await self.session.request(
-                method, url, json=json_data, params=params
-            )
+            response = await self.session.request(method, url, json=json_data, params=params)
 
             self.__check_response(response)
 
             try:
                 result = response.json()
             except LookupError as exc:  # pragma: no cover
-                raise UnexpectedResponseError(
-                    f"Unknown response encoding: {response.encoding}."
-                ) from exc
+                raise UnexpectedResponseError(f'Unknown response encoding: {response.encoding}.') from exc
             except UnicodeError:  # pragma: no cover
                 # replace errors - we need decoded content just to check for error codes in __check_response
-                result = response.content.decode("utf-8", "replace")
+                result = response.content.decode('utf-8', 'replace')
 
-            if not isinstance(result, dict) and "items" in result:
-                raise UnexpectedResponseError("Server returned an unexpected result")
+            if not isinstance(result, dict) and 'items' in result:
+                raise UnexpectedResponseError('Server returned an unexpected result')
 
-            if result.get("pages", None) is None and result["count"] == 0:
+            if result.get('pages', None) is None and result['count'] == 0:
                 # no more results found, exit here
                 # (workaround for the >=RT5.0.5 undefined pages variable for non-superusers)
                 raise NotFoundError
 
-            for item in result["items"]:
+            for item in result['items']:
                 yield item
 
-            if (
-                recurse
-                and result.get("pages", None) is not None
-                and result["pages"] > result["page"]
-            ):
-                for _page in range(2, result["pages"] + 1):
+            if recurse and result.get('pages', None) is not None and result['pages'] > result['page']:
+                for _page in range(2, result['pages'] + 1):
                     async for item in self.__paged_request(
-                        selector,
-                        json_data=json_data,
-                        page=_page,
-                        per_page=result["per_page"],
-                        params=params,
-                        recurse=False,
+                        selector, json_data=json_data, page=_page, per_page=result['per_page'], params=params, recurse=False
                     ):
                         yield item
-            elif recurse and result.get("pages", None) is None:
+            elif recurse and result.get('pages', None) is None:
                 # no more results found, exit here
                 # (workaround for the >=RT5.0.5 undefined pages variable for non-superusers)
-                _page = result["page"]
+                _page = result['page']
                 while True:
                     _page += 1
                     try:
                         async for item in self.__paged_request(
-                            selector,
-                            json_data=json_data,
-                            page=_page,
-                            per_page=result["per_page"],
-                            params=params,
-                            recurse=False,
+                            selector, json_data=json_data, page=_page, per_page=result['per_page'], params=params, recurse=False
                         ):
                             yield item
                     except NotFoundError:
                         break
 
         except httpx.ConnectError as exc:  # pragma: no cover
-            raise ConnectionError("Connection error", exc) from exc
+            raise ConnectionError('Connection error', exc) from exc
         except httpx.TransportError as exc:  # pragma: no cover
-            raise ConnectionError("Transport error", exc) from exc
+            raise ConnectionError('Transport error', exc) from exc
 
     @staticmethod
     def __check_response(response: httpx.Response) -> None:
@@ -2053,29 +1897,27 @@ class AsyncRt:
             try:
                 ret = response.json()
             except json.JSONDecodeError:
-                ret = "Bad request"
+                ret = 'Bad request'
 
             if isinstance(ret, dict):
-                raise rt.exceptions.BadRequestError(ret["message"])
+                raise rt.exceptions.BadRequestError(ret['message'])
 
             raise rt.exceptions.BadRequestError(ret)
 
         if response.status_code == 401:  # pragma: no cover
-            raise AuthorizationError(
-                "Server could not verify that you are authorized to access the requested document."
-            )
+            raise AuthorizationError('Server could not verify that you are authorized to access the requested document.')
         if response.status_code == 404:
-            raise NotFoundError("No such resource found.")
+            raise NotFoundError('No such resource found.')
         if response.status_code not in (200, 201):
             raise UnexpectedResponseError(
-                f"Received status code {response.status_code} instead of 200.",
+                f'Received status code {response.status_code} instead of 200.',
                 status_code=response.status_code,
                 response_message=response.text,
             )
 
     async def __get_url(self, url: str) -> dict[str, typing.Any]:
         """Call a URL as specified in the returned JSON of an API operation."""
-        url_ = url.split("/REST/2.0/", 1)[1]
+        url_ = url.split('/REST/2.0/', 1)[1]
         res = await self.__request(url_)
 
         if not isinstance(res, dict):  # pragma: no cover
@@ -2083,9 +1925,7 @@ class AsyncRt:
 
         return res
 
-    async def new_correspondence(
-        self, queue: typing.Optional[typing.Union[str, object]] = None
-    ) -> collections.abc.AsyncIterator:
+    async def new_correspondence(self, queue: typing.Optional[typing.Union[str, object]] = None) -> collections.abc.AsyncIterator:
         """Obtains tickets changed by other users than the system one.
 
         :param queue: Queue where to search
@@ -2096,11 +1936,9 @@ class AsyncRt:
                   :py:meth:`~Rt.get_ticket`.
                   collections.abc.AsyncIterator[dict]
         """
-        return self.search(queue=queue, order="-LastUpdated")
+        return self.search(queue=queue, order='-LastUpdated')
 
-    async def last_updated(
-        self, since: str, queue: typing.Optional[str] = None
-    ) -> collections.abc.AsyncIterator:
+    async def last_updated(self, since: str, queue: typing.Optional[str] = None) -> collections.abc.AsyncIterator:
         """Obtains tickets changed after given date.
 
         :param since: Date as string in form '2011-02-24'
@@ -2117,12 +1955,12 @@ class AsyncRt:
         if not self.__validate_date(since):
             raise InvalidUseError(f'Invalid date specified - "{since}"')
 
-        return self.search(queue=queue, order="-LastUpdated", LastUpdated__gt=since)
+        return self.search(queue=queue, order='-LastUpdated', LastUpdated__gt=since)
 
     @classmethod
     def __validate_date(cls, _date: str) -> bool:
         """Check whether the specified date is in the supported format."""
-        if m := re.match(r"(\d{4})-(\d{2})-(\d{2})", _date):
+        if m := re.match(r'(\d{4})-(\d{2})-(\d{2})', _date):
             try:
                 year = int(m.group(1))
                 month = int(m.group(2))
@@ -2140,7 +1978,7 @@ class AsyncRt:
         queue: typing.Optional[typing.Union[str, object]] = None,
         order: typing.Optional[str] = None,
         raw_query: typing.Optional[str] = None,
-        query_format: typing.Union[str, list[str]] = "l",
+        query_format: typing.Union[str, list[str]] = 'l',
         **kwargs: typing.Any,
     ) -> collections.abc.AsyncIterator:
         r"""Search arbitrary needles in given fields and queue.
@@ -2199,49 +2037,49 @@ class AsyncRt:
         """
         get_params = {}
         query = []
-        url = "tickets"
+        url = 'tickets'
 
         if queue is not None:
             query.append(f"Queue='{queue}'")
         if not raw_query:
             operators_map = {
-                "gt": ">",
-                "lt": "<",
-                "exact": "=",
-                "notexact": "!=",
-                "like": " LIKE ",
-                "notlike": " NOT LIKE ",
+                'gt': '>',
+                'lt': '<',
+                'exact': '=',
+                'notexact': '!=',
+                'like': ' LIKE ',
+                'notlike': ' NOT LIKE ',
             }
 
             for key, value in kwargs.items():
-                op = "="
-                key_parts = key.split("__")
+                op = '='
+                key_parts = key.split('__')
                 if len(key_parts) > 1:
-                    key = "__".join(key_parts[:-1])
-                    op = operators_map.get(key_parts[-1], "=")
-                if key[:3] != "CF_":
+                    key = '__'.join(key_parts[:-1])
+                    op = operators_map.get(key_parts[-1], '=')
+                if key[:3] != 'CF_':
                     query.append(f"{key}{op}'{value}'")
                 else:
                     query.append(f"""CF.{{{key[3:]}}}'{op}'{value}\'""")
         else:
             query.append(raw_query)
-        get_params["query"] = " AND ".join("(" + part + ")" for part in query)
+        get_params['query'] = ' AND '.join('(' + part + ')' for part in query)
         if order:
-            if order.startswith("-"):
-                get_params["orderby"] = order[1:]
-                get_params["order"] = "DESC"
+            if order.startswith('-'):
+                get_params['orderby'] = order[1:]
+                get_params['order'] = 'DESC'
             else:
-                get_params["orderby"] = order
+                get_params['orderby'] = order
 
         if isinstance(query_format, list):
-            get_params["fields"] = ",".join(query_format)
-        elif query_format == "l":
-            get_params["fields"] = (
-                "Owner,Status,Created,Subject,Queue,CustomFields,Requestor,Cc,AdminCc,Started,Created,TimeEstimated,Due,Type,InitialPriority,Priority,TimeLeft,LastUpdated"
+            get_params['fields'] = ','.join(query_format)
+        elif query_format == 'l':
+            get_params['fields'] = (
+                'Owner,Status,Created,Subject,Queue,CustomFields,Requestor,Cc,AdminCc,Started,Created,TimeEstimated,Due,Type,InitialPriority,Priority,TimeLeft,LastUpdated'
             )
-            get_params["fields[Queue]"] = "Name"
-        elif query_format == "s":
-            get_params["fields"] = "Subject"
+            get_params['fields[Queue]'] = 'Name'
+        elif query_format == 's':
+            get_params['fields'] = 'Subject'
 
         async for item in self.__paged_request(url, params=get_params):
             yield item
@@ -2279,9 +2117,7 @@ class AsyncRt:
         :raises UnexpectedMessageFormatError: Unexpected format of returned message.
         :raises NotFoundError: If there is no ticket with the specified ticket_id.
         """
-        res = await self.__request(
-            f"ticket/{ticket_id}", get_params={"fields[Queue]": "Name"}
-        )
+        res = await self.__request(f'ticket/{ticket_id}', get_params={'fields[Queue]': 'Name'})
 
         if not isinstance(res, dict):  # pragma: no cover
             raise UnexpectedResponseError(str(res))
@@ -2291,7 +2127,7 @@ class AsyncRt:
     async def create_ticket(
         self,
         queue: str,
-        content_type: TYPE_CONTENT_TYPE = "text/plain",
+        content_type: TYPE_CONTENT_TYPE = 'text/plain',
         subject: typing.Optional[str] = None,
         content: typing.Optional[str] = None,
         attachments: typing.Optional[typing.Sequence[Attachment]] = None,
@@ -2325,33 +2161,29 @@ class AsyncRt:
         :returns: ID of new ticket
         :raises ValueError: If the `content_type` is not of a supported format.
         """
-        if content_type not in ("text/plain", "text/html"):  # pragma: no cover
-            raise ValueError("Invalid content-type specified.")
+        if content_type not in ('text/plain', 'text/html'):  # pragma: no cover
+            raise ValueError('Invalid content-type specified.')
 
-        ticket_data: dict[str, typing.Any] = {"Queue": queue}
+        ticket_data: dict[str, typing.Any] = {'Queue': queue}
 
         if subject is not None:
-            ticket_data["Subject"] = subject
+            ticket_data['Subject'] = subject
 
         if content is not None:
-            ticket_data["Content"] = content
-            ticket_data["ContentType"] = content_type
+            ticket_data['Content'] = content
+            ticket_data['ContentType'] = content_type
 
         for k, v in kwargs.items():
             ticket_data[k] = v
 
-        res = await self.__request(
-            "ticket", json_data=ticket_data, attachments=attachments
-        )
+        res = await self.__request('ticket', json_data=ticket_data, attachments=attachments)
 
         if not isinstance(res, dict):  # pragma: no cover
             raise UnexpectedResponseError(str(res))
 
-        return int(res["id"])
+        return int(res['id'])
 
-    async def edit_ticket(
-        self, ticket_id: typing.Union[str, int], **kwargs: typing.Any
-    ) -> bool:
+    async def edit_ticket(self, ticket_id: typing.Union[str, int], **kwargs: typing.Any) -> bool:
         """Edit ticket values.
 
         :param ticket_id: ID of ticket to edit
@@ -2371,7 +2203,7 @@ class AsyncRt:
                       Ticket with given ID does not exist or unknown parameter
                       was set (in this case all other valid fields are changed)
         """
-        msg = await self.__request_put(f"ticket/{ticket_id}", json_data=kwargs)
+        msg = await self.__request_put(f'ticket/{ticket_id}', json_data=kwargs)
 
         self.logger.debug(msg)
 
@@ -2382,14 +2214,12 @@ class AsyncRt:
             return True
 
         for k in msg:
-            if REGEX_PATTERNS["does_not_exist"].search(k):
+            if REGEX_PATTERNS['does_not_exist'].search(k):
                 raise rt.exceptions.NotFoundError(k)
 
         return bool(msg[0])
 
-    async def get_ticket_history(
-        self, ticket_id: typing.Union[str, int]
-    ) -> collections.abc.AsyncIterator:
+    async def get_ticket_history(self, ticket_id: typing.Union[str, int]) -> collections.abc.AsyncIterator:
         """Get set of short history items.
 
         :param ticket_id: ID of ticket
@@ -2398,25 +2228,21 @@ class AsyncRt:
                   collections.abc.AsyncIterator[typing.Dict[str, typing.Any]]
         """
         async for transaction in self.__paged_request(
-            f"ticket/{ticket_id}/history",
+            f'ticket/{ticket_id}/history',
             params={
-                "fields": "Type,Creator,Created,Description,_hyperlinks",
-                "fields[Creator]": "id,Name,RealName,EmailAddress",
+                'fields': 'Type,Creator,Created,Description,_hyperlinks',
+                'fields[Creator]': 'id,Name,RealName,EmailAddress',
             },
         ):
             yield transaction
 
-    async def get_transaction(
-        self, transaction_id: typing.Union[str, int]
-    ) -> dict[str, typing.Any]:
+    async def get_transaction(self, transaction_id: typing.Union[str, int]) -> dict[str, typing.Any]:
         """Get a transaction.
 
         :param transaction_id: ID of transaction
         :returns: Return a single transaction.
         """
-        res = await self.__request(
-            f"transaction/{transaction_id}", get_params={"fields": "Description"}
-        )
+        res = await self.__request(f'transaction/{transaction_id}', get_params={'fields': 'Description'})
 
         if not isinstance(res, dict):  # pragma: no cover
             raise UnexpectedResponseError(str(res))
@@ -2426,9 +2252,9 @@ class AsyncRt:
     async def __correspond(
         self,
         ticket_id: typing.Union[str, int],
-        content: str = "",
-        action: Literal["correspond", "comment"] = "correspond",
-        content_type: TYPE_CONTENT_TYPE = "text/plain",
+        content: str = '',
+        action: Literal['correspond', 'comment'] = 'correspond',
+        content_type: TYPE_CONTENT_TYPE = 'text/plain',
         attachments: typing.Optional[typing.Sequence[Attachment]] = None,
     ) -> list[str]:
         """Sends out the correspondence.
@@ -2443,12 +2269,12 @@ class AsyncRt:
         :raises InvalidUseError: If the `action` parameter is invalid
         :raises UnexpectedResponseError: If the response from RT is not as expected
         """
-        if action not in ("correspond", "comment"):  # pragma: no cover
+        if action not in ('correspond', 'comment'):  # pragma: no cover
             raise InvalidUseError('action must be either "correspond" or "comment"')
 
         post_data: dict[str, typing.Any] = {
-            "Content": content,
-            "ContentType": content_type,
+            'Content': content,
+            'ContentType': content_type,
         }
 
         # Adding a one-shot cc/bcc is not supported by RT5.0.2
@@ -2458,9 +2284,7 @@ class AsyncRt:
         # if bcc:
         #     post_data['Bcc'] = bcc  # noqa: ERA001
 
-        res = await self.__request(
-            f"ticket/{ticket_id}/{action}", json_data=post_data, attachments=attachments
-        )
+        res = await self.__request(f'ticket/{ticket_id}/{action}', json_data=post_data, attachments=attachments)
 
         if not isinstance(res, list):  # pragma: no cover
             raise UnexpectedResponseError(str(res))
@@ -2472,8 +2296,8 @@ class AsyncRt:
     async def reply(
         self,
         ticket_id: typing.Union[str, int],
-        content: str = "",
-        content_type: TYPE_CONTENT_TYPE = "text/plain",
+        content: str = '',
+        content_type: TYPE_CONTENT_TYPE = 'text/plain',
         attachments: typing.Optional[typing.Sequence[Attachment]] = None,
     ) -> bool:
         """Sends email message to the contacts in ``Requestors`` field of
@@ -2490,9 +2314,7 @@ class AsyncRt:
         :raises BadRequestError: When ticket does not exist
         :raises UnexpectedResponseError: If the response from RT is not as expected
         """
-        msg = await self.__correspond(
-            ticket_id, content, "correspond", content_type, attachments
-        )
+        msg = await self.__correspond(ticket_id, content, 'correspond', content_type, attachments)
 
         if not (isinstance(msg, list) and len(msg) >= 1):  # pragma: no cover
             raise UnexpectedResponseError(str(msg))
@@ -2509,7 +2331,7 @@ class AsyncRt:
         :raises UnexpectedResponseError: If the response from RT is not as expected
         """
         try:
-            await self.__request_delete(f"ticket/{ticket_id}")
+            await self.__request_delete(f'ticket/{ticket_id}')
         except UnexpectedResponseError as exc:
             if exc.status_code == 400:  # pragma: no cover
                 raise rt.exceptions.BadRequestError(exc.response_message) from exc
@@ -2522,8 +2344,8 @@ class AsyncRt:
     async def comment(
         self,
         ticket_id: typing.Union[str, int],
-        content: str = "",
-        content_type: TYPE_CONTENT_TYPE = "text/plain",
+        content: str = '',
+        content_type: TYPE_CONTENT_TYPE = 'text/plain',
         attachments: typing.Optional[typing.Sequence[Attachment]] = None,
     ) -> bool:
         """Adds comment to the given ticket.
@@ -2539,9 +2361,7 @@ class AsyncRt:
         :raises BadRequestError: When ticket does not exist
         :raises UnexpectedResponseError: If the response from RT is not as expected
         """
-        msg = await self.__correspond(
-            ticket_id, content, "comment", content_type, attachments
-        )
+        msg = await self.__correspond(ticket_id, content, 'comment', content_type, attachments)
 
         if not (isinstance(msg, list) and len(msg) >= 1):  # pragma: no cover
             raise UnexpectedResponseError(str(msg))
@@ -2551,9 +2371,7 @@ class AsyncRt:
     async def get_attachments(
         self,
         ticket_id: typing.Union[str, int],
-        filter: typing.Optional[list[dict[str, str]]] = [
-            {"field": "Filename", "operator": "IS NOT", "value": ""}
-        ],
+        filter: typing.Optional[list[dict[str, str]]] = [{"field": "Filename", "operator": "IS NOT", "value": ""}],
     ) -> collections.abc.AsyncIterator:
         """Get attachment list for a given ticket.
 
@@ -2577,32 +2395,30 @@ class AsyncRt:
         :returns: Iterator of attachments belonging to given ticket. collections.abc.AsyncIterator[typing.Dict[str, str]]
         """
         async for item in self.__paged_request(
-            f"ticket/{ticket_id}/attachments",
+            f'ticket/{ticket_id}/attachments',
             json_data=filter,
-            params={"fields": "Filename,ContentType,ContentLength"},
+            params={'fields': 'Filename,ContentType,ContentLength'},
         ):
             yield item
 
     async def get_attachments_ids(
         self,
         ticket_id: typing.Union[str, int],
-        filter: typing.Optional[list[dict[str, str]]] = [
-            {"field": "Filename", "operator": "IS NOT", "value": ""}
-        ],
+        filter: typing.Optional[list[dict[str, str]]] = [{"field": "Filename", "operator": "IS NOT", "value": ""}],
     ) -> collections.abc.AsyncIterator:
         """Get IDs of attachments for given ticket.
 
-        :param ticket_id: ID of
+        :param ticket_id: ID of 
         :param filter: JSON search filter, defaults to Filename is not empty
         :returns: Iterator of IDs (type int) of attachments belonging to given
                   ticket.
                   collections.abc.AsyncIterator[int]
         """
         async for item in self.__paged_request(
-            f"ticket/{ticket_id}/attachments",
+            f'ticket/{ticket_id}/attachments',
             json_data=filter,
         ):
-            yield int(item["id"])
+            yield int(item['id'])
 
     async def get_attachment(self, attachment_id: typing.Union[str, int]) -> dict:
         """Get attachment.
@@ -2655,7 +2471,7 @@ class AsyncRt:
         :raises UnexpectedMessageFormatError: Unexpected format of returned message.
         :raises NotFoundError: If attachment with specified ID does not exist.
         """
-        res = await self.__request(f"attachment/{attachment_id}")
+        res = await self.__request(f'attachment/{attachment_id}')
 
         if not (res is None or isinstance(res, dict)):  # pragma: no cover
             raise UnexpectedResponseError(str(res))
@@ -2693,16 +2509,14 @@ class AsyncRt:
         :raises UnexpectedMessageFormatError: In case that returned status code is not 200
         :raises NotFoundError: If the user does not exist.
         """
-        res = await self.__request(f"user/{user_id}")
+        res = await self.__request(f'user/{user_id}')
 
         if not isinstance(res, dict):  # pragma: no cover
             raise UnexpectedResponseError(str(res))
 
         return res
 
-    async def user_exists(
-        self, user_id: typing.Union[int, str], privileged: bool = True
-    ) -> bool:
+    async def user_exists(self, user_id: typing.Union[int, str], privileged: bool = True) -> bool:
         """Check if a given user_id exists.
 
         :parameter user_id: User ID to lookup.
@@ -2713,16 +2527,14 @@ class AsyncRt:
         try:
             user_dict = await self.get_user(user_id)
 
-            if not privileged or (privileged and user_dict.get("Privileged", "0") == 1):
+            if not privileged or (privileged and user_dict.get('Privileged', '0') == 1):
                 return True
         except rt.exceptions.NotFoundError:
             return False
 
         return False
 
-    async def create_user(
-        self, user_name: str, email_address: str, **kwargs: typing.Any
-    ) -> str:
+    async def create_user(self, user_name: str, email_address: str, **kwargs: typing.Any) -> str:
         """Create user.
 
         :param user_name: Username (login for privileged, required)
@@ -2734,42 +2546,42 @@ class AsyncRt:
         :raises UnexpectedResponseError: If the response from RT is not as expected
         """
         valid_fields = {
-            "Name",
-            "Password",
-            "EmailAddress",
-            "RealName",
-            "Nickname",
-            "Gecos",
-            "Organization",
-            "Address1",
-            "Address2",
-            "City",
-            "State",
-            "Zip",
-            "Country",
-            "HomePhone",
-            "WorkPhone",
-            "MobilePhone",
-            "PagerPhone",
-            "ContactInfo",
-            "Comments",
-            "Signature",
-            "Lang",
-            "EmailEncoding",
-            "WebEncoding",
-            "ExternalContactInfoId",
-            "ContactInfoSystem",
-            "ExternalAuthId",
-            "AuthSystem",
-            "Privileged",
-            "Disabled",
-            "CustomFields",
+            'Name',
+            'Password',
+            'EmailAddress',
+            'RealName',
+            'Nickname',
+            'Gecos',
+            'Organization',
+            'Address1',
+            'Address2',
+            'City',
+            'State',
+            'Zip',
+            'Country',
+            'HomePhone',
+            'WorkPhone',
+            'MobilePhone',
+            'PagerPhone',
+            'ContactInfo',
+            'Comments',
+            'Signature',
+            'Lang',
+            'EmailEncoding',
+            'WebEncoding',
+            'ExternalContactInfoId',
+            'ContactInfoSystem',
+            'ExternalAuthId',
+            'AuthSystem',
+            'Privileged',
+            'Disabled',
+            'CustomFields',
         }
         invalid_fields = []
 
         post_data = {
-            "Name": user_name,
-            "EmailAddress": email_address,
+            'Name': user_name,
+            'EmailAddress': email_address,
         }
 
         for k, v in kwargs.items():
@@ -2780,12 +2592,10 @@ class AsyncRt:
                 post_data[k] = v
 
         if invalid_fields:
-            raise InvalidUseError(
-                f"""Unsupported names of fields: {', '.join(invalid_fields)}."""
-            )
+            raise InvalidUseError(f"""Unsupported names of fields: {', '.join(invalid_fields)}.""")
 
         try:
-            res = await self.__request("user", json_data=post_data)
+            res = await self.__request('user', json_data=post_data)
         except UnexpectedResponseError as exc:  # pragma: no cover
             if exc.status_code == 400:
                 raise rt.exceptions.BadRequestError(exc.response_message) from exc
@@ -2795,11 +2605,9 @@ class AsyncRt:
         if not isinstance(res, dict):  # pragma: no cover
             raise UnexpectedResponseError(str(res))
 
-        return res["id"]
+        return res['id']
 
-    async def edit_user(
-        self, user_id: typing.Union[str, int], **kwargs: typing.Any
-    ) -> list[str]:
+    async def edit_user(self, user_id: typing.Union[str, int], **kwargs: typing.Any) -> list[str]:
         """Edit user profile.
 
         :param user_id: Identification of user by username (str) or user ID
@@ -2842,36 +2650,36 @@ class AsyncRt:
         :raises UnexpectedResponseError: If the response from RT is not as expected
         """
         valid_fields = {
-            "Name",
-            "Password",
-            "EmailAddress",
-            "RealName",
-            "Nickname",
-            "Gecos",
-            "Organization",
-            "Address1",
-            "Address2",
-            "City",
-            "State",
-            "Zip",
-            "Country",
-            "HomePhone",
-            "WorkPhone",
-            "MobilePhone",
-            "PagerPhone",
-            "ContactInfo",
-            "Comments",
-            "Signature",
-            "Lang",
-            "EmailEncoding",
-            "WebEncoding",
-            "ExternalContactInfoId",
-            "ContactInfoSystem",
-            "ExternalAuthId",
-            "AuthSystem",
-            "Privileged",
-            "Disabled",
-            "CustomFields",
+            'Name',
+            'Password',
+            'EmailAddress',
+            'RealName',
+            'Nickname',
+            'Gecos',
+            'Organization',
+            'Address1',
+            'Address2',
+            'City',
+            'State',
+            'Zip',
+            'Country',
+            'HomePhone',
+            'WorkPhone',
+            'MobilePhone',
+            'PagerPhone',
+            'ContactInfo',
+            'Comments',
+            'Signature',
+            'Lang',
+            'EmailEncoding',
+            'WebEncoding',
+            'ExternalContactInfoId',
+            'ContactInfoSystem',
+            'ExternalAuthId',
+            'AuthSystem',
+            'Privileged',
+            'Disabled',
+            'CustomFields',
         }
         invalid_fields = []
 
@@ -2885,12 +2693,10 @@ class AsyncRt:
                 post_data[key] = val
 
         if invalid_fields:
-            raise InvalidUseError(
-                f"""Unsupported names of fields: {', '.join(invalid_fields)}."""
-            )
+            raise InvalidUseError(f"""Unsupported names of fields: {', '.join(invalid_fields)}.""")
 
         try:
-            ret = await self.__request_put(f"user/{user_id}", json_data=post_data)
+            ret = await self.__request_put(f'user/{user_id}', json_data=post_data)
         except UnexpectedResponseError as exc:  # pragma: no cover
             if exc.status_code == 400:
                 raise rt.exceptions.BadRequestError(exc.response_message) from exc
@@ -2909,7 +2715,7 @@ class AsyncRt:
         :raises UnexpectedResponseError: If the response from RT is not as expected
         """
         try:
-            _ = await self.__request_delete(f"user/{user_id}")
+            _ = await self.__request_delete(f'user/{user_id}')
         except UnexpectedResponseError as exc:
             if exc.status_code == 400:  # pragma: no cover
                 raise rt.exceptions.BadRequestError(exc.response_message) from exc
@@ -2919,9 +2725,7 @@ class AsyncRt:
 
             raise  # pragma: no cover
 
-    async def get_queue(
-        self, queue_id: typing.Union[str, int]
-    ) -> dict[str, typing.Any]:
+    async def get_queue(self, queue_id: typing.Union[str, int]) -> dict[str, typing.Any]:
         """Get queue details.
 
         Example of a return result:
@@ -2981,16 +2785,14 @@ class AsyncRt:
         :raises UnexpectedMessageFormatError: In case that returned status code is not 200
         :raises NotFoundError: In case the queue does not exist
         """
-        res = await self.__request(f"queue/{queue_id}")
+        res = await self.__request(f'queue/{queue_id}')
 
         if not (res is None or isinstance(res, dict)):  # pragma: no cover
             raise UnexpectedResponseError(str(res))
 
         return res
 
-    async def get_all_queues(
-        self, include_disabled: bool = False
-    ) -> collections.abc.AsyncIterator:
+    async def get_all_queues(self, include_disabled: bool = False) -> collections.abc.AsyncIterator:
         """Return a list of all queues.
 
         Example of a return result:
@@ -3020,15 +2822,13 @@ class AsyncRt:
         :raises UnexpectedMessageFormatError: In case that returned status code is not 200
         """
         params = {
-            "fields": "Name,Description,CorrespondAddress,CommentAddress,InitialPriority,FinalPriority,DefaultDueIn",
-            "find_disabled_rows": int(include_disabled),
+            'fields': 'Name,Description,CorrespondAddress,CommentAddress,InitialPriority,FinalPriority,DefaultDueIn',
+            'find_disabled_rows': int(include_disabled),
         }
-        async for item in self.__paged_request("queues/all", params=params):
+        async for item in self.__paged_request('queues/all', params=params):
             yield item
 
-    async def edit_queue(
-        self, queue_id: typing.Union[str, int], **kwargs: typing.Any
-    ) -> list[str]:
+    async def edit_queue(self, queue_id: typing.Union[str, int], **kwargs: typing.Any) -> list[str]:
         """Edit queue.
 
         :param queue_id: Identification of queue by name (str) or ID (int)
@@ -3049,14 +2849,14 @@ class AsyncRt:
         :raises UnexpectedResponseError: If the response from RT is not as expected
         """
         valid_fields = {
-            "Name",
-            "Description",
-            "CorrespondAddress",
-            "CommentAddress",
-            "Disabled",
-            "SLADisabled",
-            "Lifecycle",
-            "SortOrder",
+            'Name',
+            'Description',
+            'CorrespondAddress',
+            'CommentAddress',
+            'Disabled',
+            'SLADisabled',
+            'Lifecycle',
+            'SortOrder',
         }
         invalid_fields = []
 
@@ -3070,12 +2870,10 @@ class AsyncRt:
                 post_data[key] = val
 
         if invalid_fields:
-            raise InvalidUseError(
-                f"""Unsupported names of fields: {', '.join(invalid_fields)}."""
-            )
+            raise InvalidUseError(f"""Unsupported names of fields: {', '.join(invalid_fields)}.""")
 
         try:
-            ret = await self.__request_put(f"queue/{queue_id}", json_data=post_data)
+            ret = await self.__request_put(f'queue/{queue_id}', json_data=post_data)
         except UnexpectedResponseError as exc:  # pragma: no cover
             if exc.status_code == 400:
                 raise rt.exceptions.BadRequestError(exc.response_message) from exc
@@ -3095,18 +2893,18 @@ class AsyncRt:
         :raises UnexpectedResponseError: If the response from RT is not as expected
         """
         valid_fields = {
-            "Name",
-            "Description",
-            "CorrespondAddress",
-            "CommentAddress",
-            "Disabled",
-            "SLADisabled",
-            "Lifecycle",
-            "SortOrder",
+            'Name',
+            'Description',
+            'CorrespondAddress',
+            'CommentAddress',
+            'Disabled',
+            'SLADisabled',
+            'Lifecycle',
+            'SortOrder',
         }
         invalid_fields = []
 
-        post_data = {"Name": name}
+        post_data = {'Name': name}
 
         for key, val in kwargs.items():
             if key not in valid_fields:
@@ -3116,12 +2914,10 @@ class AsyncRt:
                 post_data[key] = val
 
         if invalid_fields:
-            raise InvalidUseError(
-                f"""Unsupported names of fields: {', '.join(invalid_fields)}."""
-            )
+            raise InvalidUseError(f"""Unsupported names of fields: {', '.join(invalid_fields)}.""")
 
         try:
-            res = await self.__request("queue", json_data=post_data)
+            res = await self.__request('queue', json_data=post_data)
         except UnexpectedResponseError as exc:  # pragma: no cover
             if exc.status_code == 400:
                 raise rt.exceptions.BadRequestError(exc.response_message) from exc
@@ -3131,7 +2927,7 @@ class AsyncRt:
         if not isinstance(res, dict):  # pragma: no cover
             raise UnexpectedResponseError(str(res))
 
-        return int(res["id"])
+        return int(res['id'])
 
     async def delete_queue(self, queue_id: typing.Union[str, int]) -> None:
         """Disable a queue.
@@ -3144,7 +2940,7 @@ class AsyncRt:
         :raises UnexpectedResponseError: If the response from RT is not as expected
         """
         try:
-            _ = await self.__request_delete(f"queue/{queue_id}")
+            _ = await self.__request_delete(f'queue/{queue_id}')
         except UnexpectedResponseError as exc:  # pragma: no cover
             if exc.status_code == 400:
                 raise rt.exceptions.BadRequestError(exc.response_message) from exc
@@ -3154,9 +2950,7 @@ class AsyncRt:
 
             raise  # pragma: no cover
 
-    async def get_links(
-        self, ticket_id: typing.Union[str, int]
-    ) -> list[dict[str, str]]:
+    async def get_links(self, ticket_id: typing.Union[str, int]) -> list[dict[str, str]]:
         """Gets the ticket links for a single ticket.
 
         Example of a return result:
@@ -3187,11 +2981,7 @@ class AsyncRt:
         """
         ticket = await self.get_ticket(ticket_id)
 
-        return [
-            link
-            for link in ticket["_hyperlinks"]
-            if link.get("type", "") == "ticket" and link["ref"] != "self"
-        ]
+        return [link for link in ticket['_hyperlinks'] if link.get('type', '') == 'ticket' and link['ref'] != 'self']
 
     async def edit_link(
         self,
@@ -3216,28 +3006,24 @@ class AsyncRt:
                             when a wrong link name is used or when trying to link to a deleted ticket.
         """
         if link_name not in VALID_TICKET_LINK_NAMES:
-            raise InvalidUseError(
-                f'Unsupported link name. Use one of "{", ".join(VALID_TICKET_LINK_NAMES)}".'
-            )
+            raise InvalidUseError(f'Unsupported link name. Use one of "{", ".join(VALID_TICKET_LINK_NAMES)}".')
 
         if delete:
-            json_data = {f"Delete{link_name}": link_value}
+            json_data = {f'Delete{link_name}': link_value}
         else:
-            json_data = {f"Add{link_name}": link_value}
+            json_data = {f'Add{link_name}': link_value}
 
-        msg = await self.__request_put(f"ticket/{ticket_id}", json_data=json_data)
+        msg = await self.__request_put(f'ticket/{ticket_id}', json_data=json_data)
 
         if msg and isinstance(msg, list):
             if msg[0].startswith("Couldn't resolve"):
                 raise NotFoundError(msg[0])
-            if "not allowed" in msg[0]:
+            if 'not allowed' in msg[0]:
                 raise InvalidUseError(msg[0])
 
         return True
 
-    async def merge_ticket(
-        self, ticket_id: typing.Union[str, int], into_id: typing.Union[str, int]
-    ) -> bool:
+    async def merge_ticket(self, ticket_id: typing.Union[str, int], into_id: typing.Union[str, int]) -> bool:
         """Merge ticket into another.
 
         :param ticket_id: ID of ticket to be merged
@@ -3249,16 +3035,14 @@ class AsyncRt:
                       exist or user does not have ModifyTicket permission.
         :raises UnexpectedResponseError: If the response from RT is not as expected
         """
-        msg = await self.__request_put(
-            f"ticket/{ticket_id}", json_data={"MergeInto": into_id}
-        )
+        msg = await self.__request_put(f'ticket/{ticket_id}', json_data={'MergeInto': into_id})
 
         if not isinstance(msg, list) or len(msg) != 1:  # pragma: no cover
             raise UnexpectedResponseError(str(msg))
 
         self.logger.debug(str(msg))
 
-        return msg[0].lower() == "merge successful"
+        return msg[0].lower() == 'merge successful'
 
     async def take(self, ticket_id: typing.Union[str, int]) -> bool:
         """Take ticket.
@@ -3271,14 +3055,14 @@ class AsyncRt:
                       have TakeTicket permission.
         :raises UnexpectedResponseError: If the response from RT is not as expected
         """
-        msg = await self.__request_put(f"ticket/{ticket_id}/take")
+        msg = await self.__request_put(f'ticket/{ticket_id}/take')
 
         if not isinstance(msg, list) or len(msg) != 1:  # pragma: no cover
             raise UnexpectedResponseError(str(msg))
 
         self.logger.debug(str(msg))
 
-        return msg[0].lower().startswith("owner changed")
+        return msg[0].lower().startswith('owner changed')
 
     async def untake(self, ticket_id: typing.Union[str, int]) -> bool:
         """Untake ticket.
@@ -3291,14 +3075,14 @@ class AsyncRt:
                       own the ticket.
         :raises UnexpectedResponseError: If the response from RT is not as expected
         """
-        msg = await self.__request_put(f"ticket/{ticket_id}/untake")
+        msg = await self.__request_put(f'ticket/{ticket_id}/untake')
 
         if not isinstance(msg, list) or len(msg) != 1:  # pragma: no cover
             raise UnexpectedResponseError(str(msg))
 
         self.logger.debug(str(msg))
 
-        return msg[0].lower().startswith("owner changed")
+        return msg[0].lower().startswith('owner changed')
 
     async def steal(self, ticket_id: typing.Union[str, int]) -> bool:
         """Steal ticket.
@@ -3311,11 +3095,11 @@ class AsyncRt:
                       have StealTicket permission.
         :raises UnexpectedResponseError: If the response from RT is not as expected
         """
-        msg = await self.__request_put(f"ticket/{ticket_id}/steal")
+        msg = await self.__request_put(f'ticket/{ticket_id}/steal')
 
         if not isinstance(msg, list) or len(msg) != 1:  # pragma: no cover
             raise UnexpectedResponseError(str(msg))
 
         self.logger.debug(str(msg))
 
-        return msg[0].lower().startswith("owner changed")
+        return msg[0].lower().startswith('owner changed')
