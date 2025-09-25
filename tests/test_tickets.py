@@ -18,7 +18,7 @@ __license__ = """ Copyright (C) 2013 CZ.NIC, z.s.p.o.
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-__docformat__ = 'reStructuredText en'
+__docformat__ = "reStructuredText en"
 __authors__ = [
     '"Jiri Machalek" <jiri.machalek@nic.cz>',
     '"Georges Toth" <georges.toth@govcert.etat.lu>',
@@ -34,15 +34,18 @@ from .conftest import RT_QUEUE
 
 def test_ticket_attachments(rt_connection: rt.rest2.Rt):
     """Test various ticket attachment operations."""
-    ticket_subject = f'Testing issue {random_string()}'
-    ticket_text = (
-        'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'
-    )
-    attachment_content = b'Content of attachment.'
-    attachment_name = 'attachment-name.txt'
+    ticket_subject = f"Testing issue {random_string()}"
+    ticket_text = "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
+    attachment_content = b"Content of attachment."
+    attachment_name = "attachment-name.txt"
 
-    attachment = rt.rest2.Attachment(attachment_name, 'text/plain', attachment_content)
-    ticket_id = rt_connection.create_ticket(subject=ticket_subject, content=ticket_text, queue=RT_QUEUE, attachments=[attachment])
+    attachment = rt.rest2.Attachment(attachment_name, "text/plain", attachment_content)
+    ticket_id = rt_connection.create_ticket(
+        subject=ticket_subject,
+        content=ticket_text,
+        queue=RT_QUEUE,
+        attachments=[attachment],
+    )
     assert ticket_id
 
     att_ids = rt_connection.get_attachments_ids(ticket_id)
@@ -51,32 +54,37 @@ def test_ticket_attachments(rt_connection: rt.rest2.Rt):
     att_list = rt_connection.get_attachments(ticket_id)
     assert len(att_list) == 1
 
-    att_names = [att['Filename'] for att in att_list]
+    att_names = [att["Filename"] for att in att_list]
     assert attachment_name in att_names
 
     # get the attachment and compare it's content
-    att_id = att_list[att_names.index(attachment_name)]['id']
-    att_content = base64.b64decode(rt_connection.get_attachment(att_id)['Content'])
+    att_id = att_list[att_names.index(attachment_name)]["id"]
+    att_content = base64.b64decode(rt_connection.get_attachment(att_id)["Content"])
     assert att_content == attachment_content
 
     # test filter parameter
     att_ids = rt_connection.get_attachments_ids(ticket_id, filter=None)
     assert len(att_ids) == 3
 
-    att_ids = rt_connection.get_attachments_ids(ticket_id, filter=[{"field": "Filename", "value": "attachment-name.txt"}])
+    att_ids = rt_connection.get_attachments_ids(
+        ticket_id, filter=[{"field": "Filename", "value": "attachment-name.txt"}]
+    )
     assert len(att_ids) == 1
 
-    att_ids = rt_connection.get_attachments_ids(ticket_id, filter=[{"field": "Filename", "value": "non-existant.txt"}])
+    att_ids = rt_connection.get_attachments_ids(
+        ticket_id, filter=[{"field": "Filename", "value": "non-existant.txt"}]
+    )
     assert len(att_ids) == 0
+
 
 def test_ticket_take(rt_connection: rt.rest2.Rt):
     """Test take/untake."""
-    ticket_subject = f'Testing issue {random_string()}'
-    ticket_text = (
-        'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'
-    )
+    ticket_subject = f"Testing issue {random_string()}"
+    ticket_text = "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
 
-    ticket_id = rt_connection.create_ticket(subject=ticket_subject, content=ticket_text, queue=RT_QUEUE)
+    ticket_id = rt_connection.create_ticket(
+        subject=ticket_subject, content=ticket_text, queue=RT_QUEUE
+    )
     assert ticket_id
 
     assert rt_connection.take(ticket_id)
