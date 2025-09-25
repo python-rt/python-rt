@@ -64,6 +64,15 @@ async def test_ticket_attachments(async_rt_connection: rt.rest2.AsyncRt):
     att_content = base64.b64decode((await async_rt_connection.get_attachment(att_id))['Content'])
     assert att_content == attachment_content
 
+    # test filter parameter
+    att_ids = [item async for item in async_rt_connection.get_attachments_ids(ticket_id, filter=None)]
+    assert len(att_ids) == 3
+
+    att_ids = [item async for item in async_rt_connection.get_attachments_ids(ticket_id, filter=[{"field": "Filename", "value": "attachment-name.txt"}])]
+    assert len(att_ids) == 1
+
+    att_ids = [item async for item in async_rt_connection.get_attachments_ids(ticket_id, filter=[{"field": "Filename", "value": "non-existant.txt"}])]
+    assert len(att_ids) == 0
 
 @pytest.mark.asyncio
 async def test_ticket_take(async_rt_connection: rt.rest2.AsyncRt):

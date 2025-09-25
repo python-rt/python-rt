@@ -849,7 +849,11 @@ class Rt:
 
         return bool(msg[0])
 
-    def get_attachments(self, ticket_id: typing.Union[str, int]) -> typing.Sequence[dict[str, str]]:
+    def get_attachments(
+        self,
+        ticket_id: typing.Union[str, int],
+        filter: typing.Optional[list[dict[str, str]]] = [{"field": "Filename", "operator": "IS NOT", "value": ""}],
+    ) -> typing.Sequence[dict[str, str]]:
         """Get attachment list for a given ticket.
 
         Example of a return result:
@@ -868,6 +872,7 @@ class Rt:
             ]
 
         :param ticket_id: ID of ticket
+        :param filter: JSON search filter, defaults to Filename is not empty
         :returns: List of tuples for attachments belonging to given ticket.
                   Tuple format: (id, name, content_type, size)
                   Returns None if ticket does not exist.
@@ -876,17 +881,22 @@ class Rt:
 
         for item in self.__paged_request(
             f'ticket/{ticket_id}/attachments',
-            json_data=[{'field': 'Filename', 'operator': 'IS NOT', 'value': ''}],
+            json_data=filter,
             params={'fields': 'Filename,ContentType,ContentLength'},
         ):
             attachments.append(item)
 
         return attachments
 
-    def get_attachments_ids(self, ticket_id: typing.Union[str, int]) -> list[int]:
+    def get_attachments_ids(
+        self,
+        ticket_id: typing.Union[str, int],
+        filter: typing.Optional[list[dict[str, str]]] = [{"field": "Filename", "operator": "IS NOT", "value": ""}],
+    ) -> list[int]:
         """Get IDs of attachments for given ticket.
 
         :param ticket_id: ID of ticket
+        :param filter: JSON search filter, defaults to Filename is not empty
         :returns: List of IDs (type int) of attachments belonging to given
                   ticket. Returns an empty list if ticket does not exist.
         """
@@ -894,7 +904,7 @@ class Rt:
 
         for item in self.__paged_request(
             f'ticket/{ticket_id}/attachments',
-            json_data=[{'field': 'Filename', 'operator': 'IS NOT', 'value': ''}],
+            json_data=filter,
         ):
             attachments.append(int(item['id']))
 
@@ -2358,7 +2368,11 @@ class AsyncRt:
 
         return bool(msg[0])
 
-    async def get_attachments(self, ticket_id: typing.Union[str, int]) -> collections.abc.AsyncIterator:
+    async def get_attachments(
+        self,
+        ticket_id: typing.Union[str, int],
+        filter: typing.Optional[list[dict[str, str]]] = [{"field": "Filename", "operator": "IS NOT", "value": ""}],
+    ) -> collections.abc.AsyncIterator:
         """Get attachment list for a given ticket.
 
         Example of a return result:
@@ -2377,26 +2391,32 @@ class AsyncRt:
             ]
 
         :param ticket_id: ID of ticket
+        :param filter: JSON search filter, defaults to Filename is not empty
         :returns: Iterator of attachments belonging to given ticket. collections.abc.AsyncIterator[typing.Dict[str, str]]
         """
         async for item in self.__paged_request(
             f'ticket/{ticket_id}/attachments',
-            json_data=[{'field': 'Filename', 'operator': 'IS NOT', 'value': ''}],
+            json_data=filter,
             params={'fields': 'Filename,ContentType,ContentLength'},
         ):
             yield item
 
-    async def get_attachments_ids(self, ticket_id: typing.Union[str, int]) -> collections.abc.AsyncIterator:
+    async def get_attachments_ids(
+        self,
+        ticket_id: typing.Union[str, int],
+        filter: typing.Optional[list[dict[str, str]]] = [{"field": "Filename", "operator": "IS NOT", "value": ""}],
+    ) -> collections.abc.AsyncIterator:
         """Get IDs of attachments for given ticket.
 
-        :param ticket_id: ID of ticket
+        :param ticket_id: ID of 
+        :param filter: JSON search filter, defaults to Filename is not empty
         :returns: Iterator of IDs (type int) of attachments belonging to given
                   ticket.
                   collections.abc.AsyncIterator[int]
         """
         async for item in self.__paged_request(
             f'ticket/{ticket_id}/attachments',
-            json_data=[{'field': 'Filename', 'operator': 'IS NOT', 'value': ''}],
+            json_data=filter,
         ):
             yield int(item['id'])
 
