@@ -59,6 +59,16 @@ def test_ticket_attachments(rt_connection: rt.rest2.Rt):
     att_content = base64.b64decode(rt_connection.get_attachment(att_id)['Content'])
     assert att_content == attachment_content
 
+    # test filter parameter
+    att_ids = rt_connection.get_attachments_ids(ticket_id, query_filter=None)
+    assert len(att_ids) == 1
+
+    att_ids = rt_connection.get_attachments_ids(ticket_id, query_filter=[])
+    assert len(att_ids) == 3
+
+    att_ids = rt_connection.get_attachments_ids(ticket_id, query_filter=[{'field': 'Filename', 'value': 'non-existant.txt'}])
+    assert not att_ids
+
 
 def test_ticket_take(rt_connection: rt.rest2.Rt):
     """Test take/untake."""
