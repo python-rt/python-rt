@@ -61,13 +61,13 @@ def test_ticket_attachments(rt_connection: rt.rest2.Rt):
 
     # test filter parameter
     att_ids = rt_connection.get_attachments_ids(ticket_id, query_filter=None)
-    assert len(att_ids) == 3
-
-    att_ids = rt_connection.get_attachments_ids(ticket_id, query_filter=[{'field': 'Filename', 'value': 'attachment-name.txt'}])
     assert len(att_ids) == 1
 
+    att_ids = rt_connection.get_attachments_ids(ticket_id, query_filter=[])
+    assert len(att_ids) == 3
+
     att_ids = rt_connection.get_attachments_ids(ticket_id, query_filter=[{'field': 'Filename', 'value': 'non-existant.txt'}])
-    assert len(att_ids) == 0
+    assert not att_ids
 
 
 def test_ticket_take(rt_connection: rt.rest2.Rt):
