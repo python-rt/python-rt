@@ -148,7 +148,7 @@ class Rt:
         self.logger.debug('Request body: %s', response.request.content.decode('utf8', 'ignore'))
         self.logger.debug('Response status code: %s', str(response.status_code))
         self.logger.debug('Response content:')
-        self.logger.debug(response.content.decode())
+        self.logger.debug(response.content.decode(errors='ignore'))
 
     def __request(
         self,
@@ -1670,7 +1670,7 @@ class AsyncRt:
         self.logger.debug('Request body: %s', response.request.content.decode('utf8', 'ignore'))
         self.logger.debug('Response status code: %s', str(response.status_code))
         self.logger.debug('Response content:')
-        self.logger.debug(response.content.decode())
+        self.logger.debug(response.content.decode(errors='ignore'))
 
     async def __request(
         self,
