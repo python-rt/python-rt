@@ -3,6 +3,10 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v3.3.9], 2025-10-01
+### Fixes
+- In debug mode, where content may be dumped, said content may not decode correctly if it is not utf-8. Ignore errors as we don't care about that in debug mode anyways (fixes #113)
+
 ## [v3.3.8], 2025-09-25
 ### Added
 - Allow for specifying a custom RT JSON filter when querying for attachments for a ticket (#110). This solved the issue with not returning attachment IDs in
