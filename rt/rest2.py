@@ -1695,6 +1695,37 @@ class Rt:
 
         return isinstance(response, list)
 
+    def search_assets(
+        self, catalog_id: typing.Union[str, int], search_params: list[dict[str, typing.Any]], fields: str = "Owner,Description,Status"
+    ) -> typing.Iterator[dict[str, typing.Any]]:
+        """
+        Search assets in a catalog.
+
+        Example::
+
+            client = Rt(...)
+            client.search_assets(1, [{"field": "Name", "value": "NameOfMyAsset"}])
+
+        :param catalog_id: Catalog ID.
+        :param search_params: Params used to filter the results.
+            field: str
+            value: str | int
+            operator: Literal[">", "<", "=", "!=", "LIKE", "NOT LIKE", ">=", "<="] | None
+        :param fields: Fields to return separated by a comma.
+        :return: Found assets. The following is returned with the default `fields`
+            {
+                'Description': '',
+                'id': '1',
+                '_url': 'http://localhost:8080/REST/2.0/asset/1',
+                'Owner': {'_url': 'http://localhost:8080/REST/2.0/user/Nobody', 'id': 'Nobody', 'type': 'user'},
+                'Status': 'new',
+                'type': 'asset'
+            }
+        """
+        search_params.append({'field': 'Catalog', 'value': catalog_id, 'operator': '='})
+
+        yield from self.__paged_request('assets', json_data=search_params, params={"fields": fields})
+
 class AsyncRt:
     r""":term:`API` for Request Tracker according to
     https://docs.bestpractical.com/rt/5.0.2/RT/REST2.html. Interface is based on
@@ -3304,3 +3335,35 @@ class AsyncRt:
         self.logger.debug(str(response))
 
         return isinstance(response, list)
+
+    async def search_assets(
+        self, catalog_id: typing.Union[str, int], search_params: list[dict[str, typing.Any]], fields: str = "Owner,Description,Status"
+    ) -> collections.abc.AsyncIterator[dict[str, typing.Any]]:
+        """
+        Search assets in a catalog.
+
+        Example::
+
+            client = AsyncRt(...)
+            await client.search_assets(1, [{"field": "Name", "value": "NameOfMyAsset"}])
+
+        :param catalog_id: Catalog ID.
+        :param search_params: Params used to filter the results.
+            field: str
+            value: str | int
+            operator: Literal[">", "<", "=", "!=", "LIKE", "NOT LIKE", ">=", "<="] | None
+        :param fields: Fields to return separated by a comma.
+        :return: Found assets. The following is returned with the default `fields`
+            {
+                'Description': '',
+                'id': '1',
+                '_url': 'http://localhost:8080/REST/2.0/asset/1',
+                'Owner': {'_url': 'http://localhost:8080/REST/2.0/user/Nobody', 'id': 'Nobody', 'type': 'user'},
+                'Status': 'new',
+                'type': 'asset'
+            }
+        """
+        search_params.append({'field': 'Catalog', 'value': catalog_id, 'operator': '='})
+
+        async for item in self.__paged_request('assets', json_data=search_params, params={"fields": fields}):
+            yield item
