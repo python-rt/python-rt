@@ -1726,6 +1726,30 @@ class Rt:
 
         yield from self.__paged_request('assets', json_data=search_params, params={"fields": fields})
 
+    def get_asset_history(self, asset_id: typing.Union[str, int]) -> typing.Iterator[dict[str, typing.Any]]:
+        """
+        Get asset history.
+
+        :param asset_id: Asset ID.
+        :return: History - transactions.
+            Type: str
+            type: str
+            _url: str
+            Creator: dict[str, str | int]
+            Created: str
+            Description: str
+            _hyperlinks: list[dict[str, int | str]]
+            id: str
+        """
+        yield from self.__paged_request(
+            f'asset/{asset_id}/history',
+            params={
+                'fields': 'Type,Creator,Created,Description,_hyperlinks',
+                'fields[Creator]': 'id,Name,RealName,EmailAddress',
+            },
+        )
+
+
 class AsyncRt:
     r""":term:`API` for Request Tracker according to
     https://docs.bestpractical.com/rt/5.0.2/RT/REST2.html. Interface is based on
@@ -3367,3 +3391,27 @@ class AsyncRt:
 
         async for item in self.__paged_request('assets', json_data=search_params, params={"fields": fields}):
             yield item
+
+    async def get_asset_history(self, asset_id: typing.Union[str, int]) -> collections.abc.AsyncIterator[list[dict[str, typing.Any]]]:
+        """
+        Get asset history.
+
+        :param asset_id: Asset ID.
+        :return: History - transactions.
+            Type: str
+            type: str
+            _url: str
+            Creator: dict[str, str | int]
+            Created: str
+            Description: str
+            _hyperlinks: list[dict[str, int | str]]
+            id: str
+        """
+        async for transaction in self.__paged_request(
+            f'asset/{asset_id}/history',
+            params={
+                'fields': 'Type,Creator,Created,Description,_hyperlinks',
+                'fields[Creator]': 'id,Name,RealName,EmailAddress',
+            },
+        ):
+            yield transaction
