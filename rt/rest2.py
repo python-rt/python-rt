@@ -1600,6 +1600,33 @@ class Rt:
 
         return msg[0].lower().startswith('owner changed')
 
+    def get_catalog(self, catalog_id: typing.Union[str, int]) -> dict[str, typing.Any]:
+        """
+        Get catalog.
+
+        :param catalog_id: Catalog ID.
+        :return: Catalog.
+                id: int
+                Lifecycle: str
+                Disabled: str
+                _hyperlinks: list[dict[dict[str, str | int]]]
+                LastUpdated: str
+                LastUpdatedBy: dict[str, str]
+                Created: str
+                Creator: dict[str, str]
+                Description: str
+                Name: str
+                Contact: list[str, str]
+                HeldBy: list[str, str]
+        """
+        response = self.__request(f'catalog/{catalog_id}')
+
+        self.logger.debug(str(response))
+
+        if not isinstance(response, dict):
+            raise UnexpectedResponseError(str(response))
+
+        return response
 
 class AsyncRt:
     r""":term:`API` for Request Tracker according to
@@ -3115,3 +3142,31 @@ class AsyncRt:
         self.logger.debug(str(msg))
 
         return msg[0].lower().startswith('owner changed')
+
+    async def get_catalog(self, catalog_id: typing.Union[str, int]) -> dict[str, typing.Any]:
+        """
+        Get catalog.
+
+        :param catalog_id: Catalog ID.
+        :return: Catalog.
+                id: int
+                Lifecycle: str
+                Disabled: str
+                _hyperlinks: list[dict[dict[str, str | int]]]
+                LastUpdated: str
+                LastUpdatedBy: dict[str, str]
+                Created: str
+                Creator: dict[str, str]
+                Description: str
+                Name: str
+                Contact: list[str, str]
+                HeldBy: list[str, str]
+        """
+        response = await self.__request(f'catalog/{catalog_id}')
+
+        self.logger.debug(str(response))
+
+        if not isinstance(response, dict):
+            raise UnexpectedResponseError(str(response))
+
+        return response
