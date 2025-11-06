@@ -1678,6 +1678,23 @@ class Rt:
 
         return int(response['id'])
 
+    def edit_asset(self, asset_id: typing.Union[str, int], **kwargs: typing.Any) -> bool:
+        """
+        Edit an existing asset.
+
+        :param asset_id: Asset ID.
+        :param kwargs: Name, Description, Status, CustomFields, RefersTo, etc.
+        :return: ``True``
+                      Operation was successful
+                  ``False``
+                      Failed (status code != 200)
+        """
+        response = self.__request_put(f'asset/{asset_id}', kwargs)
+
+        self.logger.debug(str(response))
+
+        return isinstance(response, list)
+
 class AsyncRt:
     r""":term:`API` for Request Tracker according to
     https://docs.bestpractical.com/rt/5.0.2/RT/REST2.html. Interface is based on
@@ -3270,3 +3287,20 @@ class AsyncRt:
             raise UnexpectedResponseError(str(response))
 
         return int(response['id'])
+
+    async def edit_asset(self, asset_id: typing.Union[str, int], **kwargs: typing.Any) -> bool:
+        """
+        Edit an existing asset.
+
+        :param asset_id: Asset ID.
+        :param kwargs: Name, Description, Status, CustomFields, RefersTo, etc.
+        :return: ``True``
+                      Operation was successful
+                  ``False``
+                      Failed (status code != 200)
+        """
+        response = await self.__request_put(f'asset/{asset_id}', kwargs)
+
+        self.logger.debug(str(response))
+
+        return isinstance(response, list)
