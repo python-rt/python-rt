@@ -1628,6 +1628,38 @@ class Rt:
 
         return response
 
+    def get_asset(self, asset_id: typing.Union[str, int]) -> dict[str, typing.Any]:
+        """
+        Get asset.
+
+        :param asset_id: Asset ID.
+        :return: Asset.
+                id: int
+                Lifecycle: str
+                Disabled: str
+                _hyperlinks: list[dict[dict[str, str | int]]]
+                LastUpdated: str
+                LastUpdatedBy: dict[str, str]
+                Created: str
+                Creator: dict[str, str]
+                Description: str
+                Name: str
+                Contact: list[str, str]
+                HeldBy: list[str, str]
+                Catalog: dict[str, str]
+                Status: str
+                Owner: dict[str, str]
+                CustomFields: list[dict[str, typing.Any]]
+        """
+        response = self.__request(f'asset/{asset_id}')
+
+        self.logger.debug(str(response))
+
+        if not isinstance(response, dict):
+            raise UnexpectedResponseError(str(response))
+
+        return response
+
 class AsyncRt:
     r""":term:`API` for Request Tracker according to
     https://docs.bestpractical.com/rt/5.0.2/RT/REST2.html. Interface is based on
@@ -3163,6 +3195,38 @@ class AsyncRt:
                 HeldBy: list[str, str]
         """
         response = await self.__request(f'catalog/{catalog_id}')
+
+        self.logger.debug(str(response))
+
+        if not isinstance(response, dict):
+            raise UnexpectedResponseError(str(response))
+
+        return response
+
+    async def get_asset(self, asset_id: typing.Union[str, int]) -> dict[str, typing.Any]:
+        """
+        Get asset.
+
+        :param asset_id: Asset ID.
+        :return: Asset.
+                id: int
+                Lifecycle: str
+                Disabled: str
+                _hyperlinks: list[dict[dict[str, str | int]]]
+                LastUpdated: str
+                LastUpdatedBy: dict[str, str]
+                Created: str
+                Creator: dict[str, str]
+                Description: str
+                Name: str
+                Contact: list[str, str]
+                HeldBy: list[str, str]
+                Catalog: dict[str, str]
+                Status: str
+                Owner: dict[str, str]
+                CustomFields: list[dict[str, typing.Any]]
+        """
+        response = await self.__request(f'asset/{asset_id}')
 
         self.logger.debug(str(response))
 
