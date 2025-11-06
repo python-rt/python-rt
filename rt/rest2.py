@@ -1660,6 +1660,24 @@ class Rt:
 
         return response
 
+    def create_asset(self, name: str, catalog: typing.Union[str, int], **kwargs: typing.Any) -> int:
+        """
+        Create a new asset in a catalog.
+
+        :param name: Asset name.
+        :param catalog: Catalog name or ID.
+        :param kwargs: Name, Description, Status, CustomFields, RefersTo, etc.
+        :return: ID of the asset.
+        """
+        response = self.__request('asset', json_data={'Name': name, 'Catalog': catalog, **kwargs})
+
+        self.logger.debug(str(response))
+
+        if not isinstance(response, dict):
+            raise UnexpectedResponseError(str(response))
+
+        return int(response['id'])
+
 class AsyncRt:
     r""":term:`API` for Request Tracker according to
     https://docs.bestpractical.com/rt/5.0.2/RT/REST2.html. Interface is based on
@@ -3234,3 +3252,21 @@ class AsyncRt:
             raise UnexpectedResponseError(str(response))
 
         return response
+
+    async def create_asset(self, name: str, catalog: typing.Union[str, int], **kwargs: typing.Any) -> int:
+        """
+        Create a new asset in a catalog.
+
+        :param name: Asset name.
+        :param catalog: Catalog name or ID.
+        :param kwargs: Name, Description, Status, CustomFields, RefersTo, etc.
+        :return: ID of the asset.
+        """
+        response = await self.__request('asset', json_data={'Name': name, 'Catalog': catalog, **kwargs})
+
+        self.logger.debug(str(response))
+
+        if not isinstance(response, dict):
+            raise UnexpectedResponseError(str(response))
+
+        return int(response['id'])
