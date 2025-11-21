@@ -3,6 +3,11 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v3.4.0], 2025-11-21
+### Added
+- Added functionality for some of the asset endpoints (get, create, edit, search, get history)
+- Added functionality for the get catalog endpoint
+
 ## [v3.3.9], 2025-10-01
 ### Fixes
 - In debug mode, where content may be dumped, said content may not decode correctly if it is not utf-8. Ignore errors as we don't care about that in debug mode anyways (fixes #113)
