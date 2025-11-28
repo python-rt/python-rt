@@ -1600,6 +1600,155 @@ class Rt:
 
         return msg[0].lower().startswith('owner changed')
 
+    def get_catalog(self, catalog_id: typing.Union[str, int]) -> dict[str, typing.Any]:
+        """
+        Get catalog.
+
+        :param catalog_id: Catalog ID.
+        :return: Catalog.
+                id: int
+                Lifecycle: str
+                Disabled: str
+                _hyperlinks: list[dict[dict[str, str | int]]]
+                LastUpdated: str
+                LastUpdatedBy: dict[str, str]
+                Created: str
+                Creator: dict[str, str]
+                Description: str
+                Name: str
+                Contact: list[str, str]
+                HeldBy: list[str, str]
+        """
+        response = self.__request(f'catalog/{catalog_id}')
+
+        self.logger.debug(str(response))
+
+        if not isinstance(response, dict):
+            raise UnexpectedResponseError(str(response))
+
+        return response
+
+    def get_asset(self, asset_id: typing.Union[str, int]) -> dict[str, typing.Any]:
+        """
+        Get asset.
+
+        :param asset_id: Asset ID.
+        :return: Asset.
+                id: int
+                Lifecycle: str
+                Disabled: str
+                _hyperlinks: list[dict[dict[str, str | int]]]
+                LastUpdated: str
+                LastUpdatedBy: dict[str, str]
+                Created: str
+                Creator: dict[str, str]
+                Description: str
+                Name: str
+                Contact: list[str, str]
+                HeldBy: list[str, str]
+                Catalog: dict[str, str]
+                Status: str
+                Owner: dict[str, str]
+                CustomFields: list[dict[str, typing.Any]]
+        """
+        response = self.__request(f'asset/{asset_id}')
+
+        self.logger.debug(str(response))
+
+        if not isinstance(response, dict):
+            raise UnexpectedResponseError(str(response))
+
+        return response
+
+    def create_asset(self, name: str, catalog: typing.Union[str, int], **kwargs: typing.Any) -> int:
+        """
+        Create a new asset in a catalog.
+
+        :param name: Asset name.
+        :param catalog: Catalog name or ID.
+        :param kwargs: Name, Description, Status, CustomFields, RefersTo, etc.
+        :return: ID of the asset.
+        """
+        response = self.__request('asset', json_data={'Name': name, 'Catalog': catalog, **kwargs})
+
+        self.logger.debug(str(response))
+
+        if not isinstance(response, dict):
+            raise UnexpectedResponseError(str(response))
+
+        return int(response['id'])
+
+    def edit_asset(self, asset_id: typing.Union[str, int], **kwargs: typing.Any) -> bool:
+        """
+        Edit an existing asset.
+
+        :param asset_id: Asset ID.
+        :param kwargs: Name, Description, Status, CustomFields, RefersTo, etc.
+        :return: ``True``
+                      Operation was successful
+                  ``False``
+                      Failed (status code != 200)
+        """
+        response = self.__request_put(f'asset/{asset_id}', kwargs)
+
+        self.logger.debug(str(response))
+
+        return isinstance(response, list)
+
+    def search_assets(
+        self, catalog_id: typing.Union[str, int], search_params: list[dict[str, typing.Any]], fields: str = "Owner,Description,Status"
+    ) -> typing.Iterator[dict[str, typing.Any]]:
+        """
+        Search assets in a catalog.
+
+        Example::
+
+            client = Rt(...)
+            client.search_assets(1, [{"field": "Name", "value": "NameOfMyAsset"}])
+
+        :param catalog_id: Catalog ID.
+        :param search_params: Params used to filter the results.
+            field: str
+            value: str | int
+            operator: Literal[">", "<", "=", "!=", "LIKE", "NOT LIKE", ">=", "<="] | None
+        :param fields: Fields to return separated by a comma.
+        :return: Found assets. The following is returned with the default `fields`
+            {
+                'Description': '',
+                'id': '1',
+                '_url': 'http://localhost:8080/REST/2.0/asset/1',
+                'Owner': {'_url': 'http://localhost:8080/REST/2.0/user/Nobody', 'id': 'Nobody', 'type': 'user'},
+                'Status': 'new',
+                'type': 'asset'
+            }
+        """
+        search_params.append({'field': 'Catalog', 'value': catalog_id, 'operator': '='})
+
+        yield from self.__paged_request('assets', json_data=search_params, params={"fields": fields})
+
+    def get_asset_history(self, asset_id: typing.Union[str, int]) -> typing.Iterator[dict[str, typing.Any]]:
+        """
+        Get asset history.
+
+        :param asset_id: Asset ID.
+        :return: History - transactions.
+            Type: str
+            type: str
+            _url: str
+            Creator: dict[str, str | int]
+            Created: str
+            Description: str
+            _hyperlinks: list[dict[str, int | str]]
+            id: str
+        """
+        yield from self.__paged_request(
+            f'asset/{asset_id}/history',
+            params={
+                'fields': 'Type,Creator,Created,Description,_hyperlinks',
+                'fields[Creator]': 'id,Name,RealName,EmailAddress',
+            },
+        )
+
 
 class AsyncRt:
     r""":term:`API` for Request Tracker according to
@@ -3115,3 +3264,154 @@ class AsyncRt:
         self.logger.debug(str(msg))
 
         return msg[0].lower().startswith('owner changed')
+
+    async def get_catalog(self, catalog_id: typing.Union[str, int]) -> dict[str, typing.Any]:
+        """
+        Get catalog.
+
+        :param catalog_id: Catalog ID.
+        :return: Catalog.
+                id: int
+                Lifecycle: str
+                Disabled: str
+                _hyperlinks: list[dict[dict[str, str | int]]]
+                LastUpdated: str
+                LastUpdatedBy: dict[str, str]
+                Created: str
+                Creator: dict[str, str]
+                Description: str
+                Name: str
+                Contact: list[str, str]
+                HeldBy: list[str, str]
+        """
+        response = await self.__request(f'catalog/{catalog_id}')
+
+        self.logger.debug(str(response))
+
+        if not isinstance(response, dict):
+            raise UnexpectedResponseError(str(response))
+
+        return response
+
+    async def get_asset(self, asset_id: typing.Union[str, int]) -> dict[str, typing.Any]:
+        """
+        Get asset.
+
+        :param asset_id: Asset ID.
+        :return: Asset.
+                id: int
+                Lifecycle: str
+                Disabled: str
+                _hyperlinks: list[dict[dict[str, str | int]]]
+                LastUpdated: str
+                LastUpdatedBy: dict[str, str]
+                Created: str
+                Creator: dict[str, str]
+                Description: str
+                Name: str
+                Contact: list[str, str]
+                HeldBy: list[str, str]
+                Catalog: dict[str, str]
+                Status: str
+                Owner: dict[str, str]
+                CustomFields: list[dict[str, typing.Any]]
+        """
+        response = await self.__request(f'asset/{asset_id}')
+
+        self.logger.debug(str(response))
+
+        if not isinstance(response, dict):
+            raise UnexpectedResponseError(str(response))
+
+        return response
+
+    async def create_asset(self, name: str, catalog: typing.Union[str, int], **kwargs: typing.Any) -> int:
+        """
+        Create a new asset in a catalog.
+
+        :param name: Asset name.
+        :param catalog: Catalog name or ID.
+        :param kwargs: Name, Description, Status, CustomFields, RefersTo, etc.
+        :return: ID of the asset.
+        """
+        response = await self.__request('asset', json_data={'Name': name, 'Catalog': catalog, **kwargs})
+
+        self.logger.debug(str(response))
+
+        if not isinstance(response, dict):
+            raise UnexpectedResponseError(str(response))
+
+        return int(response['id'])
+
+    async def edit_asset(self, asset_id: typing.Union[str, int], **kwargs: typing.Any) -> bool:
+        """
+        Edit an existing asset.
+
+        :param asset_id: Asset ID.
+        :param kwargs: Name, Description, Status, CustomFields, RefersTo, etc.
+        :return: ``True``
+                      Operation was successful
+                  ``False``
+                      Failed (status code != 200)
+        """
+        response = await self.__request_put(f'asset/{asset_id}', kwargs)
+
+        self.logger.debug(str(response))
+
+        return isinstance(response, list)
+
+    async def search_assets(
+        self, catalog_id: typing.Union[str, int], search_params: list[dict[str, typing.Any]], fields: str = "Owner,Description,Status"
+    ) -> collections.abc.AsyncIterator[dict[str, typing.Any]]:
+        """
+        Search assets in a catalog.
+
+        Example::
+
+            client = AsyncRt(...)
+            await client.search_assets(1, [{"field": "Name", "value": "NameOfMyAsset"}])
+
+        :param catalog_id: Catalog ID.
+        :param search_params: Params used to filter the results.
+            field: str
+            value: str | int
+            operator: Literal[">", "<", "=", "!=", "LIKE", "NOT LIKE", ">=", "<="] | None
+        :param fields: Fields to return separated by a comma.
+        :return: Found assets. The following is returned with the default `fields`
+            {
+                'Description': '',
+                'id': '1',
+                '_url': 'http://localhost:8080/REST/2.0/asset/1',
+                'Owner': {'_url': 'http://localhost:8080/REST/2.0/user/Nobody', 'id': 'Nobody', 'type': 'user'},
+                'Status': 'new',
+                'type': 'asset'
+            }
+        """
+        search_params.append({'field': 'Catalog', 'value': catalog_id, 'operator': '='})
+
+        async for item in self.__paged_request('assets', json_data=search_params, params={"fields": fields}):
+            yield item
+
+    async def get_asset_history(self, asset_id: typing.Union[str, int]) -> collections.abc.AsyncIterator[list[dict[str, typing.Any]]]:
+        """
+        Get asset history.
+
+        :param asset_id: Asset ID.
+        :return: History - transactions.
+            Type: str
+            type: str
+            _url: str
+            Creator: dict[str, str | int]
+            Created: str
+            Description: str
+            _hyperlinks: list[dict[str, int | str]]
+            id: str
+        """
+        async for transaction in self.__paged_request(
+            f'asset/{asset_id}/history',
+            params={
+                'fields': 'Type,Creator,Created,Description,_hyperlinks',
+                'fields[Creator]': 'id,Name,RealName,EmailAddress',
+            },
+        ):
+            yield transaction

@@ -440,3 +440,27 @@ def test_queues(rt_connection: rt.rest2.Rt):
 
     with pytest.raises(rt.exceptions.NotFoundError):
         rt_connection.delete_queue(f'Queue {random_string()}')
+
+
+def test_catalog(rt_connection: rt.rest2.Rt):
+    catalog = rt_connection.get_catalog(1)
+    assert catalog['id'] == 1
+
+
+def test_assets(rt_connection: rt.rest2.Rt):
+    asset_id = rt_connection.create_asset('test', 1, Creator='root')
+    assert asset_id
+
+    asset = rt_connection.get_asset(asset_id)
+    assert asset['id'] == asset_id
+
+    asset_history = rt_connection.get_asset_history(asset_id)
+    assert len(list(asset_history)) == 1
+
+    asset_edited = rt_connection.edit_asset(asset_id, Name='test2')
+    assert asset_edited
+
+    search = rt_connection.search_assets(1, [{'field': 'Name', 'value': 'test2'}])
+    items = list(search)
+    assert len(items) == 1
+    assert items[0]["Status"] == "new"
