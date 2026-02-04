@@ -409,7 +409,7 @@ class Rt:
 
         return res
 
-    def new_correspondence(self, queue: typing.Optional[typing.Union[str, object]] = None) -> typing.Iterator[dict]:
+    def new_correspondence(self, queue: typing.Optional[typing.Union[str, object]] = None) -> typing.Iterator[dict[str, typing.Any]]:
         """Obtains tickets changed by other users than the system one.
 
         :param queue: Queue where to search
@@ -421,7 +421,7 @@ class Rt:
         """
         return self.search(queue=queue, order='-LastUpdated')
 
-    def last_updated(self, since: str, queue: typing.Optional[str] = None) -> typing.Iterator[dict]:
+    def last_updated(self, since: str, queue: typing.Optional[str] = None) -> typing.Iterator[dict[str, typing.Any]]:
         """Obtains tickets changed after given date.
 
         :param since: Date as string in form '2011-02-24'
@@ -462,7 +462,7 @@ class Rt:
         raw_query: typing.Optional[str] = None,
         query_format: typing.Union[str, list[str], dict[str, str]] = 'l',
         **kwargs: typing.Any,
-    ) -> typing.Iterator[dict]:
+    ) -> typing.Iterator[dict[str, typing.Any]]:
         r"""Search arbitrary needles in given fields and queue.
 
         Example::
@@ -566,7 +566,9 @@ class Rt:
 
         yield from self.__paged_request(url, params=get_params)
 
-    def get_ticket(self, ticket_id: typing.Union[str, int], query_format: typing.Union[dict[str, str], None] = None) -> dict:
+    def get_ticket(
+        self, ticket_id: typing.Union[str, int], query_format: typing.Union[dict[str, str], None] = None
+    ) -> dict[str, typing.Any]:
         """Fetch ticket by its ID.
 
         :param ticket_id: ID of demanded ticket
@@ -922,7 +924,7 @@ class Rt:
 
         return attachments
 
-    def get_attachment(self, attachment_id: typing.Union[str, int]) -> dict:
+    def get_attachment(self, attachment_id: typing.Union[str, int]) -> dict[str, typing.Any]:
         """Get attachment.
 
         :param attachment_id: ID of attachment to fetch
@@ -1984,7 +1986,7 @@ class AsyncRt:
         page: int = 1,
         per_page: int = 20,
         recurse: bool = True,
-    ) -> collections.abc.AsyncIterator:
+    ) -> collections.abc.AsyncIterator[dict[str, typing.Any]]:
         """Request using pagination for :term:`API`.
 
         :param selector: End part of URL which completes self.url parameter
@@ -2103,7 +2105,9 @@ class AsyncRt:
 
         return res
 
-    async def new_correspondence(self, queue: typing.Optional[typing.Union[str, object]] = None) -> collections.abc.AsyncIterator:
+    async def new_correspondence(
+        self, queue: typing.Optional[typing.Union[str, object]] = None
+    ) -> collections.abc.AsyncIterator[dict[str, typing.Any]]:
         """Obtains tickets changed by other users than the system one.
 
         :param queue: Queue where to search
@@ -2112,11 +2116,11 @@ class AsyncRt:
                   the system one, ordered in decreasing order by LastUpdated.
                   Each ticket is dictionary, the same as in
                   :py:meth:`~Rt.get_ticket`.
-                  collections.abc.AsyncIterator[dict]
+                  collections.abc.AsyncIterator[dict[str, typing.Any]]
         """
         return self.search(queue=queue, order='-LastUpdated')
 
-    async def last_updated(self, since: str, queue: typing.Optional[str] = None) -> collections.abc.AsyncIterator:
+    async def last_updated(self, since: str, queue: typing.Optional[str] = None) -> collections.abc.AsyncIterator[dict[str, typing.Any]]:
         """Obtains tickets changed after given date.
 
         :param since: Date as string in form '2011-02-24'
@@ -2126,7 +2130,7 @@ class AsyncRt:
                   *since* ordered in decreasing order by LastUpdated.
                   Each ticket is a dictionary, the same as in
                   :py:meth:`~Rt.get_ticket`.
-                  collections.abc.AsyncIterator[dict]
+                  collections.abc.AsyncIterator[dict[str, typing.Any]]
 
         :raises InvalidUseError: If the specified date is of an unsupported format.
         """
@@ -2158,7 +2162,7 @@ class AsyncRt:
         raw_query: typing.Optional[str] = None,
         query_format: typing.Union[str, list[str], dict[str, str]] = 'l',
         **kwargs: typing.Any,
-    ) -> collections.abc.AsyncIterator:
+    ) -> collections.abc.AsyncIterator[dict[str, typing.Any]]:
         r"""Search arbitrary needles in given fields and queue.
 
         Example::
@@ -2209,7 +2213,7 @@ class AsyncRt:
 
         :returns: Iterator over matching tickets. Each ticket is the same dictionary
                   as in :py:meth:`~Rt.get_ticket`.
-                  collections.abc.AsyncIterator[dict]
+                  collections.abc.AsyncIterator[dict[str, typing.Any]]
         :raises:  UnexpectedMessageFormatError: Unexpected format of returned message.
                   InvalidQueryError: If raw query is malformed
         """
@@ -2264,7 +2268,9 @@ class AsyncRt:
         async for item in self.__paged_request(url, params=get_params):
             yield item
 
-    async def get_ticket(self, ticket_id: typing.Union[str, int], query_format: typing.Union[dict[str, str], None] = None) -> dict:
+    async def get_ticket(
+        self, ticket_id: typing.Union[str, int], query_format: typing.Union[dict[str, str], None] = None
+    ) -> dict[str, typing.Any]:
         """Fetch ticket by its ID.
 
         :param ticket_id: ID of demanded ticket
@@ -2403,7 +2409,7 @@ class AsyncRt:
 
         return bool(msg[0])
 
-    async def get_ticket_history(self, ticket_id: typing.Union[str, int]) -> collections.abc.AsyncIterator:
+    async def get_ticket_history(self, ticket_id: typing.Union[str, int]) -> collections.abc.AsyncIterator[dict[str, typing.Any]]:
         """Get set of short history items.
 
         :param ticket_id: ID of ticket
@@ -2556,7 +2562,7 @@ class AsyncRt:
         self,
         ticket_id: typing.Union[str, int],
         query_filter: typing.Optional[list[dict[str, str]]] = None,
-    ) -> collections.abc.AsyncIterator:
+    ) -> collections.abc.AsyncIterator[dict[str, typing.Any]]:
         """Get attachment list for a given ticket.
 
         Example of a return result:
@@ -2592,7 +2598,7 @@ class AsyncRt:
         self,
         ticket_id: typing.Union[str, int],
         query_filter: typing.Optional[list[dict[str, str]]] = None,
-    ) -> collections.abc.AsyncIterator:
+    ) -> collections.abc.AsyncIterator[int]:
         """Get IDs of attachments for given ticket.
 
         :param ticket_id: ID of
@@ -2610,7 +2616,7 @@ class AsyncRt:
         ):
             yield int(item['id'])
 
-    async def get_attachment(self, attachment_id: typing.Union[str, int]) -> dict:
+    async def get_attachment(self, attachment_id: typing.Union[str, int]) -> dict[str, typing.Any]:
         """Get attachment.
 
         :param attachment_id: ID of attachment to fetch
@@ -2982,7 +2988,7 @@ class AsyncRt:
 
         return res
 
-    async def get_all_queues(self, include_disabled: bool = False) -> collections.abc.AsyncIterator:
+    async def get_all_queues(self, include_disabled: bool = False) -> collections.abc.AsyncIterator[dict[str, typing.Any]]:
         """Return a list of all queues.
 
         Example of a return result:
@@ -3440,7 +3446,7 @@ class AsyncRt:
         async for item in self.__paged_request('assets', json_data=search_params, params=get_params):
             yield item
 
-    async def get_asset_history(self, asset_id: typing.Union[str, int]) -> collections.abc.AsyncIterator[list[dict[str, typing.Any]]]:
+    async def get_asset_history(self, asset_id: typing.Union[str, int]) -> collections.abc.AsyncIterator[dict[str, typing.Any]]:
         """
         Get asset history.
 
