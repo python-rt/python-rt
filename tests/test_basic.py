@@ -81,6 +81,13 @@ def test_ticket_operations(rt_connection: rt.rest2.Rt):
     assert search_result[0]['Status'] == 'new'
     assert 'Requestor' not in search_result[0].keys()
 
+    # search with query_format field dict
+    search_result = list(rt_connection.search(Subject=ticket_subject, query_format={'fields': 'Owner', 'fields[Owner]': 'Name'}))
+    assert len(search_result) == 1
+    assert 'Subject' not in search_result[0]
+    assert 'Status' not in search_result[0]
+    assert search_result[0]['Owner']['Name'] == 'Nobody'
+
     # raw search
     search_result = list(rt_connection.search(raw_query=f'Subject="{ticket_subject}"'))
     assert len(search_result) == 1
@@ -448,7 +455,10 @@ def test_catalog(rt_connection: rt.rest2.Rt):
 
 
 def test_assets(rt_connection: rt.rest2.Rt):
-    asset_id = rt_connection.create_asset('test', 1, Creator='root')
+    asset_name = random_string()
+    asset_name_new = random_string()
+
+    asset_id = rt_connection.create_asset(asset_name, 1, Creator='root')
     assert asset_id
 
     asset = rt_connection.get_asset(asset_id)
@@ -457,10 +467,30 @@ def test_assets(rt_connection: rt.rest2.Rt):
     asset_history = rt_connection.get_asset_history(asset_id)
     assert len(list(asset_history)) == 1
 
-    asset_edited = rt_connection.edit_asset(asset_id, Name='test2')
+    asset_edited = rt_connection.edit_asset(asset_id, Name=asset_name_new)
     assert asset_edited
 
-    search = rt_connection.search_assets(1, [{'field': 'Name', 'value': 'test2'}])
+    search = rt_connection.search_assets(1, [{'field': 'Name', 'value': asset_name_new}])
     items = list(search)
     assert len(items) == 1
-    assert items[0]["Status"] == "new"
+    assert items[0]['Status'] == 'new'
+
+    search = rt_connection.search_assets(1, [{'field': 'Name', 'value': asset_name_new}], query_format='Owner')
+    items = list(search)
+    assert len(items) == 1
+    assert items[0]['Owner']['id'] == 'Nobody'
+    assert 'Status' not in items[0]
+
+    search = rt_connection.search_assets(1, [{'field': 'Name', 'value': asset_name_new}], query_format=['Owner'])
+    items = list(search)
+    assert len(items) == 1
+    assert items[0]['Owner']['id'] == 'Nobody'
+    assert 'Status' not in items[0]
+
+    search = rt_connection.search_assets(
+        1, [{'field': 'Name', 'value': asset_name_new}], query_format={'fields': 'Owner', 'fields[Owner]': 'Name'}
+    )
+    items = list(search)
+    assert len(items) == 1
+    assert items[0]['Owner']['Name'] == 'Nobody'
+    assert 'Status' not in items[0]

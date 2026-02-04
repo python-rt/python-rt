@@ -460,7 +460,7 @@ class Rt:
         queue: typing.Optional[typing.Union[str, object]] = None,
         order: typing.Optional[str] = None,
         raw_query: typing.Optional[str] = None,
-        query_format: typing.Union[str, list[str]] = 'l',
+        query_format: typing.Union[str, list[str], dict[str, str]] = 'l',
         **kwargs: typing.Any,
     ) -> typing.Iterator[dict]:
         r"""Search arbitrary needles in given fields and queue.
@@ -554,6 +554,8 @@ class Rt:
 
         if isinstance(query_format, list):
             get_params['fields'] = ','.join(query_format)
+        elif isinstance(query_format, dict):
+            get_params = {**get_params, **query_format}
         elif query_format == 'l':
             get_params['fields'] = (
                 'Owner,Status,Created,Subject,Queue,CustomFields,Requestor,Cc,AdminCc,Started,Created,TimeEstimated,Due,Type,InitialPriority,Priority,TimeLeft,LastUpdated'
@@ -564,13 +566,14 @@ class Rt:
 
         yield from self.__paged_request(url, params=get_params)
 
-    def get_ticket(self, ticket_id: typing.Union[str, int]) -> dict:
+    def get_ticket(self, ticket_id: typing.Union[str, int], query_format: typing.Union[dict[str, str], None] = None) -> dict:
         """Fetch ticket by its ID.
 
         :param ticket_id: ID of demanded ticket
+        :param query_format: Returned fields to be populated
 
         :returns: Dictionary with key, value pairs for ticket with
-                  *ticket_id* or None if ticket does not exist. List of keys:
+                  *ticket_id* or None if ticket does not exist. List of keys (when query_format is None):
 
                       * id
                       * numerical_id
@@ -597,7 +600,10 @@ class Rt:
         :raises UnexpectedMessageFormatError: Unexpected format of returned message.
         :raises NotFoundError: If there is no ticket with the specified ticket_id.
         """
-        res = self.__request(f'ticket/{ticket_id}', get_params={'fields[Queue]': 'Name'})
+        if not query_format:
+            query_format = {}
+
+        res = self.__request(f'ticket/{ticket_id}', get_params={'fields[Queue]': 'Name', **query_format})
 
         if not isinstance(res, dict):  # pragma: no cover
             raise UnexpectedResponseError(str(res))
@@ -1628,12 +1634,13 @@ class Rt:
 
         return response
 
-    def get_asset(self, asset_id: typing.Union[str, int]) -> dict[str, typing.Any]:
+    def get_asset(self, asset_id: typing.Union[str, int], query_format: typing.Optional[dict[str, str]] = None) -> dict[str, typing.Any]:
         """
         Get asset.
 
         :param asset_id: Asset ID.
-        :return: Asset.
+        :param query_format: Returned fields to be populated.
+        :return: Asset (when `query_format` is `None`).
                 id: int
                 Lifecycle: str
                 Disabled: str
@@ -1651,7 +1658,10 @@ class Rt:
                 Owner: dict[str, str]
                 CustomFields: list[dict[str, typing.Any]]
         """
-        response = self.__request(f'asset/{asset_id}')
+        if not query_format:
+            query_format = {}
+
+        response = self.__request(f'asset/{asset_id}', get_params=query_format)
 
         self.logger.debug(str(response))
 
@@ -1696,23 +1706,28 @@ class Rt:
         return isinstance(response, list)
 
     def search_assets(
-        self, catalog_id: typing.Union[str, int], search_params: list[dict[str, typing.Any]], fields: str = "Owner,Description,Status"
+        self,
+        catalog_id: typing.Union[str, int],
+        search_params: list[dict[str, typing.Any]],
+        query_format: typing.Optional[typing.Union[str, list[str], dict[str, str]]] = None,
     ) -> typing.Iterator[dict[str, typing.Any]]:
         """
         Search assets in a catalog.
 
         Example::
 
-            client = Rt(...)
-            client.search_assets(1, [{"field": "Name", "value": "NameOfMyAsset"}])
+            >>> client = Rt(...)
+            >>> client.search_assets(1, [{"field": "Name", "value": "NameOfMyAsset"}], "Owner,Status")
+            >>> client.search_assets(1, [{"field": "Name", "value": "NameOfMyAsset"}], ["Owner", "Status"])
+            >>> client.search_assets(1, [{"field": "Name", "value": "NameOfMyAsset"}], {"fields": "Owner,Status", "fields[Owner]": "id,Name"})
 
         :param catalog_id: Catalog ID.
         :param search_params: Params used to filter the results.
             field: str
             value: str | int
             operator: Literal[">", "<", "=", "!=", "LIKE", "NOT LIKE", ">=", "<="] | None
-        :param fields: Fields to return separated by a comma.
-        :return: Found assets. The following is returned with the default `fields`
+        :param query_format: Returned fields to be populated.
+        :return: Found assets. The following is returned by default (when `query_format` is `None`)
             {
                 'Description': '',
                 'id': '1',
@@ -1724,7 +1739,15 @@ class Rt:
         """
         search_params.append({'field': 'Catalog', 'value': catalog_id, 'operator': '='})
 
-        yield from self.__paged_request('assets', json_data=search_params, params={"fields": fields})
+        get_params = {'fields': 'Owner,Description,Status'}
+        if isinstance(query_format, dict):
+            get_params = {**get_params, **query_format}
+        elif isinstance(query_format, list):
+            get_params['fields'] = ','.join(query_format)
+        elif isinstance(query_format, str):
+            get_params['fields'] = query_format
+
+        yield from self.__paged_request('assets', json_data=search_params, params=get_params)
 
     def get_asset_history(self, asset_id: typing.Union[str, int]) -> typing.Iterator[dict[str, typing.Any]]:
         """
@@ -2133,7 +2156,7 @@ class AsyncRt:
         queue: typing.Optional[typing.Union[str, object]] = None,
         order: typing.Optional[str] = None,
         raw_query: typing.Optional[str] = None,
-        query_format: typing.Union[str, list[str]] = 'l',
+        query_format: typing.Union[str, list[str], dict[str, str]] = 'l',
         **kwargs: typing.Any,
     ) -> collections.abc.AsyncIterator:
         r"""Search arbitrary needles in given fields and queue.
@@ -2228,6 +2251,8 @@ class AsyncRt:
 
         if isinstance(query_format, list):
             get_params['fields'] = ','.join(query_format)
+        elif isinstance(query_format, dict):
+            get_params = {**get_params, **query_format}
         elif query_format == 'l':
             get_params['fields'] = (
                 'Owner,Status,Created,Subject,Queue,CustomFields,Requestor,Cc,AdminCc,Started,Created,TimeEstimated,Due,Type,InitialPriority,Priority,TimeLeft,LastUpdated'
@@ -2239,13 +2264,14 @@ class AsyncRt:
         async for item in self.__paged_request(url, params=get_params):
             yield item
 
-    async def get_ticket(self, ticket_id: typing.Union[str, int]) -> dict:
+    async def get_ticket(self, ticket_id: typing.Union[str, int], query_format: typing.Union[dict[str, str], None] = None) -> dict:
         """Fetch ticket by its ID.
 
         :param ticket_id: ID of demanded ticket
+        :param query_format: Returned fields to be populated
 
         :returns: Dictionary with key, value pairs for ticket with
-                  *ticket_id* or None if ticket does not exist. List of keys:
+                  *ticket_id* or None if ticket does not exist. List of keys (when query_format is None):
 
                       * id
                       * numerical_id
@@ -2272,7 +2298,10 @@ class AsyncRt:
         :raises UnexpectedMessageFormatError: Unexpected format of returned message.
         :raises NotFoundError: If there is no ticket with the specified ticket_id.
         """
-        res = await self.__request(f'ticket/{ticket_id}', get_params={'fields[Queue]': 'Name'})
+        if not query_format:
+            query_format = {}
+
+        res = await self.__request(f'ticket/{ticket_id}', get_params={'fields[Queue]': 'Name', **query_format})
 
         if not isinstance(res, dict):  # pragma: no cover
             raise UnexpectedResponseError(str(res))
@@ -3293,12 +3322,15 @@ class AsyncRt:
 
         return response
 
-    async def get_asset(self, asset_id: typing.Union[str, int]) -> dict[str, typing.Any]:
+    async def get_asset(
+        self, asset_id: typing.Union[str, int], query_format: typing.Optional[dict[str, str]] = None
+    ) -> dict[str, typing.Any]:
         """
         Get asset.
 
         :param asset_id: Asset ID.
-        :return: Asset.
+        :param query_format: Returned fields to be populated.
+        :return: Asset (when `query_format` is `None`).
                 id: int
                 Lifecycle: str
                 Disabled: str
@@ -3316,7 +3348,10 @@ class AsyncRt:
                 Owner: dict[str, str]
                 CustomFields: list[dict[str, typing.Any]]
         """
-        response = await self.__request(f'asset/{asset_id}')
+        if not query_format:
+            query_format = {}
+
+        response = await self.__request(f'asset/{asset_id}', get_params=query_format)
 
         self.logger.debug(str(response))
 
@@ -3361,23 +3396,28 @@ class AsyncRt:
         return isinstance(response, list)
 
     async def search_assets(
-        self, catalog_id: typing.Union[str, int], search_params: list[dict[str, typing.Any]], fields: str = "Owner,Description,Status"
+        self,
+        catalog_id: typing.Union[str, int],
+        search_params: list[dict[str, typing.Any]],
+        query_format: typing.Optional[typing.Union[str, list[str], dict[str, str]]] = None,
     ) -> collections.abc.AsyncIterator[dict[str, typing.Any]]:
         """
         Search assets in a catalog.
 
         Example::
 
-            client = AsyncRt(...)
-            await client.search_assets(1, [{"field": "Name", "value": "NameOfMyAsset"}])
+            >>> client = AsyncRt(...)
+            >>> await client.search_assets(1, [{"field": "Name", "value": "NameOfMyAsset"}], "Owner,Status")
+            >>> await client.search_assets(1, [{"field": "Name", "value": "NameOfMyAsset"}], ["Owner", "Status"])
+            >>> await client.search_assets(1, [{"field": "Name", "value": "NameOfMyAsset"}], {"fields": "Owner,Status", "fields[Owner]": "id,Name"})
 
         :param catalog_id: Catalog ID.
         :param search_params: Params used to filter the results.
             field: str
             value: str | int
             operator: Literal[">", "<", "=", "!=", "LIKE", "NOT LIKE", ">=", "<="] | None
-        :param fields: Fields to return separated by a comma.
-        :return: Found assets. The following is returned with the default `fields`
+        :param query_format: Returned fields to be populated.
+        :return: Found assets. The following is returned by default (when `query_format` is `None`)
             {
                 'Description': '',
                 'id': '1',
@@ -3389,7 +3429,15 @@ class AsyncRt:
         """
         search_params.append({'field': 'Catalog', 'value': catalog_id, 'operator': '='})
 
-        async for item in self.__paged_request('assets', json_data=search_params, params={"fields": fields}):
+        get_params = {'fields': 'Owner,Description,Status'}
+        if isinstance(query_format, dict):
+            get_params = {**get_params, **query_format}
+        elif isinstance(query_format, list):
+            get_params['fields'] = ','.join(query_format)
+        elif isinstance(query_format, str):
+            get_params['fields'] = query_format
+
+        async for item in self.__paged_request('assets', json_data=search_params, params=get_params):
             yield item
 
     async def get_asset_history(self, asset_id: typing.Union[str, int]) -> collections.abc.AsyncIterator[list[dict[str, typing.Any]]]:
