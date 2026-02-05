@@ -8,7 +8,7 @@
     :target: https://badge.fury.io/py/rt
 
 ==============================================
- Rt - Python interface to Request Tracker API 
+ Rt - Python interface to Request Tracker API
 ==============================================
 
 Python implementation of REST API described here:
@@ -108,7 +108,7 @@ Get the last important updates from a specific queue that have been updated rece
     >>>                 print(content)
 
 
-		
+
 Please use docstrings to see how to use different functions. They are written
 in ReStructuredText. You can also generate HTML documentation by running
 ``make html`` in doc directory (Sphinx required).

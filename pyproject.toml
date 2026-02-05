@@ -97,7 +97,11 @@ testpaths = [
 line-length = 140
 indent-width = 4
 target-version = "py39"
-include = ["pyproject.toml", "rt/**/*.py", "tests/**/*.py"]
+include = [
+  "pyproject.toml",
+  "rt/**/*.py",
+  "tests/**/*.py"
+]
 
 [tool.ruff.lint]
 select = [

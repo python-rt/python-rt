@@ -42,7 +42,7 @@ Using pip::
     pip install rt
 
 Using project git repository::
-    
+
     git clone https://github.com/python-rt/python-rt
 
 Indices and tables
@@ -51,4 +51,3 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-

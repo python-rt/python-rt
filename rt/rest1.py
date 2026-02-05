@@ -258,7 +258,7 @@ class Rt:
         :rtype: int
         """
         try:
-            return int(msg.split('\n')[0].split(' ')[1])
+            return int(msg.split('\n', maxsplit=1)[0].split(' ')[1])
         except (ValueError, AttributeError, LookupError):
             return None
 

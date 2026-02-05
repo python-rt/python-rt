@@ -146,9 +146,9 @@ REST2 is a modern API based on JSON exchanges and thus the complex parsing of re
 - Importing the `rt` class changed in order to better accommodate the new `rest2` implementation.
   - Where one use to be able to import `rt` using:
     `from rt import Rt`
-  
+
     you now have to use the following syntax:
-  
+
     `from rt.rest1 import Rt`
 - Importing the `rt` module does no longer import all exceptions but only the core `RtError` exception.
 If you require other exceptions, please import them from `rt.exceptions`.

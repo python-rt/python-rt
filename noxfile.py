@@ -12,5 +12,5 @@ def test_and_typing(session):
 
 @nox.session()
 def lint(session):
-    session.install(".[test,dev]")
+    session.install('.[test,dev]')
     session.run('ruff', 'rt')

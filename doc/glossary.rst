@@ -12,4 +12,3 @@ Glossary
     REST
         Representational state transfer,  a style of software architecture for
         distributed hypermedia systems such as the World Wide Web
-

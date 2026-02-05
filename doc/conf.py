@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # rt documentation build configuration file, created by
 # sphinx-quickstart on Thu Jan 10 16:31:25 2013.
@@ -11,9 +10,9 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
+import importlib.metadata
 import os
 import sys
-import importlib.metadata
 
 sys.path.insert(0, os.path.abspath('..'))
 
@@ -35,7 +34,7 @@ autodoc_default_options = {
     'member-order': 'alphabetical',
     'special-members': '__init__',
     'undoc-members': True,
-    'exclude-members': '__weakref__'
+    'exclude-members': '__weakref__',
 }
 
 # Add any paths that contain templates here, relative to this directory.
@@ -51,8 +50,8 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'rt'
-copyright = u'2013-present, A project founded by Jiri Machalek and maintained by the python-rt community.'
+project = 'rt'
+copyright = '2013-present, A project founded by Jiri Machalek and maintained by the python-rt community.'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -186,10 +185,8 @@ htmlhelp_basename = 'rtdoc'
 latex_elements = {
     # The paper size ('letterpaper' or 'a4paper').
     # 'papersize': 'letterpaper',
-
     # The font size ('10pt', '11pt' or '12pt').
     # 'pointsize': '10pt',
-
     # Additional stuff for the LaTeX preamble.
     # 'preamble': '',
 }
@@ -197,8 +194,7 @@ latex_elements = {
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-    ('index', 'rt.tex', u'rt Documentation',
-     u'Jiri Machalek', 'manual'),
+    ('index', 'rt.tex', 'rt Documentation', 'Jiri Machalek', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -226,10 +222,7 @@ latex_documents = [
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
-man_pages = [
-    ('index', 'rt', u'rt Documentation',
-     [u'Jiri Machalek'], 1)
-]
+man_pages = [('index', 'rt', 'rt Documentation', ['Jiri Machalek'], 1)]
 
 # If true, show URL addresses after external links.
 # man_show_urls = False
@@ -241,9 +234,7 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    ('index', 'rt', u'rt Documentation',
-     u'Jiri Machalek', 'rt', 'One line description of project.',
-     'Miscellaneous'),
+    ('index', 'rt', 'rt Documentation', 'Jiri Machalek', 'rt', 'One line description of project.', 'Miscellaneous'),
 ]
 
 # Documents to append as an appendix to all manuals.
