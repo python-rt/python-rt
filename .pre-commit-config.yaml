@@ -1,0 +1,56 @@
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+default_language_version:
+  python: ">=3.13"
+
+exclude: |
+  (?x)^(
+    doc/.*|
+    rt.egg-info/.*|
+    venv/.*|
+    .venv/.*|
+    noxfile.py|
+  )$
+
+repos:
+  - repo: builtin
+    hooks:
+      - id: check-added-large-files
+        args: ['--maxkb=750']
+        exclude: ^uv.lock$
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+        args: [--markdown-linebreak-ext=md]
+      - id: fix-byte-order-marker
+      - id: check-json
+      - id: check-toml
+      - id: check-yaml
+      - id: mixed-line-ending
+        args: [--fix=lf]
+      - id: check-symlinks
+      - id: check-merge-conflict
+      - id: check-executables-have-shebangs
+
+  - repo: local
+    hooks:
+      - id: local-ruff-check
+        name: ruff check
+        entry: uv run ruff check --force-exclude --fix --exit-non-zero-on-fix
+        require_serial: true
+        language: system
+        types: [python]
+
+      - id: local-ruff-format
+        name: ruff format
+        entry: uv run ruff format --force-exclude --exit-non-zero-on-format
+        require_serial: true
+        language: system
+        types: [python]
+
+      - id: mypy
+        name: mypy
+        entry: uv run mypy
+        files: rt
+        require_serial: true
+        language: python
+        types: [python]
