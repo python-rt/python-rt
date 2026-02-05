@@ -84,6 +84,15 @@ async def test_ticket_operations(async_rt_connection: rt.rest2.AsyncRt):
     assert search_result[0]['Status'] == 'new'
     assert 'Requestor' not in search_result[0].keys()
 
+    # search with query_format field dict
+    search_result = [
+        item async for item in async_rt_connection.search(Subject=ticket_subject, query_format={'fields': 'Owner', 'fields[Owner]': 'Name'})
+    ]
+    assert len(search_result) == 1
+    assert 'Subject' not in search_result[0]
+    assert 'Status' not in search_result[0]
+    assert search_result[0]['Owner']['Name'] == 'Nobody'
+
     # raw search
     search_result = [item async for item in async_rt_connection.search(raw_query=f'Subject="{ticket_subject}"')]
     assert len(search_result) == 1
@@ -461,7 +470,10 @@ async def test_catalog(async_rt_connection: rt.rest2.AsyncRt):
 
 @pytest.mark.asyncio
 async def test_assets(async_rt_connection: rt.rest2.AsyncRt):
-    asset_id = await async_rt_connection.create_asset('test', 1, Creator='root')
+    asset_name = random_string()
+    asset_name_new = random_string()
+
+    asset_id = await async_rt_connection.create_asset(asset_name, 1, Creator='root')
     assert asset_id
 
     asset = await async_rt_connection.get_asset(asset_id)
@@ -470,10 +482,30 @@ async def test_assets(async_rt_connection: rt.rest2.AsyncRt):
     asset_history = [item async for item in async_rt_connection.get_asset_history(asset_id)]
     assert len(asset_history) == 1
 
-    asset_edited = await async_rt_connection.edit_asset(asset_id, Name='test2async')
+    asset_edited = await async_rt_connection.edit_asset(asset_id, Name=asset_name_new)
     assert asset_edited
 
-    search = async_rt_connection.search_assets(1, [{'field': 'Name', 'value': 'test2async'}])
+    search = async_rt_connection.search_assets(1, [{'field': 'Name', 'value': asset_name_new}])
     items = [item async for item in search]
     assert len(items) == 1
-    assert items[0]["Status"] == "new"
+    assert items[0]['Status'] == 'new'
+
+    search = async_rt_connection.search_assets(1, [{'field': 'Name', 'value': asset_name_new}], query_format='Owner')
+    items = [item async for item in search]
+    assert len(items) == 1
+    assert items[0]['Owner']['id'] == 'Nobody'
+    assert 'Status' not in items[0]
+
+    search = async_rt_connection.search_assets(1, [{'field': 'Name', 'value': asset_name_new}], query_format=['Owner'])
+    items = [item async for item in search]
+    assert len(items) == 1
+    assert items[0]['Owner']['id'] == 'Nobody'
+    assert 'Status' not in items[0]
+
+    search = async_rt_connection.search_assets(
+        1, [{'field': 'Name', 'value': asset_name_new}], query_format={'fields': 'Owner', 'fields[Owner]': 'Name'}
+    )
+    items = [item async for item in search]
+    assert len(items) == 1
+    assert items[0]['Owner']['Name'] == 'Nobody'
+    assert 'Status' not in items[0]
