@@ -487,6 +487,10 @@ def test_assets(rt_connection: rt.rest2.Rt):
     assert items[0]['Owner']['id'] == 'Nobody'
     assert 'Status' not in items[0]
 
+    search = rt_connection.search_assets()
+    items = list(search)
+    assert items
+
     search = rt_connection.search_assets(
         1, [{'field': 'Name', 'value': asset_name_new}], query_format={'fields': 'Owner', 'fields[Owner]': 'Name'}
     )

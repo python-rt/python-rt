@@ -502,6 +502,10 @@ async def test_assets(async_rt_connection: rt.rest2.AsyncRt):
     assert items[0]['Owner']['id'] == 'Nobody'
     assert 'Status' not in items[0]
 
+    search = async_rt_connection.search_assets()
+    items = [item async for item in search]
+    assert items
+
     search = async_rt_connection.search_assets(
         1, [{'field': 'Name', 'value': asset_name_new}], query_format={'fields': 'Owner', 'fields[Owner]': 'Name'}
     )
