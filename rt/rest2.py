@@ -1709,8 +1709,8 @@ class Rt:
 
     def search_assets(
         self,
-        catalog_id: typing.Union[str, int],
-        search_params: list[dict[str, typing.Any]],
+        catalog_id: typing.Union[str, int, None] = None,
+        search_params: typing.Union[list[dict[str, typing.Any]], None] = None,
         query_format: typing.Optional[typing.Union[str, list[str], dict[str, str]]] = None,
     ) -> typing.Iterator[dict[str, typing.Any]]:
         """
@@ -1723,7 +1723,7 @@ class Rt:
             >>> client.search_assets(1, [{"field": "Name", "value": "NameOfMyAsset"}], ["Owner", "Status"])
             >>> client.search_assets(1, [{"field": "Name", "value": "NameOfMyAsset"}], {"fields": "Owner,Status", "fields[Owner]": "id,Name"})
 
-        :param catalog_id: Catalog ID.
+        :param catalog_id: Catalog ID. Use `None` to search all catalogs.
         :param search_params: Params used to filter the results.
             field: str
             value: str | int
@@ -1739,7 +1739,12 @@ class Rt:
                 'type': 'asset'
             }
         """
-        search_params.append({'field': 'Catalog', 'value': catalog_id, 'operator': '='})
+        if not search_params:
+            search_params = []
+        if catalog_id:
+            search_params.append({'field': 'Catalog', 'value': catalog_id, 'operator': '='})
+        else:
+            search_params.append({'field': 'Catalog', 'value': '%', 'operator': 'LIKE'})
 
         get_params = {'fields': 'Owner,Description,Status'}
         if isinstance(query_format, dict):
@@ -3403,8 +3408,8 @@ class AsyncRt:
 
     async def search_assets(
         self,
-        catalog_id: typing.Union[str, int],
-        search_params: list[dict[str, typing.Any]],
+        catalog_id: typing.Union[str, int, None] = None,
+        search_params: typing.Union[list[dict[str, typing.Any]], None] = None,
         query_format: typing.Optional[typing.Union[str, list[str], dict[str, str]]] = None,
     ) -> collections.abc.AsyncIterator[dict[str, typing.Any]]:
         """
@@ -3417,7 +3422,7 @@ class AsyncRt:
             >>> await client.search_assets(1, [{"field": "Name", "value": "NameOfMyAsset"}], ["Owner", "Status"])
             >>> await client.search_assets(1, [{"field": "Name", "value": "NameOfMyAsset"}], {"fields": "Owner,Status", "fields[Owner]": "id,Name"})
 
-        :param catalog_id: Catalog ID.
+        :param catalog_id: Catalog ID. Use `None` to search all catalogs.
         :param search_params: Params used to filter the results.
             field: str
             value: str | int
@@ -3433,7 +3438,12 @@ class AsyncRt:
                 'type': 'asset'
             }
         """
-        search_params.append({'field': 'Catalog', 'value': catalog_id, 'operator': '='})
+        if not search_params:
+            search_params = []
+        if catalog_id:
+            search_params.append({'field': 'Catalog', 'value': catalog_id, 'operator': '='})
+        else:
+            search_params.append({'field': 'Catalog', 'value': '%', 'operator': 'LIKE'})
 
         get_params = {'fields': 'Owner,Description,Status'}
         if isinstance(query_format, dict):

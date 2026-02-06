@@ -3,6 +3,11 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v3.6.0], 2026-02-06
+### Added
+- Parameters search_params and catalog_id used in asset search are now optional
+- If catalog_id is set to None, search all catalogs
+
 ## [v3.5.0], 2026-02-04
 ### Added
 - Added option to define all query parameters for get/search asset and ticket endpoints
