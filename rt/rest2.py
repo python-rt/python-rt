@@ -1551,7 +1551,7 @@ class Rt:
     def take(self, ticket_id: typing.Union[str, int]) -> bool:
         """Take ticket.
 
-        :param ticket_id: ID of ticket to be merged
+        :param ticket_id: ID of ticket to be taken
         :returns: ``True``
                       Operation was successful
                   ``False``
@@ -1571,7 +1571,7 @@ class Rt:
     def untake(self, ticket_id: typing.Union[str, int]) -> bool:
         """Untake ticket.
 
-        :param ticket_id: ID of ticket to be merged
+        :param ticket_id: ID of ticket to be untaken
         :returns: ``True``
                       Operation was successful
                   ``False``
@@ -1591,7 +1591,7 @@ class Rt:
     def steal(self, ticket_id: typing.Union[str, int]) -> bool:
         """Steal ticket.
 
-        :param ticket_id: ID of ticket to be merged
+        :param ticket_id: ID of ticket to be stolen
         :returns: ``True``
                       Operation was successful
                   ``False``
@@ -3248,7 +3248,7 @@ class AsyncRt:
     async def take(self, ticket_id: typing.Union[str, int]) -> bool:
         """Take ticket.
 
-        :param ticket_id: ID of ticket to be merged
+        :param ticket_id: ID of ticket to be taken
         :returns: ``True``
                       Operation was successful
                   ``False``
@@ -3268,7 +3268,7 @@ class AsyncRt:
     async def untake(self, ticket_id: typing.Union[str, int]) -> bool:
         """Untake ticket.
 
-        :param ticket_id: ID of ticket to be merged
+        :param ticket_id: ID of ticket to be untaken
         :returns: ``True``
                       Operation was successful
                   ``False``
@@ -3288,7 +3288,7 @@ class AsyncRt:
     async def steal(self, ticket_id: typing.Union[str, int]) -> bool:
         """Steal ticket.
 
-        :param ticket_id: ID of ticket to be merged
+        :param ticket_id: ID of ticket to be stolen
         :returns: ``True``
                       Operation was successful
                   ``False``

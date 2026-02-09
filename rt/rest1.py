@@ -1423,7 +1423,7 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
     def take(self, ticket_id: typing.Union[str, int]) -> bool:
         """Take ticket.
 
-        :param ticket_id: ID of ticket to be merged
+        :param ticket_id: ID of ticket to be taken
         :returns: ``True``
                       Operation was successful
                   ``False``
@@ -1437,7 +1437,7 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
     def steal(self, ticket_id: typing.Union[str, int]) -> bool:
         """Steal ticket.
 
-        :param ticket_id: ID of ticket to be merged
+        :param ticket_id: ID of ticket to be stolen
         :returns: ``True``
                       Operation was successful
                   ``False``
@@ -1451,7 +1451,7 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
     def untake(self, ticket_id: typing.Union[str, int]) -> bool:
         """Untake ticket.
 
-        :param ticket_id: ID of ticket to be merged
+        :param ticket_id: ID of ticket to be untaken
         :returns: ``True``
                       Operation was successful
                   ``False``
