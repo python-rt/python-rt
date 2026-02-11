@@ -101,11 +101,11 @@ Get the last important updates from a specific queue that have been updated rece
     >>>             attachment_id = k['_url'].rsplit('/', 1)[1]
     >>>             break
     >>>
-    >>>         if attachment_id is not None:
-    >>>             attachment = c.get_attachment(attachment_id)
-    >>>             if attachment['Content'] is not None:
-    >>>                 content = base64.b64decode(attachment['Content']).decode()
-    >>>                 print(content)
+    >>>     if attachment_id is not None:
+    >>>         attachment = tracker.get_attachment(attachment_id)
+    >>>         if attachment['Content'] is not None:
+    >>>             content = base64.b64decode(attachment['Content']).decode()
+    >>>             print(content)
 
 
 
