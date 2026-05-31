@@ -472,8 +472,7 @@ class Rt:
             >>> tickets = list(tracker.search(queue='General', order='Status', raw_query="id='1'+OR+id='2'+OR+id='3'"))
 
         :param queue:      Queue where to search. If you wish to search across
-                           all of your queues, pass the ALL_QUEUES object as the
-                           argument.
+                           all of your queues, pass None as the argument.
         :param order:      Name of field sorting result list, for descending
                            order put - before the field name. E.g. -Created
                            will put the newest tickets at the beginning
@@ -2177,8 +2176,7 @@ class AsyncRt:
             >>> tickets = list(tracker.search(queue='General', order='Status', raw_query="id='1'+OR+id='2'+OR+id='3'"))
 
         :param queue:      Queue where to search. If you wish to search across
-                           all of your queues, pass the ALL_QUEUES object as the
-                           argument.
+                           all of your queues, pass None as the argument.
         :param order:      Name of field sorting result list, for descending
                            order put - before the field name. E.g. -Created
                            will put the newest tickets at the beginning
