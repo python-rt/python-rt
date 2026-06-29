@@ -105,13 +105,13 @@ class RtTestCase(unittest.TestCase):
         for name, params in self.RT_INVALID_CREDENTIALS.items():
             tracker = rt.rest1.Rt(**params)
             self.assertFalse(tracker.login(), 'Login to RT demo site ' + name + ' should fail but did not')
-            self.assertRaises(rt.exceptions.AuthorizationError, lambda: tracker.search())
-        for name, params in self.RT_MISSING_CREDENTIALS.items():
+            self.assertRaises(rt.exceptions.AuthorizationError, lambda: tracker.search())  # noqa: PLW0108
+        for _name, params in self.RT_MISSING_CREDENTIALS.items():
             tracker = rt.rest1.Rt(**params)
-            self.assertRaises(rt.exceptions.AuthorizationError, lambda: tracker.login())
-        for name, params in self.RT_BAD_URL.items():
+            self.assertRaises(rt.exceptions.AuthorizationError, lambda: tracker.login())  # noqa: PLW0108
+        for _name, params in self.RT_BAD_URL.items():
             tracker = rt.rest1.Rt(**params)
-            self.assertRaises(rt.exceptions.UnexpectedResponseError, lambda: tracker.login())
+            self.assertRaises(rt.exceptions.UnexpectedResponseError, lambda: tracker.login())  # noqa: PLW0108
 
     @unittest.skipUnless(_have_creds(RT_VALID_CREDENTIALS), 'missing credentials required to run test')
     def test_ticket_operations(self):

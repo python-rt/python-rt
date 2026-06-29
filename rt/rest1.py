@@ -553,7 +553,8 @@ class Rt:
                 'isnot': ' IS NOT ',
             }
 
-            for key, value in kwargs.items():
+            for _key, value in kwargs.items():
+                key = _key
                 op = '='
                 key_parts = key.split('__')
                 if len(key_parts) > 1:
@@ -656,12 +657,12 @@ class Rt:
         :returns: Equivalent string to POST to the RT REST interface.
         """
         post_data = []
-        for key in data_source:
+        for key, data_source_value in data_source.items():
             if key.startswith('CF_'):
                 rt_key = f'CF.{{{key[3:]}}}'
             else:
                 rt_key = key
-            value = data_source[key]
+            value = data_source_value
             if isinstance(value, (list, tuple)):
                 value = ', '.join(value)
             value_lines = iter(value.splitlines())
@@ -757,9 +758,7 @@ class Rt:
         state = msg.split('\n')[2]
         return self.RE_PATTERNS['update_pattern'].match(state) is not None
 
-    def get_history(
-        self, ticket_id: str | int, transaction_id: str | int | None = None
-    ) -> list[dict] | None:
+    def get_history(self, ticket_id: str | int, transaction_id: str | int | None = None) -> list[dict] | None:
         """Get set of history items.
 
         :param ticket_id: ID of ticket
@@ -1376,9 +1375,7 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
         state = msg.split('\n')[2]
         return self.RE_PATTERNS['links_updated_pattern'].match(state) is not None
 
-    def edit_link(
-        self, ticket_id: str | int, link_name: str, link_value: str | int, delete: bool = False
-    ) -> bool:
+    def edit_link(self, ticket_id: str | int, link_name: str, link_value: str | int, delete: bool = False) -> bool:
         """Creates or deletes a link between the specified tickets (undocumented API feature).
 
         :param ticket_id: ID of ticket to edit

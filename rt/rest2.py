@@ -531,7 +531,8 @@ class Rt:
                 'notlike': ' NOT LIKE ',
             }
 
-            for key, value in kwargs.items():
+            for _key, value in kwargs.items():
+                key = _key
                 op = '='
                 key_parts = key.split('__')
                 if len(key_parts) > 1:
@@ -565,9 +566,7 @@ class Rt:
 
         yield from self.__paged_request(url, params=get_params)
 
-    def get_ticket(
-        self, ticket_id: str | int, query_format: dict[str, str] | None = None
-    ) -> dict[str, typing.Any]:
+    def get_ticket(self, ticket_id: str | int, query_format: dict[str, str] | None = None) -> dict[str, typing.Any]:
         """Fetch ticket by its ID.
 
         :param ticket_id: ID of demanded ticket
@@ -2109,9 +2108,7 @@ class AsyncRt:
 
         return res
 
-    async def new_correspondence(
-        self, queue: str | object | None = None
-    ) -> collections.abc.AsyncIterator[dict[str, typing.Any]]:
+    async def new_correspondence(self, queue: str | object | None = None) -> collections.abc.AsyncIterator[dict[str, typing.Any]]:
         """Obtains tickets changed by other users than the system one.
 
         :param queue: Queue where to search
@@ -2236,7 +2233,8 @@ class AsyncRt:
                 'notlike': ' NOT LIKE ',
             }
 
-            for key, value in kwargs.items():
+            for _key, value in kwargs.items():
+                key = _key
                 op = '='
                 key_parts = key.split('__')
                 if len(key_parts) > 1:
@@ -2271,9 +2269,7 @@ class AsyncRt:
         async for item in self.__paged_request(url, params=get_params):
             yield item
 
-    async def get_ticket(
-        self, ticket_id: str | int, query_format: dict[str, str] | None = None
-    ) -> dict[str, typing.Any]:
+    async def get_ticket(self, ticket_id: str | int, query_format: dict[str, str] | None = None) -> dict[str, typing.Any]:
         """Fetch ticket by its ID.
 
         :param ticket_id: ID of demanded ticket
@@ -3331,9 +3327,7 @@ class AsyncRt:
 
         return response
 
-    async def get_asset(
-        self, asset_id: str | int, query_format: dict[str, str] | None = None
-    ) -> dict[str, typing.Any]:
+    async def get_asset(self, asset_id: str | int, query_format: dict[str, str] | None = None) -> dict[str, typing.Any]:
         """
         Get asset.
 

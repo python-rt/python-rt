@@ -1,7 +1,6 @@
 """Exceptions collection for the rt library."""
 
 
-
 class RtError(Exception):
     """Super class of all Rt Errors."""
 
