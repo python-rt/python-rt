@@ -95,11 +95,11 @@ class Rt:
     def __init__(
         self,
         url: str,
-        proxy: typing.Optional[str] = None,
-        verify_cert: typing.Union[str, bool] = True,
-        http_auth: typing.Optional[httpx.Auth] = None,
-        token: typing.Optional[str] = None,
-        http_timeout: typing.Optional[int] = 20,
+        proxy: str | None = None,
+        verify_cert: str | bool = True,
+        http_auth: httpx.Auth | None = None,
+        token: str | None = None,
+        http_timeout: int | None = 20,
     ) -> None:
         """API initialization.
 
@@ -153,11 +153,11 @@ class Rt:
     def __request(
         self,
         selector: str,
-        get_params: typing.Optional[dict[str, typing.Any]] = None,
-        json_data: typing.Optional[typing.Union[dict[str, typing.Any], list[typing.Any]]] = None,
-        post_data: typing.Optional[dict[str, typing.Any]] = None,
-        attachments: typing.Optional[typing.Sequence[Attachment]] = None,
-    ) -> typing.Union[dict[str, typing.Any], list[str]]:
+        get_params: dict[str, typing.Any] | None = None,
+        json_data: dict[str, typing.Any] | list[typing.Any] | None = None,
+        post_data: dict[str, typing.Any] | None = None,
+        attachments: typing.Sequence[Attachment] | None = None,
+    ) -> dict[str, typing.Any] | list[str]:
         """General request for :term:`API`.
 
         :param selector: End part of URL which completes self.url parameter
@@ -207,7 +207,7 @@ class Rt:
     def __request_put(
         self,
         selector: str,
-        json_data: typing.Optional[dict[str, typing.Any]] = None,
+        json_data: dict[str, typing.Any] | None = None,
     ) -> list[str]:
         """PUT request for :term:`API`.
 
@@ -288,8 +288,8 @@ class Rt:
     def __paged_request(
         self,
         selector: str,
-        json_data: typing.Optional[typing.Union[list[dict[str, typing.Any]], dict[str, typing.Any]]] = None,
-        params: typing.Optional[dict[str, typing.Any]] = None,
+        json_data: list[dict[str, typing.Any]] | dict[str, typing.Any] | None = None,
+        params: dict[str, typing.Any] | None = None,
         page: int = 1,
         per_page: int = 20,
         recurse: bool = True,
@@ -409,7 +409,7 @@ class Rt:
 
         return res
 
-    def new_correspondence(self, queue: typing.Optional[typing.Union[str, object]] = None) -> typing.Iterator[dict[str, typing.Any]]:
+    def new_correspondence(self, queue: str | object | None = None) -> typing.Iterator[dict[str, typing.Any]]:
         """Obtains tickets changed by other users than the system one.
 
         :param queue: Queue where to search
@@ -421,7 +421,7 @@ class Rt:
         """
         return self.search(queue=queue, order='-LastUpdated')
 
-    def last_updated(self, since: str, queue: typing.Optional[str] = None) -> typing.Iterator[dict[str, typing.Any]]:
+    def last_updated(self, since: str, queue: str | None = None) -> typing.Iterator[dict[str, typing.Any]]:
         """Obtains tickets changed after given date.
 
         :param since: Date as string in form '2011-02-24'
@@ -457,10 +457,10 @@ class Rt:
 
     def search(
         self,
-        queue: typing.Optional[typing.Union[str, object]] = None,
-        order: typing.Optional[str] = None,
-        raw_query: typing.Optional[str] = None,
-        query_format: typing.Union[str, list[str], dict[str, str]] = 'l',
+        queue: str | object | None = None,
+        order: str | None = None,
+        raw_query: str | None = None,
+        query_format: str | list[str] | dict[str, str] = 'l',
         **kwargs: typing.Any,
     ) -> typing.Iterator[dict[str, typing.Any]]:
         r"""Search arbitrary needles in given fields and queue.
@@ -566,7 +566,7 @@ class Rt:
         yield from self.__paged_request(url, params=get_params)
 
     def get_ticket(
-        self, ticket_id: typing.Union[str, int], query_format: typing.Union[dict[str, str], None] = None
+        self, ticket_id: str | int, query_format: dict[str, str] | None = None
     ) -> dict[str, typing.Any]:
         """Fetch ticket by its ID.
 
@@ -615,9 +615,9 @@ class Rt:
         self,
         queue: str,
         content_type: TYPE_CONTENT_TYPE = 'text/plain',
-        subject: typing.Optional[str] = None,
-        content: typing.Optional[str] = None,
-        attachments: typing.Optional[typing.Sequence[Attachment]] = None,
+        subject: str | None = None,
+        content: str | None = None,
+        attachments: typing.Sequence[Attachment] | None = None,
         **kwargs: typing.Any,
     ) -> int:
         """Create new ticket and set given parameters.
@@ -670,7 +670,7 @@ class Rt:
 
         return int(res['id'])
 
-    def edit_ticket(self, ticket_id: typing.Union[str, int], **kwargs: typing.Any) -> bool:
+    def edit_ticket(self, ticket_id: str | int, **kwargs: typing.Any) -> bool:
         """Edit ticket values.
 
         :param ticket_id: ID of ticket to edit
@@ -706,7 +706,7 @@ class Rt:
 
         return bool(msg[0])
 
-    def get_ticket_history(self, ticket_id: typing.Union[str, int]) -> list[dict[str, typing.Any]]:
+    def get_ticket_history(self, ticket_id: str | int) -> list[dict[str, typing.Any]]:
         """Get set of short history items.
 
         :param ticket_id: ID of ticket
@@ -724,7 +724,7 @@ class Rt:
 
         return list(transactions)
 
-    def get_transaction(self, transaction_id: typing.Union[str, int]) -> dict[str, typing.Any]:
+    def get_transaction(self, transaction_id: str | int) -> dict[str, typing.Any]:
         """Get a transaction.
 
         :param transaction_id: ID of transaction
@@ -739,11 +739,11 @@ class Rt:
 
     def __correspond(
         self,
-        ticket_id: typing.Union[str, int],
+        ticket_id: str | int,
         content: str = '',
         action: Literal['correspond', 'comment'] = 'correspond',
         content_type: TYPE_CONTENT_TYPE = 'text/plain',
-        attachments: typing.Optional[typing.Sequence[Attachment]] = None,
+        attachments: typing.Sequence[Attachment] | None = None,
     ) -> list[str]:
         """Sends out the correspondence.
 
@@ -783,10 +783,10 @@ class Rt:
 
     def reply(
         self,
-        ticket_id: typing.Union[str, int],
+        ticket_id: str | int,
         content: str = '',
         content_type: TYPE_CONTENT_TYPE = 'text/plain',
-        attachments: typing.Optional[typing.Sequence[Attachment]] = None,
+        attachments: typing.Sequence[Attachment] | None = None,
     ) -> bool:
         """Sends email message to the contacts in ``Requestors`` field of
         given ticket with subject as is set in ``Subject`` field.
@@ -809,7 +809,7 @@ class Rt:
 
         return bool(msg[0])
 
-    def delete_ticket(self, ticket_id: typing.Union[str, int]) -> None:
+    def delete_ticket(self, ticket_id: str | int) -> None:
         """Mark a ticket as deleted.
 
         :param ticket_id: ID of ticket
@@ -831,10 +831,10 @@ class Rt:
 
     def comment(
         self,
-        ticket_id: typing.Union[str, int],
+        ticket_id: str | int,
         content: str = '',
         content_type: TYPE_CONTENT_TYPE = 'text/plain',
-        attachments: typing.Optional[typing.Sequence[Attachment]] = None,
+        attachments: typing.Sequence[Attachment] | None = None,
     ) -> bool:
         """Adds comment to the given ticket.
 
@@ -858,8 +858,8 @@ class Rt:
 
     def get_attachments(
         self,
-        ticket_id: typing.Union[str, int],
-        query_filter: typing.Optional[list[dict[str, str]]] = None,
+        ticket_id: str | int,
+        query_filter: list[dict[str, str]] | None = None,
     ) -> typing.Sequence[dict[str, str]]:
         """Get attachment list for a given ticket.
 
@@ -900,8 +900,8 @@ class Rt:
 
     def get_attachments_ids(
         self,
-        ticket_id: typing.Union[str, int],
-        query_filter: typing.Optional[list[dict[str, str]]] = None,
+        ticket_id: str | int,
+        query_filter: list[dict[str, str]] | None = None,
     ) -> list[int]:
         """Get IDs of attachments for given ticket.
 
@@ -923,7 +923,7 @@ class Rt:
 
         return attachments
 
-    def get_attachment(self, attachment_id: typing.Union[str, int]) -> dict[str, typing.Any]:
+    def get_attachment(self, attachment_id: str | int) -> dict[str, typing.Any]:
         """Get attachment.
 
         :param attachment_id: ID of attachment to fetch
@@ -981,7 +981,7 @@ class Rt:
 
         return res
 
-    def get_user(self, user_id: typing.Union[int, str]) -> dict[str, typing.Any]:
+    def get_user(self, user_id: int | str) -> dict[str, typing.Any]:
         """Get user details.
 
         :param user_id: Identification of user by username (str) or user ID
@@ -1019,7 +1019,7 @@ class Rt:
 
         return res
 
-    def user_exists(self, user_id: typing.Union[int, str], privileged: bool = True) -> bool:
+    def user_exists(self, user_id: int | str, privileged: bool = True) -> bool:
         """Check if a given user_id exists.
 
         :parameter user_id: User ID to lookup.
@@ -1110,7 +1110,7 @@ class Rt:
 
         return res['id']
 
-    def edit_user(self, user_id: typing.Union[str, int], **kwargs: typing.Any) -> list[str]:
+    def edit_user(self, user_id: str | int, **kwargs: typing.Any) -> list[str]:
         """Edit user profile.
 
         :param user_id: Identification of user by username (str) or user ID
@@ -1208,7 +1208,7 @@ class Rt:
 
         return ret
 
-    def delete_user(self, user_id: typing.Union[str, int]) -> None:
+    def delete_user(self, user_id: str | int) -> None:
         """Disable a user.
 
         :param user_id: Identification of a user by name (str) or ID (int)
@@ -1228,7 +1228,7 @@ class Rt:
 
             raise  # pragma: no cover
 
-    def get_queue(self, queue_id: typing.Union[str, int]) -> dict[str, typing.Any]:
+    def get_queue(self, queue_id: str | int) -> dict[str, typing.Any]:
         """Get queue details.
 
         Example of a return result:
@@ -1331,7 +1331,7 @@ class Rt:
 
         return list(queues)
 
-    def edit_queue(self, queue_id: typing.Union[str, int], **kwargs: typing.Any) -> list[str]:
+    def edit_queue(self, queue_id: str | int, **kwargs: typing.Any) -> list[str]:
         """Edit queue.
 
         :param queue_id: Identification of queue by name (str) or ID (int)
@@ -1432,7 +1432,7 @@ class Rt:
 
         return int(res['id'])
 
-    def delete_queue(self, queue_id: typing.Union[str, int]) -> None:
+    def delete_queue(self, queue_id: str | int) -> None:
         """Disable a queue.
 
         :param queue_id: Identification of queue by name (str) or ID (int)
@@ -1453,7 +1453,7 @@ class Rt:
 
             raise  # pragma: no cover
 
-    def get_links(self, ticket_id: typing.Union[str, int]) -> list[dict[str, str]]:
+    def get_links(self, ticket_id: str | int) -> list[dict[str, str]]:
         """Gets the ticket links for a single ticket.
 
         Example of a return result:
@@ -1488,9 +1488,9 @@ class Rt:
 
     def edit_link(
         self,
-        ticket_id: typing.Union[str, int],
+        ticket_id: str | int,
         link_name: TYPE_VALID_TICKET_LINK_NAMES,
-        link_value: typing.Union[str, int],
+        link_value: str | int,
         delete: bool = False,
     ) -> bool:
         """Creates or deletes a link between the specified tickets.
@@ -1526,7 +1526,7 @@ class Rt:
 
         return True
 
-    def merge_ticket(self, ticket_id: typing.Union[str, int], into_id: typing.Union[str, int]) -> bool:
+    def merge_ticket(self, ticket_id: str | int, into_id: str | int) -> bool:
         """Merge ticket into another.
 
         :param ticket_id: ID of ticket to be merged
@@ -1547,7 +1547,7 @@ class Rt:
 
         return msg[0].lower() == 'merge successful'
 
-    def take(self, ticket_id: typing.Union[str, int]) -> bool:
+    def take(self, ticket_id: str | int) -> bool:
         """Take ticket.
 
         :param ticket_id: ID of ticket to be taken
@@ -1567,7 +1567,7 @@ class Rt:
 
         return msg[0].lower().startswith('owner changed')
 
-    def untake(self, ticket_id: typing.Union[str, int]) -> bool:
+    def untake(self, ticket_id: str | int) -> bool:
         """Untake ticket.
 
         :param ticket_id: ID of ticket to be untaken
@@ -1587,7 +1587,7 @@ class Rt:
 
         return msg[0].lower().startswith('owner changed')
 
-    def steal(self, ticket_id: typing.Union[str, int]) -> bool:
+    def steal(self, ticket_id: str | int) -> bool:
         """Steal ticket.
 
         :param ticket_id: ID of ticket to be stolen
@@ -1607,7 +1607,7 @@ class Rt:
 
         return msg[0].lower().startswith('owner changed')
 
-    def get_catalog(self, catalog_id: typing.Union[str, int]) -> dict[str, typing.Any]:
+    def get_catalog(self, catalog_id: str | int) -> dict[str, typing.Any]:
         """
         Get catalog.
 
@@ -1635,7 +1635,7 @@ class Rt:
 
         return response
 
-    def get_asset(self, asset_id: typing.Union[str, int], query_format: typing.Optional[dict[str, str]] = None) -> dict[str, typing.Any]:
+    def get_asset(self, asset_id: str | int, query_format: dict[str, str] | None = None) -> dict[str, typing.Any]:
         """
         Get asset.
 
@@ -1671,7 +1671,7 @@ class Rt:
 
         return response
 
-    def create_asset(self, name: str, catalog: typing.Union[str, int], **kwargs: typing.Any) -> int:
+    def create_asset(self, name: str, catalog: str | int, **kwargs: typing.Any) -> int:
         """
         Create a new asset in a catalog.
 
@@ -1689,7 +1689,7 @@ class Rt:
 
         return int(response['id'])
 
-    def edit_asset(self, asset_id: typing.Union[str, int], **kwargs: typing.Any) -> bool:
+    def edit_asset(self, asset_id: str | int, **kwargs: typing.Any) -> bool:
         """
         Edit an existing asset.
 
@@ -1708,9 +1708,9 @@ class Rt:
 
     def search_assets(
         self,
-        catalog_id: typing.Union[str, int, None] = None,
-        search_params: typing.Union[list[dict[str, typing.Any]], None] = None,
-        query_format: typing.Optional[typing.Union[str, list[str], dict[str, str]]] = None,
+        catalog_id: str | int | None = None,
+        search_params: list[dict[str, typing.Any]] | None = None,
+        query_format: str | list[str] | dict[str, str] | None = None,
     ) -> typing.Iterator[dict[str, typing.Any]]:
         """
         Search assets in a catalog.
@@ -1755,7 +1755,7 @@ class Rt:
 
         yield from self.__paged_request('assets', json_data=search_params, params=get_params)
 
-    def get_asset_history(self, asset_id: typing.Union[str, int]) -> typing.Iterator[dict[str, typing.Any]]:
+    def get_asset_history(self, asset_id: str | int) -> typing.Iterator[dict[str, typing.Any]]:
         """
         Get asset history.
 
@@ -1795,11 +1795,11 @@ class AsyncRt:
     def __init__(
         self,
         url: str,
-        proxy: typing.Optional[str] = None,
-        verify_cert: typing.Union[str, bool] = True,
-        http_auth: typing.Optional[httpx.Auth] = None,
-        token: typing.Optional[str] = None,
-        http_timeout: typing.Optional[int] = 20,
+        proxy: str | None = None,
+        verify_cert: str | bool = True,
+        http_auth: httpx.Auth | None = None,
+        token: str | None = None,
+        http_timeout: int | None = 20,
     ) -> None:
         """API initialization.
 
@@ -1853,11 +1853,11 @@ class AsyncRt:
     async def __request(
         self,
         selector: str,
-        get_params: typing.Optional[dict[str, typing.Any]] = None,
-        json_data: typing.Optional[typing.Union[dict[str, typing.Any], list[typing.Any]]] = None,
-        post_data: typing.Optional[dict[str, typing.Any]] = None,
-        attachments: typing.Optional[typing.Sequence[Attachment]] = None,
-    ) -> typing.Union[dict[str, typing.Any], list[str]]:
+        get_params: dict[str, typing.Any] | None = None,
+        json_data: dict[str, typing.Any] | list[typing.Any] | None = None,
+        post_data: dict[str, typing.Any] | None = None,
+        attachments: typing.Sequence[Attachment] | None = None,
+    ) -> dict[str, typing.Any] | list[str]:
         """General request for :term:`API`.
 
         :param selector: End part of URL which completes self.url parameter
@@ -1907,7 +1907,7 @@ class AsyncRt:
     async def __request_put(
         self,
         selector: str,
-        json_data: typing.Optional[dict[str, typing.Any]] = None,
+        json_data: dict[str, typing.Any] | None = None,
     ) -> list[str]:
         """PUT request for :term:`API`.
 
@@ -1985,8 +1985,8 @@ class AsyncRt:
     async def __paged_request(
         self,
         selector: str,
-        json_data: typing.Optional[typing.Union[list[dict[str, typing.Any]], dict[str, typing.Any]]] = None,
-        params: typing.Optional[dict[str, typing.Any]] = None,
+        json_data: list[dict[str, typing.Any]] | dict[str, typing.Any] | None = None,
+        params: dict[str, typing.Any] | None = None,
         page: int = 1,
         per_page: int = 20,
         recurse: bool = True,
@@ -2110,7 +2110,7 @@ class AsyncRt:
         return res
 
     async def new_correspondence(
-        self, queue: typing.Optional[typing.Union[str, object]] = None
+        self, queue: str | object | None = None
     ) -> collections.abc.AsyncIterator[dict[str, typing.Any]]:
         """Obtains tickets changed by other users than the system one.
 
@@ -2124,7 +2124,7 @@ class AsyncRt:
         """
         return self.search(queue=queue, order='-LastUpdated')
 
-    async def last_updated(self, since: str, queue: typing.Optional[str] = None) -> collections.abc.AsyncIterator[dict[str, typing.Any]]:
+    async def last_updated(self, since: str, queue: str | None = None) -> collections.abc.AsyncIterator[dict[str, typing.Any]]:
         """Obtains tickets changed after given date.
 
         :param since: Date as string in form '2011-02-24'
@@ -2161,10 +2161,10 @@ class AsyncRt:
 
     async def search(
         self,
-        queue: typing.Optional[typing.Union[str, object]] = None,
-        order: typing.Optional[str] = None,
-        raw_query: typing.Optional[str] = None,
-        query_format: typing.Union[str, list[str], dict[str, str]] = 'l',
+        queue: str | object | None = None,
+        order: str | None = None,
+        raw_query: str | None = None,
+        query_format: str | list[str] | dict[str, str] = 'l',
         **kwargs: typing.Any,
     ) -> collections.abc.AsyncIterator[dict[str, typing.Any]]:
         r"""Search arbitrary needles in given fields and queue.
@@ -2272,7 +2272,7 @@ class AsyncRt:
             yield item
 
     async def get_ticket(
-        self, ticket_id: typing.Union[str, int], query_format: typing.Union[dict[str, str], None] = None
+        self, ticket_id: str | int, query_format: dict[str, str] | None = None
     ) -> dict[str, typing.Any]:
         """Fetch ticket by its ID.
 
@@ -2321,9 +2321,9 @@ class AsyncRt:
         self,
         queue: str,
         content_type: TYPE_CONTENT_TYPE = 'text/plain',
-        subject: typing.Optional[str] = None,
-        content: typing.Optional[str] = None,
-        attachments: typing.Optional[typing.Sequence[Attachment]] = None,
+        subject: str | None = None,
+        content: str | None = None,
+        attachments: typing.Sequence[Attachment] | None = None,
         **kwargs: typing.Any,
     ) -> int:
         """Create new ticket and set given parameters.
@@ -2376,7 +2376,7 @@ class AsyncRt:
 
         return int(res['id'])
 
-    async def edit_ticket(self, ticket_id: typing.Union[str, int], **kwargs: typing.Any) -> bool:
+    async def edit_ticket(self, ticket_id: str | int, **kwargs: typing.Any) -> bool:
         """Edit ticket values.
 
         :param ticket_id: ID of ticket to edit
@@ -2412,7 +2412,7 @@ class AsyncRt:
 
         return bool(msg[0])
 
-    async def get_ticket_history(self, ticket_id: typing.Union[str, int]) -> collections.abc.AsyncIterator[dict[str, typing.Any]]:
+    async def get_ticket_history(self, ticket_id: str | int) -> collections.abc.AsyncIterator[dict[str, typing.Any]]:
         """Get set of short history items.
 
         :param ticket_id: ID of ticket
@@ -2429,7 +2429,7 @@ class AsyncRt:
         ):
             yield transaction
 
-    async def get_transaction(self, transaction_id: typing.Union[str, int]) -> dict[str, typing.Any]:
+    async def get_transaction(self, transaction_id: str | int) -> dict[str, typing.Any]:
         """Get a transaction.
 
         :param transaction_id: ID of transaction
@@ -2444,11 +2444,11 @@ class AsyncRt:
 
     async def __correspond(
         self,
-        ticket_id: typing.Union[str, int],
+        ticket_id: str | int,
         content: str = '',
         action: Literal['correspond', 'comment'] = 'correspond',
         content_type: TYPE_CONTENT_TYPE = 'text/plain',
-        attachments: typing.Optional[typing.Sequence[Attachment]] = None,
+        attachments: typing.Sequence[Attachment] | None = None,
     ) -> list[str]:
         """Sends out the correspondence.
 
@@ -2488,10 +2488,10 @@ class AsyncRt:
 
     async def reply(
         self,
-        ticket_id: typing.Union[str, int],
+        ticket_id: str | int,
         content: str = '',
         content_type: TYPE_CONTENT_TYPE = 'text/plain',
-        attachments: typing.Optional[typing.Sequence[Attachment]] = None,
+        attachments: typing.Sequence[Attachment] | None = None,
     ) -> bool:
         """Sends email message to the contacts in ``Requestors`` field of
         given ticket with subject as is set in ``Subject`` field.
@@ -2514,7 +2514,7 @@ class AsyncRt:
 
         return bool(msg[0])
 
-    async def delete_ticket(self, ticket_id: typing.Union[str, int]) -> None:
+    async def delete_ticket(self, ticket_id: str | int) -> None:
         """Mark a ticket as deleted.
 
         :param ticket_id: ID of ticket
@@ -2536,10 +2536,10 @@ class AsyncRt:
 
     async def comment(
         self,
-        ticket_id: typing.Union[str, int],
+        ticket_id: str | int,
         content: str = '',
         content_type: TYPE_CONTENT_TYPE = 'text/plain',
-        attachments: typing.Optional[typing.Sequence[Attachment]] = None,
+        attachments: typing.Sequence[Attachment] | None = None,
     ) -> bool:
         """Adds comment to the given ticket.
 
@@ -2563,8 +2563,8 @@ class AsyncRt:
 
     async def get_attachments(
         self,
-        ticket_id: typing.Union[str, int],
-        query_filter: typing.Optional[list[dict[str, str]]] = None,
+        ticket_id: str | int,
+        query_filter: list[dict[str, str]] | None = None,
     ) -> collections.abc.AsyncIterator[dict[str, typing.Any]]:
         """Get attachment list for a given ticket.
 
@@ -2599,8 +2599,8 @@ class AsyncRt:
 
     async def get_attachments_ids(
         self,
-        ticket_id: typing.Union[str, int],
-        query_filter: typing.Optional[list[dict[str, str]]] = None,
+        ticket_id: str | int,
+        query_filter: list[dict[str, str]] | None = None,
     ) -> collections.abc.AsyncIterator[int]:
         """Get IDs of attachments for given ticket.
 
@@ -2619,7 +2619,7 @@ class AsyncRt:
         ):
             yield int(item['id'])
 
-    async def get_attachment(self, attachment_id: typing.Union[str, int]) -> dict[str, typing.Any]:
+    async def get_attachment(self, attachment_id: str | int) -> dict[str, typing.Any]:
         """Get attachment.
 
         :param attachment_id: ID of attachment to fetch
@@ -2677,7 +2677,7 @@ class AsyncRt:
 
         return res
 
-    async def get_user(self, user_id: typing.Union[int, str]) -> dict[str, typing.Any]:
+    async def get_user(self, user_id: int | str) -> dict[str, typing.Any]:
         """Get user details.
 
         :param user_id: Identification of user by username (str) or user ID
@@ -2715,7 +2715,7 @@ class AsyncRt:
 
         return res
 
-    async def user_exists(self, user_id: typing.Union[int, str], privileged: bool = True) -> bool:
+    async def user_exists(self, user_id: int | str, privileged: bool = True) -> bool:
         """Check if a given user_id exists.
 
         :parameter user_id: User ID to lookup.
@@ -2806,7 +2806,7 @@ class AsyncRt:
 
         return res['id']
 
-    async def edit_user(self, user_id: typing.Union[str, int], **kwargs: typing.Any) -> list[str]:
+    async def edit_user(self, user_id: str | int, **kwargs: typing.Any) -> list[str]:
         """Edit user profile.
 
         :param user_id: Identification of user by username (str) or user ID
@@ -2904,7 +2904,7 @@ class AsyncRt:
 
         return ret
 
-    async def delete_user(self, user_id: typing.Union[str, int]) -> None:
+    async def delete_user(self, user_id: str | int) -> None:
         """Disable a user.
 
         :param user_id: Identification of a user by name (str) or ID (int)
@@ -2924,7 +2924,7 @@ class AsyncRt:
 
             raise  # pragma: no cover
 
-    async def get_queue(self, queue_id: typing.Union[str, int]) -> dict[str, typing.Any]:
+    async def get_queue(self, queue_id: str | int) -> dict[str, typing.Any]:
         """Get queue details.
 
         Example of a return result:
@@ -3027,7 +3027,7 @@ class AsyncRt:
         async for item in self.__paged_request('queues/all', params=params):
             yield item
 
-    async def edit_queue(self, queue_id: typing.Union[str, int], **kwargs: typing.Any) -> list[str]:
+    async def edit_queue(self, queue_id: str | int, **kwargs: typing.Any) -> list[str]:
         """Edit queue.
 
         :param queue_id: Identification of queue by name (str) or ID (int)
@@ -3128,7 +3128,7 @@ class AsyncRt:
 
         return int(res['id'])
 
-    async def delete_queue(self, queue_id: typing.Union[str, int]) -> None:
+    async def delete_queue(self, queue_id: str | int) -> None:
         """Disable a queue.
 
         :param queue_id: Identification of queue by name (str) or ID (int)
@@ -3149,7 +3149,7 @@ class AsyncRt:
 
             raise  # pragma: no cover
 
-    async def get_links(self, ticket_id: typing.Union[str, int]) -> list[dict[str, str]]:
+    async def get_links(self, ticket_id: str | int) -> list[dict[str, str]]:
         """Gets the ticket links for a single ticket.
 
         Example of a return result:
@@ -3184,9 +3184,9 @@ class AsyncRt:
 
     async def edit_link(
         self,
-        ticket_id: typing.Union[str, int],
+        ticket_id: str | int,
         link_name: TYPE_VALID_TICKET_LINK_NAMES,
-        link_value: typing.Union[str, int],
+        link_value: str | int,
         delete: bool = False,
     ) -> bool:
         """Creates or deletes a link between the specified tickets.
@@ -3222,7 +3222,7 @@ class AsyncRt:
 
         return True
 
-    async def merge_ticket(self, ticket_id: typing.Union[str, int], into_id: typing.Union[str, int]) -> bool:
+    async def merge_ticket(self, ticket_id: str | int, into_id: str | int) -> bool:
         """Merge ticket into another.
 
         :param ticket_id: ID of ticket to be merged
@@ -3243,7 +3243,7 @@ class AsyncRt:
 
         return msg[0].lower() == 'merge successful'
 
-    async def take(self, ticket_id: typing.Union[str, int]) -> bool:
+    async def take(self, ticket_id: str | int) -> bool:
         """Take ticket.
 
         :param ticket_id: ID of ticket to be taken
@@ -3263,7 +3263,7 @@ class AsyncRt:
 
         return msg[0].lower().startswith('owner changed')
 
-    async def untake(self, ticket_id: typing.Union[str, int]) -> bool:
+    async def untake(self, ticket_id: str | int) -> bool:
         """Untake ticket.
 
         :param ticket_id: ID of ticket to be untaken
@@ -3283,7 +3283,7 @@ class AsyncRt:
 
         return msg[0].lower().startswith('owner changed')
 
-    async def steal(self, ticket_id: typing.Union[str, int]) -> bool:
+    async def steal(self, ticket_id: str | int) -> bool:
         """Steal ticket.
 
         :param ticket_id: ID of ticket to be stolen
@@ -3303,7 +3303,7 @@ class AsyncRt:
 
         return msg[0].lower().startswith('owner changed')
 
-    async def get_catalog(self, catalog_id: typing.Union[str, int]) -> dict[str, typing.Any]:
+    async def get_catalog(self, catalog_id: str | int) -> dict[str, typing.Any]:
         """
         Get catalog.
 
@@ -3332,7 +3332,7 @@ class AsyncRt:
         return response
 
     async def get_asset(
-        self, asset_id: typing.Union[str, int], query_format: typing.Optional[dict[str, str]] = None
+        self, asset_id: str | int, query_format: dict[str, str] | None = None
     ) -> dict[str, typing.Any]:
         """
         Get asset.
@@ -3369,7 +3369,7 @@ class AsyncRt:
 
         return response
 
-    async def create_asset(self, name: str, catalog: typing.Union[str, int], **kwargs: typing.Any) -> int:
+    async def create_asset(self, name: str, catalog: str | int, **kwargs: typing.Any) -> int:
         """
         Create a new asset in a catalog.
 
@@ -3387,7 +3387,7 @@ class AsyncRt:
 
         return int(response['id'])
 
-    async def edit_asset(self, asset_id: typing.Union[str, int], **kwargs: typing.Any) -> bool:
+    async def edit_asset(self, asset_id: str | int, **kwargs: typing.Any) -> bool:
         """
         Edit an existing asset.
 
@@ -3406,9 +3406,9 @@ class AsyncRt:
 
     async def search_assets(
         self,
-        catalog_id: typing.Union[str, int, None] = None,
-        search_params: typing.Union[list[dict[str, typing.Any]], None] = None,
-        query_format: typing.Optional[typing.Union[str, list[str], dict[str, str]]] = None,
+        catalog_id: str | int | None = None,
+        search_params: list[dict[str, typing.Any]] | None = None,
+        query_format: str | list[str] | dict[str, str] | None = None,
     ) -> collections.abc.AsyncIterator[dict[str, typing.Any]]:
         """
         Search assets in a catalog.
@@ -3454,7 +3454,7 @@ class AsyncRt:
         async for item in self.__paged_request('assets', json_data=search_params, params=get_params):
             yield item
 
-    async def get_asset_history(self, asset_id: typing.Union[str, int]) -> collections.abc.AsyncIterator[dict[str, typing.Any]]:
+    async def get_asset_history(self, asset_id: str | int) -> collections.abc.AsyncIterator[dict[str, typing.Any]]:
         """
         Get asset history.
 
