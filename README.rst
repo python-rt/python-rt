@@ -13,7 +13,7 @@
 
 Python implementation of REST API described here:
  - https://rt-wiki.bestpractical.com/wiki/REST
- - https://docs.bestpractical.com/rt/5.0.2/RT/REST2.html
+ - https://docs.bestpractical.com/rt/6.0.3/RT/REST2.html
 
 .. csv-table:: Python version compatibility:
    :header: "Python", "rt"
@@ -23,10 +23,11 @@ Python implementation of REST API described here:
    ">= 3.5, <3.7", ">= 2.0.0, < 3.0.0"
    ">= 3.7", ">= 3.0.0, < 3.1.0"
    ">= 3.8", ">= 3.0.0, < 3.3.0"
-   ">= 3.9", ">= 3.3.0"
+   ">= 3.9", ">= 3.3.0, < 3.7.0"
+   ">= 3.10", ">= 3.7.0"
 
 ℹ️ **Note**:
-    Please note that starting with the release of v3.3.0, this library requires Python version >= 3.9.
+    Please note that starting with the release of v3.7.0, this library requires Python version >= 3.10.
     See the *Python version compatibility* table above for more detailed information.
 
 ⚡ **Note**:
