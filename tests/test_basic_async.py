@@ -279,7 +279,7 @@ async def test_attachments_search(async_rt_connection: rt.rest2.AsyncRt):
     assert at_list
     assert len(at_list) == 1
 
-    assert at_list[0]["TranscationId"]
+    assert at_list[0]["TransactionId"]
     assert at_list[0]["Headers"]
 
 
