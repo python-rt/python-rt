@@ -18,7 +18,7 @@ RT_QUEUE = 'General'
 @pytest.fixture(scope='session')
 def rt_connection() -> 'rt.rest2.Rt':
     """Setup a generic connection."""
-    import rt.rest2
+    import rt.rest2  # noqa: PLC0415
 
     return rt.rest2.Rt(url=RT_URL, http_auth=httpx.BasicAuth(RT_USER, RT_PASSWORD), http_timeout=None)
 
@@ -26,6 +26,6 @@ def rt_connection() -> 'rt.rest2.Rt':
 @pytest.fixture(scope='session')
 def async_rt_connection() -> 'rt.rest2.AsyncRt':
     """Setup a generic connection."""
-    import rt.rest2
+    import rt.rest2  # noqa: PLC0415
 
     return rt.rest2.AsyncRt(url=RT_URL, http_auth=httpx.BasicAuth(RT_USER, RT_PASSWORD), http_timeout=None)

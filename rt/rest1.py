@@ -115,14 +115,14 @@ class Rt:
     def __init__(
         self,
         url: str,
-        default_login: typing.Optional[str] = None,
-        default_password: typing.Optional[str] = None,
-        cookies: typing.Optional[dict] = None,
-        proxy: typing.Optional[str] = None,
+        default_login: str | None = None,
+        default_password: str | None = None,
+        cookies: dict | None = None,
+        proxy: str | None = None,
         default_queue: str = DEFAULT_QUEUE,
         skip_login: bool = False,
-        verify_cert: typing.Optional[typing.Union[str, bool]] = True,
-        http_auth: typing.Optional[requests.auth.AuthBase] = None,
+        verify_cert: str | bool | None = True,
+        http_auth: requests.auth.AuthBase | None = None,
     ) -> None:
         """API initialization.
 
@@ -173,9 +173,9 @@ class Rt:
     def __request(
         self,
         selector: str,
-        get_params: typing.Optional[dict[str, typing.Any]] = None,
-        post_data: typing.Optional[dict[str, typing.Any]] = None,
-        files: typing.Optional[list[tuple[str, typing.IO, typing.Optional[str]]]] = None,
+        get_params: dict[str, typing.Any] | None = None,
+        post_data: dict[str, typing.Any] | None = None,
+        files: list[tuple[str, typing.IO, str | None]] | None = None,
         without_login: bool = False,
         text_response: bool = True,
     ) -> str:
@@ -250,7 +250,7 @@ class Rt:
             raise ConnectionError('Connection error', exc) from exc
 
     @staticmethod
-    def __get_status_code(msg: str) -> typing.Optional[int]:
+    def __get_status_code(msg: str) -> int | None:
         """Select status code given message.
 
         :keyword msg: Result message
@@ -262,7 +262,7 @@ class Rt:
         except (ValueError, AttributeError, LookupError):
             return None
 
-    def __check_response(self, msg: typing.Union[str, list]) -> None:
+    def __check_response(self, msg: str | list) -> None:
         """Search general errors in server response and raise exceptions when found.
 
         :keyword msg: Result message
@@ -283,7 +283,7 @@ class Rt:
             raise BadRequestError(msg[2] if len(msg) > 2 else 'Bad request.')
 
     @staticmethod
-    def __normalize_list(msg: typing.Union[str, typing.Sequence[str]]) -> typing.Sequence[str]:
+    def __normalize_list(msg: str | typing.Sequence[str]) -> typing.Sequence[str]:
         """Split message to list by commas and trim whitespace."""
         if isinstance(msg, list):
             _msg = ''.join(msg)
@@ -368,7 +368,7 @@ class Rt:
         return sorted((int(key), value) for key, value in cls.__parse_response_dict(msg).items())
 
     @classmethod
-    def __parse_response_ticket(cls, msg: typing.Iterable[str]) -> dict[str, typing.Union[str, typing.Sequence[str]]]:
+    def __parse_response_ticket(cls, msg: typing.Iterable[str]) -> dict[str, str | typing.Sequence[str]]:
         """Parse an RT API ticket response into a Python dictionary.
 
         :keyword msg: A multiline string, or an iterable of string lines, with
@@ -392,7 +392,7 @@ class Rt:
                 pass
         return ticket
 
-    def login(self, login: typing.Optional[str] = None, password: typing.Optional[str] = None) -> bool:
+    def login(self, login: str | None = None, password: str | None = None) -> bool:
         """Login with default or supplied credentials.
 
         .. note::
@@ -447,7 +447,7 @@ class Rt:
             self.login_result = None
         return ret
 
-    def new_correspondence(self, queue: typing.Optional[typing.Union[str, object]] = None) -> list[dict]:
+    def new_correspondence(self, queue: str | object | None = None) -> list[dict]:
         """Obtains tickets changed by other users than the system one.
 
         :keyword queue: Queue where to search
@@ -459,7 +459,7 @@ class Rt:
         """
         return self.search(Queue=queue, order='-LastUpdated', LastUpdatedBy__notexact=self.default_login)
 
-    def last_updated(self, since: str, queue: typing.Optional[typing.Union[str, object]] = None) -> list[dict]:
+    def last_updated(self, since: str, queue: str | object | None = None) -> list[dict]:
         """Obtains tickets changed after given date.
 
         :param since: Date as string in form '2011-02-24'
@@ -474,11 +474,11 @@ class Rt:
 
     def search(
         self,
-        Queue: typing.Optional[typing.Union[str, object]] = None,
-        order: typing.Optional[str] = None,
-        raw_query: typing.Optional[str] = None,
+        Queue: str | object | None = None,
+        order: str | None = None,
+        raw_query: str | None = None,
         Format: str = 'l',
-        Fields: typing.Optional[list[str]] = None,
+        Fields: list[str] | None = None,
         **kwargs: typing.Any,
     ) -> list[dict]:
         r"""Search arbitrary needles in given fields and queue.
@@ -553,7 +553,8 @@ class Rt:
                 'isnot': ' IS NOT ',
             }
 
-            for key, value in kwargs.items():
+            for _key, value in kwargs.items():
+                key = _key
                 op = '='
                 key_parts = key.split('__')
                 if len(key_parts) > 1:
@@ -599,7 +600,7 @@ class Rt:
 
         return []
 
-    def get_ticket(self, ticket_id: typing.Union[str, int]) -> typing.Optional[dict]:
+    def get_ticket(self, ticket_id: str | int) -> dict | None:
         """Fetch ticket by its ID.
 
         :param ticket_id: ID of demanded ticket
@@ -656,12 +657,12 @@ class Rt:
         :returns: Equivalent string to POST to the RT REST interface.
         """
         post_data = []
-        for key in data_source:
+        for key, data_source_value in data_source.items():
             if key.startswith('CF_'):
                 rt_key = f'CF.{{{key[3:]}}}'
             else:
                 rt_key = key
-            value = data_source[key]
+            value = data_source_value
             if isinstance(value, (list, tuple)):
                 value = ', '.join(value)
             value_lines = iter(value.splitlines())
@@ -671,8 +672,8 @@ class Rt:
 
     def create_ticket(
         self,
-        Queue: typing.Optional[typing.Union[str, object]] = None,
-        files: typing.Optional[list[tuple[str, typing.IO, typing.Optional[str]]]] = None,
+        Queue: str | object | None = None,
+        files: list[tuple[str, typing.IO, str | None]] | None = None,
         **kwargs: typing.Any,
     ) -> int:
         """Create new ticket and set given parameters.
@@ -731,7 +732,7 @@ class Rt:
             warnings.warn(line[2:], stacklevel=2)
         return -1
 
-    def edit_ticket(self, ticket_id: typing.Union[str, int], **kwargs: typing.Any) -> bool:
+    def edit_ticket(self, ticket_id: str | int, **kwargs: typing.Any) -> bool:
         """Edit ticket values.
 
         :param ticket_id: ID of ticket to edit
@@ -757,9 +758,7 @@ class Rt:
         state = msg.split('\n')[2]
         return self.RE_PATTERNS['update_pattern'].match(state) is not None
 
-    def get_history(
-        self, ticket_id: typing.Union[str, int], transaction_id: typing.Optional[typing.Union[str, int]] = None
-    ) -> typing.Optional[list[dict]]:
+    def get_history(self, ticket_id: str | int, transaction_id: str | int | None = None) -> list[dict] | None:
         """Get set of history items.
 
         :param ticket_id: ID of ticket
@@ -791,7 +790,7 @@ class Rt:
         ):
             return None
         items = typing.cast(
-            'list[dict[str, typing.Union[str, list[tuple[int, str]]]]]',
+            'list[dict[str, str | list[tuple[int, str]]]]',
             [self.__parse_response_dict(msg, ['Content', 'Attachments']) for msg in msgs.split('\n--\n')],
         )
         for body in items:
@@ -799,7 +798,7 @@ class Rt:
             body['Attachments'] = self.__parse_response_numlist(attachments)
         return items
 
-    def get_short_history(self, ticket_id: typing.Union[str, int]) -> typing.Optional[list[tuple[int, str]]]:
+    def get_short_history(self, ticket_id: str | int) -> list[tuple[int, str]] | None:
         """Get set of short history items.
 
         :param ticket_id: ID of ticket
@@ -817,13 +816,13 @@ class Rt:
 
     def __correspond(
         self,
-        ticket_id: typing.Union[str, int],
+        ticket_id: str | int,
         text: str = '',
         action: str = 'correspond',
         cc: str = '',
         bcc: str = '',
         content_type: str = 'text/plain',
-        files: typing.Optional[list[tuple[str, typing.IO, typing.Optional[str]]]] = None,
+        files: list[tuple[str, typing.IO, str | None]] | None = None,
     ) -> bool:
         """Sends out the correspondence.
 
@@ -858,12 +857,12 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
 
     def reply(
         self,
-        ticket_id: typing.Union[str, int],
+        ticket_id: str | int,
         text: str = '',
         cc: str = '',
         bcc: str = '',
         content_type: str = 'text/plain',
-        files: typing.Optional[list[tuple[str, typing.IO, typing.Optional[str]]]] = None,
+        files: list[tuple[str, typing.IO, str | None]] | None = None,
     ) -> bool:
         """Sends email message to the contacts in ``Requestors`` field of
         given ticket with subject as is set in ``Subject`` field.
@@ -896,12 +895,12 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
 
     def comment(
         self,
-        ticket_id: typing.Union[str, int],
+        ticket_id: str | int,
         text: str = '',
         cc: str = '',
         bcc: str = '',
         content_type: str = 'text/plain',
-        files: typing.Optional[list[tuple[str, typing.IO, typing.Optional[str]]]] = None,
+        files: list[tuple[str, typing.IO, str | None]] | None = None,
     ) -> bool:
         """Adds comment to the given ticket.
 
@@ -937,7 +936,7 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
         """
         return self.__correspond(ticket_id, text, 'comment', cc, bcc, content_type, files)
 
-    def get_attachments(self, ticket_id: typing.Union[str, int]) -> typing.Optional[list[tuple[str, str, str, str]]]:
+    def get_attachments(self, ticket_id: str | int) -> list[tuple[str, str, str, str]] | None:
         """Get attachment list for a given ticket.
 
         :param ticket_id: ID of ticket
@@ -963,7 +962,7 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
                     attachment_infos.append(info.groups())
         return attachment_infos  # type: ignore # type returned by the regex, if it matches, is as defined above
 
-    def get_attachments_ids(self, ticket_id: typing.Union[str, int]) -> typing.Optional[list[int]]:
+    def get_attachments_ids(self, ticket_id: str | int) -> list[int] | None:
         """Get IDs of attachments for given ticket.
 
         :param ticket_id: ID of ticket
@@ -973,7 +972,7 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
         attachments = self.get_attachments(ticket_id)
         return [int(at[0]) for at in attachments] if attachments is not None else None
 
-    def get_attachment(self, ticket_id: typing.Union[str, int], attachment_id: typing.Union[str, int]) -> typing.Optional[dict]:
+    def get_attachment(self, ticket_id: str | int, attachment_id: str | int) -> dict | None:
         """Get attachment.
 
         :param ticket_id: ID of ticket
@@ -1069,7 +1068,7 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
         pairs['Content'] = content
         return pairs
 
-    def get_attachment_content(self, ticket_id: typing.Union[str, int], attachment_id: typing.Union[str, int]) -> typing.Optional[bytes]:
+    def get_attachment_content(self, ticket_id: str | int, attachment_id: str | int) -> bytes | None:
         r"""Get content of attachment without headers.
 
         This function is necessary to use for binary attachment,
@@ -1095,7 +1094,7 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
             return None
         return msg[msg.find(b'\n') + 2 :]
 
-    def get_user(self, user_id: typing.Union[str, int]) -> typing.Optional[dict[str, str]]:
+    def get_user(self, user_id: str | int) -> dict[str, str] | None:
         """Get user details.
 
         :param user_id: Identification of user by username (str) or user ID
@@ -1136,7 +1135,7 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
 
         raise UnexpectedMessageFormatError(f'Received status code is {status_code} instead of 200.')
 
-    def create_user(self, Name: str, EmailAddress: str, **kwargs: typing.Any) -> typing.Union[int, bool]:
+    def create_user(self, Name: str, EmailAddress: str, **kwargs: typing.Any) -> int | bool:
         """Create user (undocumented API feature).
 
         :param Name: User name (login for privileged, required)
@@ -1148,7 +1147,7 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
         """
         return self.edit_user('new', Name=Name, EmailAddress=EmailAddress, **kwargs)
 
-    def edit_user(self, user_id: typing.Union[str, int], **kwargs: typing.Any) -> typing.Union[int, bool]:
+    def edit_user(self, user_id: str | int, **kwargs: typing.Any) -> int | bool:
         """Edit user profile (undocumented API feature).
 
         :param user_id: Identification of user by username (str) or user ID
@@ -1245,7 +1244,7 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
                 return int(match.group(1))
         return False
 
-    def get_queue(self, queue_id: typing.Union[str, int]) -> typing.Optional[dict[str, str]]:
+    def get_queue(self, queue_id: str | int) -> dict[str, str] | None:
         """Get queue details.
 
         :param queue_id: Identification of queue by name (str) or queue ID
@@ -1274,7 +1273,7 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
 
         raise UnexpectedMessageFormatError(f'Received status code is {status_code} instead of 200.')
 
-    def edit_queue(self, queue_id: typing.Union[str, int], **kwargs: typing.Any) -> typing.Union[str, bool]:
+    def edit_queue(self, queue_id: str | int, **kwargs: typing.Any) -> str | bool:
         """Edit queue (undocumented API feature).
 
         :param queue_id: Identification of queue by name (str) or ID (int)
@@ -1320,7 +1319,7 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
         """
         return int(self.edit_queue('new', Name=Name, **kwargs))
 
-    def get_links(self, ticket_id: typing.Union[str, int]) -> typing.Optional[dict[str, list[str]]]:
+    def get_links(self, ticket_id: str | int) -> dict[str, list[str]] | None:
         """Gets the ticket links for a single ticket.
 
         :param ticket_id: ticket ID
@@ -1349,7 +1348,7 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
 
         raise UnexpectedMessageFormatError(f'Received status code is {status_code} instead of 200.')
 
-    def edit_ticket_links(self, ticket_id: typing.Union[str, int], **kwargs: typing.Any) -> bool:
+    def edit_ticket_links(self, ticket_id: str | int, **kwargs: typing.Any) -> bool:
         """Edit ticket links.
 
         .. warning:: This method is deprecated in favour of edit_link method, because
@@ -1376,9 +1375,7 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
         state = msg.split('\n')[2]
         return self.RE_PATTERNS['links_updated_pattern'].match(state) is not None
 
-    def edit_link(
-        self, ticket_id: typing.Union[str, int], link_name: str, link_value: typing.Union[str, int], delete: bool = False
-    ) -> bool:
+    def edit_link(self, ticket_id: str | int, link_name: str, link_value: str | int, delete: bool = False) -> bool:
         """Creates or deletes a link between the specified tickets (undocumented API feature).
 
         :param ticket_id: ID of ticket to edit
@@ -1405,7 +1402,7 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
 
         return self.RE_PATTERNS['created_link_pattern'].match(state) is not None
 
-    def merge_ticket(self, ticket_id: typing.Union[str, int], into_id: typing.Union[str, int]) -> bool:
+    def merge_ticket(self, ticket_id: str | int, into_id: str | int) -> bool:
         """Merge ticket into another (undocumented API feature).
 
         :param ticket_id: ID of ticket to be merged
@@ -1420,7 +1417,7 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
         state = msg.split('\n')[2]
         return self.RE_PATTERNS['merge_successful_pattern'].match(state) is not None
 
-    def take(self, ticket_id: typing.Union[str, int]) -> bool:
+    def take(self, ticket_id: str | int) -> bool:
         """Take ticket.
 
         :param ticket_id: ID of ticket to be taken
@@ -1434,7 +1431,7 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
         msg = self.__request(f'ticket/{ticket_id}/take', post_data=post_data)
         return self.__get_status_code(msg) == 200
 
-    def steal(self, ticket_id: typing.Union[str, int]) -> bool:
+    def steal(self, ticket_id: str | int) -> bool:
         """Steal ticket.
 
         :param ticket_id: ID of ticket to be stolen
@@ -1448,7 +1445,7 @@ Content-Type: {}""".format(str(ticket_id), action, re.sub(r'\n', r'\n      ', te
         msg = self.__request(f'ticket/{ticket_id}/take', post_data=post_data)
         return self.__get_status_code(msg) == 200
 
-    def untake(self, ticket_id: typing.Union[str, int]) -> bool:
+    def untake(self, ticket_id: str | int) -> bool:
         """Untake ticket.
 
         :param ticket_id: ID of ticket to be untaken

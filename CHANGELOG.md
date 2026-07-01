@@ -3,6 +3,15 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v3.7.0], 2026-06-29
+### Removed
+- Remove support for now EoL Python 3.9.
+- Modernise typing due to raised minimum Python version.
+
+## [v3.6.1], 2026-06-29
+### Fixes
+- Fix API doc on search() to correctly document the queue parameter in case you want to query all queues (thanks @p-fruck #121)
+
 ## [v3.6.0], 2026-02-06
 ### Added
 - Parameters search_params and catalog_id used in asset search are now optional
