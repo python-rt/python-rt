@@ -20,7 +20,7 @@ __license__ = """ Copyright (C) 2013 CZ.NIC, z.s.p.o.
 """
 __docformat__ = 'reStructuredText en'
 __authors__ = [
-    '"Jiri Machalek" <jiri.machalek@nirt_connection.cz>',
+    '"Jiri Machalek" <jiri.machalek@nic.cz>',
     '"Georges Toth" <georges.toth@govcert.etat.lu>',
 ]
 
