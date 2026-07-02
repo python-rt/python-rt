@@ -251,8 +251,7 @@ def test_attachments_create(rt_connection: rt.rest2.Rt):
         assert at_content == k.file_content
 
 
-@pytest.mark.asyncio
-async def test_attachments_search(rt_connection: rt.rest2.Rt):
+def test_attachments_search(rt_connection: rt.rest2.Rt):
     """Create a ticket with an attachments and verify that attachment search and filtering works correctly."""
     ticket_subject = f'Testing issue {random_string()}'
     ticket_text = (
@@ -263,16 +262,14 @@ async def test_attachments_search(rt_connection: rt.rest2.Rt):
     attachment_name = f'attachment-{random_string(length=10)}.txt'
     attachment = rt.rest2.Attachment(attachment_name, 'text/plain', attachment_content)
 
-    ticket_id = rt_connection.create_ticket(
-        subject=ticket_subject, content=ticket_text, queue=RT_QUEUE, attachments=[attachment]
-    )
+    ticket_id = rt_connection.create_ticket(subject=ticket_subject, content=ticket_text, queue=RT_QUEUE, attachments=[attachment])
 
-    at_list = [item for item in rt_connection.get_attachments(ticket_id, query_format=["TransactionId", "Headers"])]
+    at_list = [item for item in rt_connection.get_attachments(ticket_id, query_format=['TransactionId', 'Headers'])]
     assert at_list
     assert len(at_list) == 1
 
-    assert at_list[0]["TransactionId"]
-    assert at_list[0]["Headers"]
+    assert at_list[0]['TransactionId']
+    assert at_list[0]['Headers']
 
 
 def test_attachments_comment(rt_connection: rt.rest2.Rt):

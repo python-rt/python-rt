@@ -275,12 +275,12 @@ async def test_attachments_search(async_rt_connection: rt.rest2.AsyncRt):
         subject=ticket_subject, content=ticket_text, queue=RT_QUEUE, attachments=[attachment]
     )
 
-    at_list = [item async for item in async_rt_connection.get_attachments(ticket_id, query_format=["TransactionId", "Headers"])]
+    at_list = [item async for item in async_rt_connection.get_attachments(ticket_id, query_format=['TransactionId', 'Headers'])]
     assert at_list
     assert len(at_list) == 1
 
-    assert at_list[0]["TransactionId"]
-    assert at_list[0]["Headers"]
+    assert at_list[0]['TransactionId']
+    assert at_list[0]['Headers']
 
 
 @pytest.mark.asyncio
