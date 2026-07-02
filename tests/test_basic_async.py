@@ -20,7 +20,7 @@ __license__ = """ Copyright (C) 2013 CZ.NIC, z.s.p.o.
 """
 __docformat__ = 'reStructuredText en'
 __authors__ = [
-    '"Jiri Machalek" <jiri.machalek@niasync_rt_connection.cz>',
+    '"Jiri Machalek" <jiri.machalek@nic.cz>',
     '"Georges Toth" <georges.toth@govcert.etat.lu>',
 ]
 
@@ -257,6 +257,30 @@ async def test_attachments_create(async_rt_connection: rt.rest2.AsyncRt):
         at_id = at_list[at_names.index(k.file_name)]['id']
         at_content = base64.b64decode((await async_rt_connection.get_attachment(at_id))['Content'])
         assert at_content == k.file_content
+
+
+@pytest.mark.asyncio
+async def test_attachments_search(async_rt_connection: rt.rest2.AsyncRt):
+    """Create a ticket with an attachments and verify that attachment search and filtering works correctly."""
+    ticket_subject = f'Testing issue {random_string()}'
+    ticket_text = (
+        'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'
+    )
+
+    attachment_content = random_string(length=100).encode()
+    attachment_name = f'attachment-{random_string(length=10)}.txt'
+    attachment = rt.rest2.Attachment(attachment_name, 'text/plain', attachment_content)
+
+    ticket_id = await async_rt_connection.create_ticket(
+        subject=ticket_subject, content=ticket_text, queue=RT_QUEUE, attachments=[attachment]
+    )
+
+    at_list = [item async for item in async_rt_connection.get_attachments(ticket_id, query_format=['TransactionId', 'Headers'])]
+    assert at_list
+    assert len(at_list) == 1
+
+    assert at_list[0]['TransactionId']
+    assert at_list[0]['Headers']
 
 
 @pytest.mark.asyncio

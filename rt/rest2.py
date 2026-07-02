@@ -859,6 +859,7 @@ class Rt:
         self,
         ticket_id: str | int,
         query_filter: list[dict[str, str]] | None = None,
+        query_format: str | list[str] | dict[str, str] | None = None,
     ) -> typing.Sequence[dict[str, str]]:
         """Get attachment list for a given ticket.
 
@@ -879,6 +880,7 @@ class Rt:
 
         :param ticket_id: ID of ticket
         :param query_filter: JSON search filter, defaults to "filename is not empty"
+        :param query_format: Returned fields to be populated
         :returns: List of tuples for attachments belonging to given ticket.
                   Tuple format: (id, name, content_type, size)
                   Returns None if ticket does not exist.
@@ -888,10 +890,18 @@ class Rt:
         if query_filter is None:
             query_filter = [{'field': 'Filename', 'operator': 'IS NOT', 'value': ''}]
 
+        get_params = {'fields': 'Filename,ContentType,ContentLength'}
+        if isinstance(query_format, dict):
+            get_params = {**get_params, **query_format}
+        elif isinstance(query_format, list):
+            get_params['fields'] = ','.join(query_format)
+        elif isinstance(query_format, str):
+            get_params['fields'] = query_format
+
         for item in self.__paged_request(
             f'ticket/{ticket_id}/attachments',
             json_data=query_filter,
-            params={'fields': 'Filename,ContentType,ContentLength'},
+            params=get_params,
         ):
             attachments.append(item)
 
@@ -2561,6 +2571,7 @@ class AsyncRt:
         self,
         ticket_id: str | int,
         query_filter: list[dict[str, str]] | None = None,
+        query_format: str | list[str] | dict[str, str] | None = None,
     ) -> collections.abc.AsyncIterator[dict[str, typing.Any]]:
         """Get attachment list for a given ticket.
 
@@ -2581,15 +2592,24 @@ class AsyncRt:
 
         :param ticket_id: ID of ticket
         :param query_filter: JSON search filter, defaults to "filename is not empty"
+        :param query_format: Returned fields to be populated
         :returns: Iterator of attachments belonging to given ticket. collections.abc.AsyncIterator[typing.Dict[str, str]]
         """
         if query_filter is None:
             query_filter = [{'field': 'Filename', 'operator': 'IS NOT', 'value': ''}]
 
+        get_params = {'fields': 'Filename,ContentType,ContentLength'}
+        if isinstance(query_format, dict):
+            get_params = {**get_params, **query_format}
+        elif isinstance(query_format, list):
+            get_params['fields'] = ','.join(query_format)
+        elif isinstance(query_format, str):
+            get_params['fields'] = query_format
+
         async for item in self.__paged_request(
             f'ticket/{ticket_id}/attachments',
             json_data=query_filter,
-            params={'fields': 'Filename,ContentType,ContentLength'},
+            params=get_params,
         ):
             yield item
 
