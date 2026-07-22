@@ -35,9 +35,9 @@ Python implementation of REST API described here:
     Usage::
 
       import rt.rest2
-      import httpx
+      import httpx2
 
-      tracker = rt.rest2.AsyncRt('http://localhost/rt/REST/2.0/', http_auth=httpx.BasicAuth('root', 'password'))
+      tracker = rt.rest2.AsyncRt('http://localhost/rt/REST/2.0/', http_auth=httpx2.BasicAuth('root', 'password'))
 
 ⚠️ **Warning**:
     Though version 3.x still supports RT REST API version 1, it contains minor breaking changes. Please see the changelog
@@ -69,8 +69,8 @@ Usage
 An example is worth a thousand words::
 
     >>> import rt.rest2
-    >>> import httpx
-    >>> tracker = rt.rest2.Rt('http://localhost/rt/REST/2.0/', http_auth=httpx.BasicAuth('root', 'password'))
+    >>> import httpx2
+    >>> tracker = rt.rest2.Rt('http://localhost/rt/REST/2.0/', http_auth=httpx2.BasicAuth('root', 'password'))
     >>> map(lambda x: x['id'], tracker.search(Queue='helpdesk', Status='open'))
     ['1', '2', '10', '15']
     >>> tracker.create_ticket(queue='helpdesk', \
@@ -86,8 +86,8 @@ Get the last important updates from a specific queue that have been updated rece
     >>> import datetime
     >>> import base64
     >>> import rt.rest2
-    >>> import httpx
-    >>> tracker = rt.rest2.Rt('http://localhost/rt/REST/2.0/', http_auth=httpx.BasicAuth('root', 'password'))
+    >>> import httpx2
+    >>> tracker = rt.rest2.Rt('http://localhost/rt/REST/2.0/', http_auth=httpx2.BasicAuth('root', 'password'))
     >>> fifteen_minutes_ago = str(datetime.datetime.now() - datetime.timedelta(minutes=15))
     >>> tickets = tracker.last_updated(since=fifteen_minutes_ago)
     >>> for ticket in tickets:

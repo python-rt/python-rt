@@ -9,12 +9,12 @@ Creating a Connection
 ::
 
     import rt.rest2
-    import httpx
+    import httpx2
 
     api_url = 'http://localhost:8080/REST/2.0/'
     username = 'root'
     password = 'password'
-    c = rt.rest2.Rt(url=baseurl, http_auth=httpx.BasicAuth('root', 'password'))
+    c = rt.rest2.Rt(url=baseurl, http_auth=httpx2.BasicAuth('root', 'password'))
 
 
 Ticket Operations
